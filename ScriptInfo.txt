@@ -1,0 +1,64 @@
+Script/ Program for Kappa Receiver SystemLocation of these scripts on Lab computerfunc_dir='/Users/chw3k5/Documents/Grad_School/Kappa/scripts'
+
+Program name: control.py
+##### LO UCA (User Controlled Attenuation) controls #####
+Function 1: LabJackU3_DAQ0
+status = LabJackU3_DAQ0(UCA_voltage)
+    import u3 # (this module connects to the LABJACK with a USB) Look up there documentation online, below are my notes
+    # I have to install
+    # libusb=1.0 from http://sourceforge.net/projects/libusb/files/libusb-1.0/libusb-1.0.18/
+    # LabJackPython-10-22-2012.zip from http://github.com/labjack/exodriver 
+UCA_voltage: must be a number from 0 to 5 corresponding to 0-5 Volts on DAQ0 on the LabJack (this is the range of both the LabJack and UCA port on the Virginia Diodes Local Oscillator).
+status: the function returns status = True if the user input was a number between 0 and 5
+
+
+##### electromagnet controls #####Function 1: measmagV_mag, mA_mag, pot_mag = measmag(verbose)
+    import telnetlib
+    import time
+    import sys
+    from mag_config import SleepPerMes # this is parameters saved in mag_config
+verbose: True displays all warnings for measurement timeouts, False only displays the last warnings before stopping the script with sys.exit()
+V_mag, mA_mag, and pot_mag are the Voltage in Volts, the current in Amps, and the potentiometer position for the electromagnet.
+
+Function 2: setmag
+V_mag, mA_mag, pot_mag = setmag(magpot, verbose)
+    import telnetlib
+    import time
+    import numpy
+    import sys
+    from control import measmag
+    from mag_config import SleepPerMes # this is parameters saved in mag_config
+magpot: is the potentiometer position and can be any number from 0 to 129797, it is rounded to an integer in the program.
+verbose: this variable is simply passed to the measmag function.
+V_mag, mA_mag, and pot_mag are the Voltage in Volts, the current in Amps, and the potentiometer position for the electromagnet.
+
+Function 3: setmag_only
+setmag_only(magpot)
+    import telnetlib
+    import time
+    import numpy
+    import sys
+    from mag_config import SleepPerMes # this is parameters saved in mag_config
+magpot: is the potentiometer position and can be any number from 0 to 129797, it is rounded to an integer in the program.
+
+function 4: setmagI
+# this is an algorithm that set the magnet current to a user specified value (mA_user).
+# the setting for this algorithm can be found in mag_config.py
+# The algorithm alwas goes fist the the rails (high positive or negtive current) then
+# it step down going a fraction of the way to the user specified current. 
+# When it gets close to the user value it makes more measurements and smaller steps,
+# this can be controlled in mag_config.py.
+V_mag, mA_mag, pot_mag = setmagI(mA_user, verbose, careful)
+    import sys
+    import numpy
+    from mag_config import step_decision, max_pot_pos, min_pot_pos, high_pot_pos, low_pot_pos, loop1_thresh, pot_diff_thresh, loop1_max, loop1_restar_max, subloop_max, subloop_min # these are variables that can be found in the file mag_config.py
+mA_user: the current that the algorithm is to attempt to find
+verbose: True: this gives status updates and extra warning messages, it is great for debugging
+careful: 
+True this allows the algorithm to restart is self if it goes below the user specified current and this ends the program if it is unable to meet the user specified criteria in mag_config.py.
+False: the algorithm always takes one shot at finding the current but gives you a result without ever exiting for warnings and errors
+V_mag, mA_mag, and pot_mag are the Voltage in Volts, the current in Amps, and the potentiometer position for the electromagnet.
+
+###### sis bias controls ######
+function 1: measSIS
+measSIS(verbose)
