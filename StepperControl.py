@@ -31,42 +31,42 @@
 ## GENERAL SETTINGS: Movement and Scaling
 import os
 import sys
-
+import serial
+import time
 
 serial_port = ''
-test_serial_port = '/dev/cu.PL2303-0000103D'
-if os.path.lexists(test_serial_port):
-    serial_port = test_serial_port
-else:
-    test_serial_port = '/dev/cu.usbserial-000011FD'
+platform = sys.platform
+if platform == 'win32':
+    serial_port = 'COM4'
+elif platform == 'darwin':
+    test_serial_port = '/dev/cu.PL2303-0000103D'
     if os.path.lexists(test_serial_port):
         serial_port = test_serial_port
     else:
-        test_serial_port = '/dev/cu.usbserial-000031FD'
+        test_serial_port = '/dev/cu.usbserial-000011FD'
         if os.path.lexists(test_serial_port):
             serial_port = test_serial_port
         else:
-            test_serial_port = '/dev/cu.usbserial-001014FA'
+            test_serial_port = '/dev/cu.usbserial-000031FD'
             if os.path.lexists(test_serial_port):
                 serial_port = test_serial_port
             else:
-                test_serial_port = '/dev/cu.usbserial-001014FD'
+                test_serial_port = '/dev/cu.usbserial-001014FA'
                 if os.path.lexists(test_serial_port):
                     serial_port = test_serial_port
+                else:
+                    test_serial_port = '/dev/cu.usbserial-001014FD'
+                    if os.path.lexists(test_serial_port):
+                        serial_port = test_serial_port
 if serial_port == '':
-    print 'The serial device that you are trying to use in StepperControl.py was found under the expected paths.'
+    print 'The serial device that you are trying to use in StepperControl.py was NOT found under the expected paths.'
     print "check the device paths with 'ls /dev/cu*' and make sure the device is plugged." 
     print "When adding new device locations they will need to be added to this script"
     print 'killing the script'
     sys.exit()
-
-
-SleepTime = 0.2
-
+SleepTime = 0.5
 
 def DisableDrive():
-    import serial
-    import time
     # Disable drive
     status = False
     stepper = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
@@ -80,9 +80,7 @@ def DisableDrive():
     stepper.close()
     return status
 #    
-def SetResolution(): 
-    import serial
-    import time 
+def SetResolution():
     # Set drive resolution to 25,000 microsteps 
     status = False    
     stepper = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
@@ -97,8 +95,6 @@ def SetResolution():
     return status
 #    
 def SetScaling():
-    import serial
-    import time
     # Set scaling so that '1' represents 1 revolution
     status = False    
     stepper = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
@@ -117,8 +113,6 @@ def SetScaling():
     return status
 #
 def EnableScaling():
-    import serial
-    import time
     # Enable Scaling
     status = False    
     stepper = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
@@ -132,10 +126,8 @@ def EnableScaling():
     stepper.close()
     return status    
 #
-def DefineAxis(AxisNum): 
+def DefineAxis(AxisNum=0):
     # Define axis:  0 = stepper, 1 = servo # 0 is defult
-    import serial
-    import time
     status = False    
     stepper = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
     time.sleep(SleepTime)
@@ -151,12 +143,10 @@ def DefineAxis(AxisNum):
     stepper.close()
     return status
 #
-def HardwareLimits(HardwareLimitNum):
+def HardwareLimits(HardwareLimitNum=0):
     # Hardware End-of-Travel Limit:
-    # 0 = disable limits (0 is defult)
+    # 0 = disable limits (0 is default)
     # 1-3 = enable motion restrictions in certain directions
-    import serial
-    import time
     status = False    
     stepper = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
     time.sleep(SleepTime)
@@ -172,12 +162,10 @@ def HardwareLimits(HardwareLimitNum):
     stepper.close()
     return status
 #
-def StopBehavior(StopBehavoirNum):
+def StopBehavior(StopBehavoirNum=1):
     # Behavior on stop input or Stop command (!S):
     # 0 = discard commands in buffer and terminate program execution
-    # 1 = pause command execution, continue with !C command (1 is defult)
-    import serial
-    import time
+    # 1 = pause command execution, continue with !C command (1 is default)
     status = False    
     stepper = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
     time.sleep(SleepTime)
@@ -193,10 +181,8 @@ def StopBehavior(StopBehavoirNum):
     stepper.close()
     return status
 #
-def ContinuousCmdMode(ContinuousCmdNum):
-    # Continuous command processing mode:  0 = disable (pause until motion is complete) (0 is defult), 1 = enable
-    import serial
-    import time
+def ContinuousCmdMode(ContinuousCmdNum=0):
+    # Continuous command processing mode:  0 = disable (pause until motion is complete) (0 is default), 1 = enable
     status = False    
     stepper = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
     time.sleep(SleepTime)
@@ -212,11 +198,9 @@ def ContinuousCmdMode(ContinuousCmdNum):
     stepper.close()
     return status
 #
-def DistOrVelMode(DistOrVelNum):
-    # Preset mode (0) = move specified distance (0 is defult)
+def DistOrVelMode(DistOrVelNum=0):
+    # Preset mode (0) = move specified distance (0 is default)
     # Continuous mode (1) = move at specified velocity
-    import serial
-    import time
     status = False    
     stepper = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
     time.sleep(SleepTime)
@@ -232,11 +216,9 @@ def DistOrVelMode(DistOrVelNum):
     stepper.close()
     return status
 #
-def IncementOrAbsolute(IncementOrAbsoluteNum):
-    # Incremental mode (0) = move w.r.t. position at start of move (0 is defult)
+def IncementOrAbsolute(IncementOrAbsoluteNum=0):
+    # Incremental mode (0) = move w.r.t. position at start of move (0 is default)
     # Absolute mode (1) = move w.r.t. absolute zero
-    import serial
-    import time
     status = False    
     stepper = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
     time.sleep(SleepTime)
@@ -254,8 +236,6 @@ def IncementOrAbsolute(IncementOrAbsoluteNum):
 #
 def SetZero():
     # Set current position as 0
-    import serial
-    import time
     status = False    
     stepper = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
     time.sleep(SleepTime)
@@ -271,8 +251,6 @@ def SetZero():
 ## MOTION SETTINGS:  Including: Acceleration, Velocity   
 def SetAccel(AccelNum):
     # Acceleration (revolutions/s^2)
-    import serial
-    import time
     status = False    
     stepper = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
     time.sleep(SleepTime)
@@ -292,8 +270,6 @@ def SetAccel(AccelNum):
 #
 def SetVel(VelNum):
     # Velocity (rev/s)
-    import serial
-    import time
     status = False    
     stepper = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
     time.sleep(SleepTime)
@@ -311,8 +287,6 @@ def SetVel(VelNum):
 #
 def Rotate(RotateNum):
     # Set rotation distance
-    import serial
-    import time
     status = False    
     stepper = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
     time.sleep(SleepTime)
@@ -330,8 +304,6 @@ def Rotate(RotateNum):
 #
 def QuarterTurn():
     # rotation of a 1/4 turn.
-    import serial
-    import time
     status = False    
     stepper = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
     time.sleep(SleepTime)
@@ -345,13 +317,14 @@ def QuarterTurn():
     return status
 #
 def initialize():
-    import serial
-    import time
     stepper = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1, timeout=2)
     time.sleep(SleepTime)
     if stepper.isOpen():
         # Disable drive
         stepper.write(b'DRIVE0\n')
+        time.sleep(SleepTime)
+        # Erase any existing programs
+        stepper.write(b'ERASE\n')
         time.sleep(SleepTime)
         # Set drive resolution
         stepper.write(b'DRES25000\n')
@@ -398,8 +371,8 @@ def initialize():
         stepper.write(b'V0.5\n')
         time.sleep(SleepTime)
         # Set distance
-        #stepper.write(b'D0.25\n')
-        #time.sleep(SleepTime)
+        stepper.write(b'D0.25\n')
+        time.sleep(SleepTime)
         # Enable drive
         stepper.write(b'DRIVE1\n')
         time.sleep(SleepTime)
@@ -410,8 +383,6 @@ def initialize():
     return status
 #
 def GoForth():
-    import serial
-    import time
     status = False
     stepper = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1, timeout=2)
     time.sleep(SleepTime)
@@ -428,8 +399,6 @@ def GoForth():
     return status
 #
 def GoBack():
-    import serial
-    import time
     status = False
     stepper = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1, timeout=2)
     #time.sleep(SleepTime)
@@ -444,3 +413,85 @@ def GoBack():
     else:
         print "The port is not open, return in status False"
     return status
+
+# make commands to be executed every time the controller is started
+def startup():
+    status = False
+    stepper = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1, timeout=2)
+    if stepper.isOpen():
+        # clear the old start up program
+        stepper.write(b'STARTP CLR\n')
+
+        writestr=''
+        # Define the setup function
+        writestr=writestr+b'DEF SETUP\n'
+        # Set drive resolution
+        writestr=writestr+b'DRES25000\n'
+        # Set scaling
+        writestr=writestr+b'SCLD25000\n'
+        writestr=writestr+b'SCLV25000\n'
+        writestr=writestr+b'SCLA25000\n'
+        # Enable scaling
+        writestr=writestr+b'SCALE1\n'
+        # Define axis as stepper
+        writestr=writestr+b'AXDEF0\n'
+        # Disable hardware end-of-travel limits
+        writestr=writestr+b'LH0\n'
+        # Pause command execution on stop command
+        writestr=writestr+b'COMEXS1\n'
+        # Disable continuous command processing mode
+        writestr=writestr+b'COMEXC0\n'
+        # Set preset/continuous mode
+        writestr=writestr+b'MC0\n'
+        # Set absolute/incremental mode
+        writestr=writestr+b'MA0\n'
+        # Set current position as 0
+        writestr=writestr+b'PSET0\n'
+        time.sleep(SleepTime)
+
+        # Set acceleration
+        writestr=writestr+b'A0.5\n'
+        # Set deceleration
+        writestr=writestr+b'AD0.5\n'
+        # Set velocity
+        writestr=writestr+b'V0.5\n'
+        time.sleep(SleepTime)
+        # Set distance
+        writestr=writestr+b'D0.25\n'
+
+        # End of the Setup program
+        writestr=writestr+b'END\n'
+        stepper.write(writestr)
+        time.sleep(SleepTime)
+        print writestr
+        # Assign the program SETUP as the startup program
+        stepper.write(b'STARTP SETUP\n')
+        time.sleep(SleepTime)
+
+        # reset the the controller to execute the program that was just written
+        stepper.write(b'RESET\n')
+        time.sleep(SleepTime)
+    else:
+        print "The port is not open, return in status False"
+    stepper.close()
+
+
+
+    return
+
+def test_func():
+    startup()
+    time.sleep(5)
+    GoForth()
+    time.sleep(5)
+    DisableDrive()
+    return
+
+def test2():
+    initialize()
+    GoForth()
+    time.sleep(20)
+    DisableDrive()
+    return
+
+test2()

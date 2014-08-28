@@ -782,9 +782,9 @@ seconds_per_email=1200, chopper_off=False, presearch_LOuA=True
             RemainingTime = (ElapsedTime/(param_index))*(list_len-(param_index+1))
             if verboseTop:
                 r_hours = numpy.floor(RemainingTime/3600)
-                r_secs  = numpy.mod(RemainingTime,3600)
-                r_mins  = numpy.floor(RemainingTime/60)
-                r_secs  = numpy.mod(RemainingTime,60)
+                r_secs  = numpy.mod(RemainingTime, 3600)
+                r_mins  = numpy.floor(r_secs/60)
+                r_secs  = numpy.mod(r_secs, 60)
                 r_str   = str('%02.f' % r_hours)+' hrs  '+str('%02.f' % r_mins)\
                           + ' mins  '+str('%02.f' % r_secs)+' secs  is the estimated remaining time \n '
                 print "estimated time remaining: " + r_str
@@ -802,16 +802,16 @@ seconds_per_email=1200, chopper_off=False, presearch_LOuA=True
     
             if EmailTrigger:
                 e_hours = numpy.floor(ElapsedTime/3600)
-                e_secs  = numpy.mod(ElapsedTime,3600)
+                e_secs  = numpy.mod(ElapsedTime, 3600)
                 e_mins  = numpy.floor(e_secs/60)
-                e_secs  = numpy.mod(ElapsedTime,60)        
+                e_secs  = numpy.mod(ElapsedTime, 60)
                 e_str   = str('%02.f' % e_hours)+' hrs  '+str('%02.f' % e_mins)\
                 +' mins  '+str('%02.f' % e_secs)+' secs  is the elapsed time \n'
                 
                 r_hours = numpy.floor(RemainingTime/3600)
-                r_secs  = numpy.mod(RemainingTime,3600)
+                r_secs  = numpy.mod(RemainingTime, 3600)
                 r_mins  = numpy.floor(r_secs/60)
-                r_secs  = numpy.mod(RemainingTime,60)
+                r_secs  = numpy.mod(RemainingTime, 60)
                 r_str   = str('%02.f' % r_hours)+' hrs  '+str('%02.f' % r_mins)\
                 +' mins  '+str('%02.f' % r_secs)+' secs  is the estimated \
                 remaining time \n '
