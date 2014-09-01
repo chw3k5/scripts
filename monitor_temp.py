@@ -1,5 +1,5 @@
 # This script was written by Hamdi Mani, and then reworked by Caleb Wheeler,
-# Caleb left some things in because he didn't know what they did or how they 
+# Caleb left some thing in because he didn't know what they did or how they 
 # were controlled. Sorry in advance.
 #
 # I had to install stuff to make USB to Serial stuff work on my mac
@@ -28,28 +28,34 @@ clearall()
 import serial, signal, time, os, sys, atpy, numpy, matplotlib
 from matplotlib import pyplot as plt
 from email_sender   import email_caleb, email_groppi, text_caleb
-matplotlib.rc('text', usetex=True)
+
 ###############################################################################
 # User  settings
 ###############################################################################
+platform = sys.platform
+
 serial_port = ''
-test_serial_port = '/dev/cu.usbserial-000032FD'
-if os.path.lexists(test_serial_port):
-    serial_port = test_serial_port
-else:
-    test_serial_port = '/dev/cu.usbserial-000012FD'
+
+if platform == 'win32':
+    serial_port = 'COM3'
+elif platform == 'darwin':
+    test_serial_port = '/dev/cu.usbserial-000032FD'
     if os.path.lexists(test_serial_port):
         serial_port = test_serial_port
     else:
-        test_serial_port = '/dev/cu.usbserial-002013FD'
+        test_serial_port = '/dev/cu.usbserial-000012FD'
         if os.path.lexists(test_serial_port):
             serial_port = test_serial_port
         else:
-            test_serial_port = '/dev/cu.usbserial-002014FA'
+            test_serial_port = '/dev/cu.usbserial-002013FD'
             if os.path.lexists(test_serial_port):
                 serial_port = test_serial_port
+            else:
+                test_serial_port = '/dev/cu.usbserial-002014FA'
+                if os.path.lexists(test_serial_port):
+                    serial_port = test_serial_port
 if serial_port == '':
-    print 'The serial device that you are trying to use in monitor_temp.py was found under the expected paths.'
+    print 'The serial device that you are trying to use in monitor_temp.py was Not found under the expected paths.'
     print "check the device paths with 'ls /dev/cu*' and make sure the device is plugged." 
     print "When adding new device locations they will need to be added to this script"
     print 'killing the script'
@@ -57,22 +63,26 @@ if serial_port == '':
     
 verbose = True
 # Data Folder
-folder ='/Users/chw3k5/Documents/Grad_School/Kappa/temperatureData/'
+if platform == 'win32':
+    folder = 'C:\\Users\\MtDewar\\Documents\\Kappa\\temperatureData\\'
+elif platform == 'darwin':
+    folder ='/Users/chw3k5/Documents/Grad_School/Kappa/temperatureData/'
 #Date File Name
-filename = 'temperatures.csv'
+filename = 'temperatures5.csv'
 
-max_count = 3 # in loops (set to -1 to set to infinity)
+max_count = 5 # in loops (set to -1 to set to infinity)
 max_time  = 60 # in seconds (set to -1 to set to infinity)
 
-monitor_time  = 7*24*60*60 # in seconds (This is the total time that is scrip will monitor temperatures from the lakeshore)
-monitor_sleep = 30*60   # in seconds
+monitor_time  = 3*7*24*60*60 # in seconds (This is the total time that is scrip will monitor temperatures from the lakeshore)
+monitor_sleep = 5*60   # in seconds
 
 Nsecs        =  24*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
 
 PeriodicEmail = True
-seconds_per_email = 8*60*60 #12*60*60 # in seconds
+seconds_per_email = 9*60*60 #12*60*60 # in seconds
 
-alarm_tempurature = 4.32 # in Kelvin
+high_alarm_temperature = 4.3 # in Kelvin
+low_alarm_temperature  = 0 # in Kelvin
 
 meas_period      = 7.0 # in seconds
 rest_time        = 0.5 # in seconds
@@ -80,20 +90,20 @@ num_of_temp2read = 6   #
 sleep_per_meas   = meas_period - 2*rest_time*num_of_temp2read
 if sleep_per_meas <= 0:
     sleep_per_meas = 0
-    print 'Warning: measurment period, ' + str(meas_period) +' ,is less than the time needed measure ' + str(num_of_temp2read) + ' tempertures'
+    print 'Warning: measurement period, ' + str(meas_period) +' ,is less than the time needed measure ' + str(num_of_temp2read) + ' tempertures'
     print 'with a total rest time of ' + str(rest_time*2) + ' equal to 2 times the rest_time=' + str(rest_time)
-    print 'Measuring temperture and fast as the other parameters allow, see monitor_temp.py to change parameters'
+    print 'Measuring temperature and fast as the other parameters allow, see monitor_temp.py to change parameters'
 testing = False
 
 
 ###############################################################################
-###### Start the giant while loop that periodically measures tempurature ######
+###### Start the giant while loop that periodically measures temperature ######
 ###############################################################################
 alarm = False
 monitoring = True
 start_monitor_time = time.time()
 Email_time = start_monitor_time
-EmailTrigger = False
+EmailTrigger = True
 while monitoring:
     current_time = time.time()
     if monitor_time < current_time - start_monitor_time:
@@ -155,27 +165,14 @@ while monitoring:
             return temp
             
         # turn all of this into a function
-        def checkTemps():    
-            
-            #start new temporary file
-            writefile=open(folder + 'temporary.csv' ,'w')
-            line2write = "time,temp2,temp3,temp4,temp5,temp6,temp7"
-            writefile.write(line2write + '\n')
-            
-            # find out if the final file has already be created, if so read in all that data and write it to the temporary file
-            if os.path.lexists(folder + filename):
-                writefile=open(folder + 'temporary.csv' ,'w')
-                line2write = "time,temp2,temp3,temp4,temp5,temp6,temp7"
+        def checkTemps():
+            # Open and create the file if necessary
+            if os.path.lexists(folder+filename):
+                writefile=open(folder+filename, 'a')
+            else:
+                writefile=open(folder+filename, 'w')
+                line2write = "time,temp2,temp3,temp4"
                 writefile.write(line2write + '\n')
-                
-                # read in the old data
-                readfile=open(folder + filename ,'r')
-                # I do this twice to skip the header
-                aline = readfile.readline()
-                aline = readfile.readline()
-                while aline:
-                    writefile.write(aline)
-                    aline = readfile.readline()            
             ###############################################################################
             # Read Temperatures and append them to the data file
             ###############################################################################
@@ -189,14 +186,11 @@ while monitoring:
                     temp2 = get_temp(2)
                     temp3 = get_temp(3)
                     temp4 = get_temp(4)
-                    temp5 = get_temp(5)
-                    temp6 = get_temp(6)
-                    temp7 = get_temp(7)
             
                     time.sleep(sleep_per_meas)
-                    #print "%s  %s   %f %f %f"%(time.time(),time.strftime("%a, %d %b %Y %H:%M:%S "),temp2, temp3, temp4) #,pressure)
-                    #writefile.write("%s %s  %f %f %f \n"%(time.time(),time.strftime("%a, %d %b %Y %H:%M:%S "),temp2,temp3,temp4)) #,pressure))
-                    line2write = str(time.time()) + ',' + str(temp2) + ',' + str(temp3) + ',' + str(temp4) + ',' + str(temp5) + ',' + str(temp6) + ',' + str(temp7)
+
+                    line2write = str(time.time()) + ',' + str(temp2) + ',' + str(temp3) + ',' + str(temp4) \
+
                     if verbose:
                         print line2write
                     writefile.write(line2write + '\n')
@@ -215,7 +209,6 @@ while monitoring:
                         #terminate()
                         finished = True
             writefile.close()
-            os.rename(folder + 'temporary.csv', folder + filename)
             if h.interrupted == False:
                 terminate()
             return
@@ -223,15 +216,12 @@ while monitoring:
         ### now the definitions are over, the fun starts now
         checkTemps()
         Nhours = float(Nsecs)/3600.0
-        data = atpy.Table(folder + filename, type="ascii", delimiter=",")
-        Ttime  = data.time
+        data  = atpy.Table(folder + filename, type="ascii", delimiter=",")
+        Ttime = data.time
         temp2 = data.temp2
         temp3 = data.temp3
         temp4 = data.temp4
-        temp5 = data.temp5
-        temp6 = data.temp6
-        temp7 = data.temp7
-        
+
         # cut data to the last Nsecs
         start_last_Nsecs = 0
         current_time = time.time()
@@ -247,8 +237,7 @@ while monitoring:
         totalhours = float(Ttime[len(Ttime)-1])
         # get the time of the last Necs and set that value to zero for those plots
         Time_Nsecs = Ttime[start_last_Nsecs:] - Ttime[start_last_Nsecs]
-        
-        
+
         temp2_mean    = numpy.mean(temp2)
         Nsecs_mean2   = numpy.mean(temp2[start_last_Nsecs:])
         temp2_std     = numpy.std(temp2)
@@ -266,26 +255,11 @@ while monitoring:
         temp4_std     = numpy.std(temp4)
         Nsecs_std4    = numpy.std(temp4)
         current_temp4 = temp4[len(temp4)-1]
+
         
-        temp5_mean    = numpy.mean(temp5)
-        Nsecs_mean5   = numpy.mean(temp5[start_last_Nsecs:])
-        temp5_std     = numpy.std(temp5)
-        Nsecs_std5    = numpy.std(temp5)
-        current_temp5 = temp5[len(temp5)-1]
-        
-        temp6_mean    = numpy.mean(temp6)
-        Nsecs_mean6   = numpy.mean(temp6[start_last_Nsecs:])
-        temp6_std     = numpy.std(temp6)
-        Nsecs_std6    = numpy.std(temp6)
-        current_temp6 = temp6[len(temp6)-1]
-        
-        temp7_mean    = numpy.mean(temp7)
-        Nsecs_mean7   = numpy.mean(temp7[start_last_Nsecs:])
-        temp7_std     = numpy.std(temp7)
-        Nsecs_std7    = numpy.std(temp7)
-        current_temp7 = temp7[len(temp7)-1]
-        
-        if alarm_tempurature <= current_temp4:
+        if high_alarm_temperature <= current_temp4:
+            alarm = True
+        if current_temp4 < low_alarm_temperature:
             alarm = True
         else:
             alarm = False
@@ -302,25 +276,16 @@ while monitoring:
             
             alarm_body_text = ''
             alarm_body_text = alarm_body_text + "RECEIVER TEMP = " + str('%2.3f' % current_temp4) + "K\nlast " 
-            alarm_body_text = alarm_body_text + str('%2.2f' % Nhours) +" hours (mean, std) = (" 
-            alarm_body_text = alarm_body_text + str('%2.3f' % Nsecs_mean4) + 'K, ' + str('%2.3f' % Nsecs_std4) 
-            alarm_body_text = alarm_body_text + "K)\nall measurements " + str('%3.2f' % totalhours) 
-            alarm_body_text = alarm_body_text + " hours (mean, std) = (" + str('%2.3f' % temp4_mean) 
-            alarm_body_text = alarm_body_text + 'K, ' + str('%2.3f' % temp4_std) + "K)\n\n" 
-            
-            alarm_body_text = alarm_body_text + "INNER SHEILD = " + str('%2.3f' % current_temp2) + "K\nlast " 
-            alarm_body_text = alarm_body_text + str('%2.2f' % Nhours) +" hours (mean, std) = (" 
-            alarm_body_text = alarm_body_text + str('%2.3f' % Nsecs_mean2) + 'K, ' + str('%2.3f' % Nsecs_std2) 
-            alarm_body_text = alarm_body_text + "K)\nall measurements " + str('%3.2f' % totalhours) 
-            alarm_body_text = alarm_body_text + " hours (mean, std) = (" + str('%2.3f' % temp2_mean) 
-            alarm_body_text = alarm_body_text + 'K, ' + str('%2.3f' % temp2_std) + "K)\n\n" 
-            
-            alarm_body_text = alarm_body_text + "OUTER SHEILD = " + str('%2.3f' % current_temp3) + "K\nlast " 
-            alarm_body_text = alarm_body_text + str('%2.2f' % Nhours) +" hours (mean, std) = (" 
-            alarm_body_text = alarm_body_text + str('%2.3f' % Nsecs_mean3) + 'K, ' + str('%2.3f' % Nsecs_std3) 
-            alarm_body_text = alarm_body_text + "K)\nall measurements " + str('%3.2f' % totalhours) 
-            alarm_body_text = alarm_body_text + " hours (mean, std) = (" + str('%2.3f' % temp3_mean) 
-            alarm_body_text = alarm_body_text + 'K, ' + str('%2.3f' % temp3_std) + "K)\n\n" 
+            + str('%2.2f' % Nhours) + " hours (mean, std) = (" + str('%2.3f' % Nsecs_mean4) + 'K, ' + str('%2.3f' % Nsecs_std4) + "K)\n"
+            + "all measurements " + str('%3.2f' % totalhours) + " hours (mean, std) = (" + str('%2.3f' % temp4_mean) 
+            + 'K, ' + str('%2.3f' % temp4_std) + "K)\n\n" 
+            + "INNER SHIELD = " + str('%2.3f' % current_temp2) + "K\nlast " 
+            + str('%2.2f' % Nhours) +" hours (mean, std) = (" + str('%2.3f' % Nsecs_mean2) + 'K, ' + str('%2.3f' % Nsecs_std2) 
+            + "K)\nall measurements " + str('%3.2f' % totalhours) + " hours (mean, std) = (" + str('%2.3f' % temp2_mean) 
+            + 'K, ' + str('%2.3f' % temp2_std) + "K)\n\n" 
+            + "OUTER SHIELD = " + str('%2.3f' % current_temp3) + "K\nlast " + str('%2.2f' % Nhours) +" hours (mean, std) = (" 
+            + str('%2.3f' % Nsecs_mean3) + 'K, ' + str('%2.3f' % Nsecs_std3) + "K)\nall measurements " + str('%3.2f' % totalhours) 
+            + " hours (mean, std) = (" + str('%2.3f' % temp3_mean) + 'K, ' + str('%2.3f' % temp3_std) + "K)\n\n" 
             
             email_caleb(alarm_subject, alarm_body_text)
             text_caleb(alarm_subject)
@@ -336,14 +301,14 @@ while monitoring:
                 body_text = body_text + " hours (mean, std) = (" + str('%2.3f' % temp4_mean) 
                 body_text = body_text + 'K, ' + str('%2.3f' % temp4_std) + "K)\n\n" 
             
-                body_text = body_text + "Inner sheild = " + str('%2.3f' % current_temp2) + "K\nlast " 
+                body_text = body_text + "Inner shield = " + str('%2.3f' % current_temp2) + "K\nlast " 
                 body_text = body_text + str('%2.2f' % Nhours) +" hours (mean, std) = (" 
                 body_text = body_text + str('%2.3f' % Nsecs_mean2) + 'K, ' + str('%2.3f' % Nsecs_std2) 
                 body_text = body_text + "K)\nall measurements " + str('%3.2f' % totalhours) 
                 body_text = body_text + " hours (mean, std) = (" + str('%2.3f' % temp2_mean) 
                 body_text = body_text + 'K, ' + str('%2.3f' % temp2_std) + "K)\n\n" 
                 
-                body_text = body_text + "Outer sheild = " + str('%2.3f' % current_temp3) + "K\nlast " 
+                body_text = body_text + "Outer shield = " + str('%2.3f' % current_temp3) + "K\nlast " 
                 body_text = body_text + str('%2.2f' % Nhours) +" hours (mean, std) = (" 
                 body_text = body_text + str('%2.3f' % Nsecs_mean3) + 'K, ' + str('%2.3f' % Nsecs_std3) 
                 body_text = body_text + "K)\nall measurements " + str('%3.2f' % totalhours) 
@@ -417,46 +382,6 @@ while monitoring:
         ax1.set_ylabel('Temperature (K)')
         ax1.plot(Time_Nsecs, temp4[start_last_Nsecs:], color=plotcolor, linewidth=3)
         plt.savefig(folder + str(Nsecs) +"secs_receiver.png")
-        
-        # Hamdi's data, all the data
-        plt.clf()
-        matplotlib.rcParams['legend.fontsize'] = 10.0
-        fig, ax1 = plt.subplots()
-        
-        plotcolor = "blue"
-        ax1.plot(Ttime, temp5, color=plotcolor, linewidth=3)
-        line1 = plt.Line2D(range(10), range(10), color=plotcolor)
-        plotcolor = "green"
-        ax1.plot(Ttime, temp6, color=plotcolor, linewidth=3)
-        line2 = plt.Line2D(range(10), range(10), color=plotcolor)
-        plotcolor = "red"
-        ax1.plot(Ttime, temp7 , color=plotcolor, linewidth=3)
-        line3 = plt.Line2D(range(10), range(10), color=plotcolor)
-        
-        ax1.set_xlabel('hours since start')
-        ax1.set_ylabel('Temperature (K)')
-        plt.legend((line1,line2, line3),('temp 5','temp 6', 'temp 7'),numpoints=1, loc=2)
-        plt.savefig(folder + "Alltempdata_Hamdi.png")
-        
-        # Hamdi's data, last Nsecs
-        plt.clf()
-        matplotlib.rcParams['legend.fontsize'] = 10.0
-        fig, ax1 = plt.subplots()
-        
-        plotcolor = "blue"
-        ax1.plot(Time_Nsecs, temp5[start_last_Nsecs:], color=plotcolor, linewidth=3)
-        line1 = plt.Line2D(range(10), range(10), color=plotcolor)
-        plotcolor = "green"
-        ax1.plot(Time_Nsecs, temp6[start_last_Nsecs:], color=plotcolor, linewidth=3)
-        line2 = plt.Line2D(range(10), range(10), color=plotcolor)
-        plotcolor = "red"
-        ax1.plot(Time_Nsecs, temp7[start_last_Nsecs:] , color=plotcolor, linewidth=3)
-        line3 = plt.Line2D(range(10), range(10), color=plotcolor)
-        
-        ax1.set_xlabel('The last ' + str('%2.2f' % Nhours) + ' hours')
-        ax1.set_ylabel('Temperature (K)')
-        plt.legend((line1,line2, line3),('receiver','Inner shield', 'Outer shield'),numpoints=1, loc=2)
-        plt.savefig(folder + str(Nsecs) +"secs_Hamdi.png")
         
         plt.close("all")
         ### end plotting

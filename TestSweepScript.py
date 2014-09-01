@@ -23,7 +23,7 @@ elif platform == 'darwin':
     
 from BiasSweep2 import BiasSweep
 BiasSweep(datadir, verbose=False, verboseTop=True, careful=False,
-sweepNstart=0, Ynum=0, testmode=False,
+sweepNstart=74, Ynum=0, testmode=False,
 do_fastsweep=True, do_unpumpedsweep=True, fastsweep_feedback=False,
 SweepStart_feedTrue=65000, SweepStop_feedTrue=52000, SweepStep_feedTrue=100,
 SweepStart_feedFalse=65100, SweepStop_feedFalse=57000,
@@ -43,14 +43,14 @@ LOfreq_start=660, LOfreq_stop=660, LOfreq_step=1,
 IFband_start=1.42, IFband_stop=1.42, IFband_step=0.10,
 do_magisweep=False, mag_meas=10,
 magisweep_start=32, magisweep_stop=32, magisweep_step=1,
-magpotsweep_start=0, magpotsweep_stop=65000, magpotsweep_step=-500,
+magpotsweep_start=37000, magpotsweep_stop=65000, magpotsweep_step=-500,
 do_sisisweep=False, UCA_set_pot=56800, UCA_meas=10,
 sisisweep_start=12, sisisweep_stop=12, sisisweep_step=1,
 sisi_magpot=103323, sisi_cheat_num=56666,
 UCAsweep_min=0.00, UCAsweep_max=0.00, UCAsweep_step=0.05,
 sweepShape="rectangular",
-FinishedEmail=False, FiveMinEmail=False, PeriodicEmail=False,
-seconds_per_email=1200, chopper_off=True, presearch_LOuA=False)
+FinishedEmail=True, FiveMinEmail=True, PeriodicEmail=True,
+seconds_per_email=10000, chopper_off=True, presearch_LOuA=False)
 
 from datapro    import SweepDataPro    
 SweepDataPro(datadir, verbose=True, search_4Sweeps=True, search_str='Y',

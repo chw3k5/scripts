@@ -329,15 +329,15 @@ def initialize():
         # Set drive resolution
         stepper.write(b'DRES25000\n')
         time.sleep(SleepTime)
+        # Enable scaling
+        stepper.write(b'SCALE1\n')        
+        time.sleep(SleepTime)
         # Set scaling
         stepper.write(b'SCLD25000\n')        
         time.sleep(SleepTime)
         stepper.write(b'SCLV25000\n')        
         time.sleep(SleepTime)
         stepper.write(b'SCLA25000\n')        
-        time.sleep(SleepTime)
-        # Enable scaling
-        stepper.write(b'SCALE1\n')        
         time.sleep(SleepTime)
         # Define axis as stepper
         stepper.write(b'AXDEF0\n')
@@ -493,5 +493,17 @@ def test2():
     time.sleep(20)
     DisableDrive()
     return
+
+def reader():
+    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1, timeout=2)
+    st.write(b'STARTP\n')
+    char = 1
+    string = ''
+    while char:
+        char = st.read()
+        string = string + char
+        print string
+    return
+
 
 test2()

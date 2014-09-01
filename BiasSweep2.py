@@ -427,14 +427,12 @@ seconds_per_email=1200, chopper_off=False, presearch_LOuA=True
         # Set the LO frequency (if needed)
         if not (LOfreq_current == LOfreq_last):
             setmag_highlow(sisi_magpot) # set the Emagnet to a known position
-            magpot_current = sisi_magpot
             setSIS_only(UCA_set_pot, sisV_feedback, verbose, careful)
             setfreq(LOfreq_current)
             mV_sis_temp, uA_sis_temp, sisPot_temp, UCA_current = setLOI(sisi_current, verbose, careful)
             setmag_highlow(magpot_current)
             setSIS_only(sisPot_current, sisV_feedback, verbose, careful)
             LOfreq_last = LOfreq_current
-            print "Here"
         
         # Set the SIS bias voltage by setting the pot position (if needed)
         if not (sisPot_current == sisPot_last):
@@ -636,23 +634,6 @@ seconds_per_email=1200, chopper_off=False, presearch_LOuA=True
                   video_band=spec_video_band, resol_band=spec_resol_band, attenu=spec_attenu)
             else:
                 LJ_streamTP(TP_filename, TPSampleFrequency, TPSampleTime, verbose)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         else:
             print "testmode on, pretending to take SIS bias data and the TP measurement"
             n = open(TP_filename, 'w')
