@@ -137,7 +137,7 @@ IFband_start=1.42, IFband_stop=1.42, IFband_step=0.10,
 do_magisweep=True, mag_meas=10,
 magisweep_start=32, magisweep_stop=32, magisweep_step=1,
 magpotsweep_start=40000, magpotsweep_stop=40000, magpotsweep_step=5000,
-do_sisisweep=True, UCA_set_pot=56800, UCA_meas=10,
+do_sisisweep=True, sisi_set_pot=56800, UCA_meas=10,
 sisisweep_start=12, sisisweep_stop=12, sisisweep_step=1,
 sisi_magpot=103323, sisi_cheat_num=56666,
 UCAsweep_min=3.45, UCAsweep_max=3.45, UCAsweep_step=0.05,
@@ -232,7 +232,7 @@ seconds_per_email=1200, chopper_off=False, presearch_LOuA=True
         sisi_list = makeLists(sisisweep_start, sisisweep_stop, sisisweep_step)
         UCA_list  = []
         setmag_highlow(sisi_magpot) # set the Emagnet to a known position
-        setSIS_only(UCA_set_pot, sisV_feedback, verbose, careful) # set the SIS bias to a known position
+        setSIS_only(sisi_set_pot, sisV_feedback, verbose, careful) # set the SIS bias to a known position
         for sisi in sisi_list:
             mV_sis_temp, uA_sis_temp, pot_sis_temp, UCA_val_temp = setLOI(sisi, verbose, careful)
             UCA_list.append(UCA_val_temp)
@@ -416,7 +416,7 @@ seconds_per_email=1200, chopper_off=False, presearch_LOuA=True
                 if LOfreq_current == LOfreq_last:
                     if not testmode:    
                         setmag_highlow(sisi_magpot) # set the Emagnet to a known position
-                        setSIS_only(UCA_set_pot, sisV_feedback, verbose, careful)
+                        setSIS_only(sisi_set_pot, sisV_feedback, verbose, careful)
                         mV_sis_temp, uA_sis_temp, sisPot_temp, UCA_current = setLOI(sisi_current, verbose, careful)
                         setmag_highlow(magpot_current)
                         setSIS_only(sisPot_current, sisV_feedback, verbose, careful)
@@ -427,7 +427,7 @@ seconds_per_email=1200, chopper_off=False, presearch_LOuA=True
         # Set the LO frequency (if needed)
         if not (LOfreq_current == LOfreq_last):
             setmag_highlow(sisi_magpot) # set the Emagnet to a known position
-            setSIS_only(UCA_set_pot, sisV_feedback, verbose, careful)
+            setSIS_only(sisi_set_pot, sisV_feedback, verbose, careful)
             setfreq(LOfreq_current)
             mV_sis_temp, uA_sis_temp, sisPot_temp, UCA_current = setLOI(sisi_current, verbose, careful)
             setmag_highlow(magpot_current)
@@ -548,7 +548,7 @@ seconds_per_email=1200, chopper_off=False, presearch_LOuA=True
             # measure the LO power
             # set the bias system to measure relative LO power
             setmag_highlow(sisi_magpot)
-            setSIS_only(UCA_set_pot, sisV_feedback, verbose, careful)
+            setSIS_only(sisi_set_pot, sisV_feedback, verbose, careful)
             mV_LO_list     = []
             uA_LO_list     = []
             tp_LO_list     = []
@@ -556,7 +556,7 @@ seconds_per_email=1200, chopper_off=False, presearch_LOuA=True
             time_stamp_LO_list = []
             if not testmode:
                 for meas_index in range(UCA_meas):
-                    mV_sis, uA_sis, tp_sis, pot_sis, time_stamp = measSIS_TP(UCA_set_pot, sisV_feedback, verbose, careful)
+                    mV_sis, uA_sis, tp_sis, pot_sis, time_stamp = measSIS_TP(sisi_set_pot, sisV_feedback, verbose, careful)
                     mV_LO_list.append(mV_sis)
                     uA_LO_list.append(uA_sis)
                     tp_LO_list.append(tp_sis)
@@ -676,17 +676,17 @@ seconds_per_email=1200, chopper_off=False, presearch_LOuA=True
             if do_magisweep:
                 params.write('magisweep,True\n')
                 params.write('magiset,' +  str(magiset) + '\n')
-                params.write('magpot,'  +  str(magpot_current)       + '\n')
             else:
                 params.write('magisweep,False\n')
-                params.write('magpot,' +  str(magpot_current) + '\n')
+            params.write('magpot,' +  str(magpot_current) + '\n')
             if do_sisisweep:
                 params.write('sisisweep,True\n')
                 params.write('sisiset,'  + str(sisiset) + '\n')
-                params.write('UCA_volt,' + str(UCA_current)   + '\n')
             else:
                 params.write('sisisweep,False\n')
-                params.write('UCA_volt,' + str(UCA_current) + '\n')
+            params.write('UCA_volt,' + str(UCA_current) + '\n')
+            params.write('sisi_set_pot,' + str(sisi_set_pot))
+            params.write('sisi_magpot,' + str(sisi_magpot))
             params.write('LOfreq,' + str(LOfreq_current) + '\n')
             params.write('IFband,' + str(IFband_current) + '\n')
             params.close()

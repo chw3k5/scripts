@@ -61,7 +61,7 @@ sisPot_feedFalse_stop  = 57000 # default is 57000 for feedback off
 sisPot_feedFalse_step  = 100   # default is 100
 
 # 0 changes the most often, the higher the axis the less common switching becomes
-Kaxis      = 0 # default = 0, however for stablity reasons, this should be set to 0 always
+Kaxis      = 0 # default = 0, however for stability reasons, this should be set to 0 always
 sisVaxis   = 1 # default = 1
 magaxis    = 2 # default = 2
 LOpowaxis  = 3 # default = 3
@@ -79,7 +79,7 @@ IFband_stop  = 1.42 # default is 1.42 GHz
 IFband_step  = 0.10 # default is 0.10 GHz
 
 do_magisweep       = False # default is True
-mag_meas           = 10 # default is 10 measurments (measure the magnet at the start of a new bias sweep)
+mag_meas           = 10 # default is 10 measurements (measure the magnet at the start of a new bias sweep)
 
 magisweep_start    = 25 # default is 32 mA, -42 in min 
 magisweep_stop     = 40 # default is 32 mA,  42 is max
@@ -91,8 +91,8 @@ magpotsweep_step   =  5000 # default is  5000 potentiometer position
 
 
 do_sisisweep       = False  # default is True
-UCA_set_pot        = 56800 # default is 56800 potentiometer position
-UCA_meas           =    10 # default is 10 measurments (measure the LO power at the start of a new bias sweep)
+sisi_set_pot        = 56800 # default is 56800 potentiometer position
+UCA_meas           =    10 # default is 10 measurements (measure the LO power at the start of a new bias sweep)
 
 sisisweep_start =  4 # default is 12 uA
 sisisweep_stop  = 14 # default is 12 uA
@@ -118,7 +118,6 @@ FiveMinEmail      = True # default is False
 PeriodicEmail     = True # default is False
 seconds_per_email = 20*60 # default is 20 mins or 20*60=1200 seconds (60 s = 1 min, 3600 s = 1 hour ) 
 
-test = BiasSweep(datadir=datadir, K_list=K_list, testmode=False, Kaxis=0, \
-sisVaxis=1, magaxis=2, LOpowaxis=3, LOfreqaxis=4, IFbandaxis=5, \
-sisPot_feedTrue_start=65000, sisPot_feedTrue_stop=56000, sisPot_feedTrue_step=2000,
-magpotsweep_start=40000, magpotsweep_stop=30000, magpotsweep_step=5000)
+test = BiasSweep(datadir=datadir, K_list=K_list, testmode=False, Kaxis=0, sisVaxis=1, magaxis=2, LOpowaxis=3,
+                 LOfreqaxis=4, IFbandaxis=5, sisPot_feedTrue_start=65000, sisPot_feedTrue_stop=56000,
+                 sisPot_feedTrue_step=2000, magpotsweep_start=40000, magpotsweep_stop=30000, magpotsweep_step=5000)

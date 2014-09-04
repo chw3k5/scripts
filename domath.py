@@ -135,8 +135,8 @@ def conv(data, mesh, min_cdf, sigma, verbose):
     status = False
     if ((not verbose == 'Y') or (not verbose == 'T') or (verbose == True)):
         print 'Doing convolution of data cdf = ' + str(min_cdf) + '  sigma = ' +str(sigma)
-    sigmaSteps=math.ceil(sigma/mesh) # unitless, rounded up to nearest interger
-    # Normal Kernal Caluation
+    sigmaSteps=math.ceil(sigma/mesh) # unitless, rounded up to nearest integer
+    # Normal Kernel Calculation
     n=0
     finished=False
     mV_len=len(data[:,0])

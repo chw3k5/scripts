@@ -116,7 +116,7 @@ def getspec(filename, verbose=False, linear_sc=True, freq_start=0, freq_stop=6, 
     trace_list = raw_trace.rsplit(',')
     n = open(filename, 'w')
     if linear_sc:
-        n.write('GHz,units\n')
+        n.write('GHz,pwr\n')
     else:
         n.write('GHz,dB\n')
     for freq_index in range(len(freq_list)):

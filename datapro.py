@@ -9,8 +9,8 @@ def ProParmsFiles(dirnames, proparamsfile, verbose):
     if os.path.isfile(paramsfile):
         params_found  = True
         # load the params file for the data
-        K_val, magisweep, magiset, magpot, sisisweep, sisiset, UCA_volt,       \
-        LOfreq, IFband = getparams(paramsfile)
+        K_val, magisweep, magiset, magpot, sisisweep, sisiset, UCA_volt, sisi_set_pot, sisi_magpot, LOfreq, IFband \
+            = getparams(paramsfile)
     
     ##### Processing Standard SIS bias measurments ######
     standSISdatafile = dirnames + 'sisdata.csv'
@@ -71,7 +71,7 @@ def ProParmsFiles(dirnames, proparamsfile, verbose):
     
     return params_found, standSISdata_found, standmagdata_found
 
-def ProFastIV(fastIV_filename,  prodataname):
+def ProFastIV(fastIV_filename,  prodataname, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose):
     from profunc import get_fastIV, ProcessMatrix
     import numpy, os
     fastIV_found = False
@@ -87,8 +87,8 @@ def ProFastIV(fastIV_filename,  prodataname):
         fast_matrix[:,3] = pot_fastIV
         # process the matrix
         fast_matrix, fast_raw_matrix, fast_mono_matrix, fast_regrid_matrix,    \
-        fast_conv_matrix = ProcessMatrix(fast_matrix, mono_switcher,           \
-        do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose)
+        fast_conv_matrix = ProcessMatrix(fast_matrix, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf,
+                                         sigma, verbose)
         # put the information back into 1-D arrays
         mV_fast  = fast_matrix[:,0]
         uA_fast  = fast_matrix[:,1]
@@ -104,11 +104,12 @@ def ProFastIV(fastIV_filename,  prodataname):
         n.close()
     return fastIV_found
 
-def AstroDataPro(datadir, prodataname):
+def AstroDataPro(datadir, prodataname, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose):
+    import sys
     from sys import platform
     import glob, numpy
     from profunc import getSISdata, getLJdata, ProcessMatrix
-    astrosweep_found = True
+    astrosweep_found = False
     if platform == 'win32':
          sweepdir = datadir + 'sweep\\'
     elif platform == 'darwin':
@@ -129,9 +130,9 @@ def AstroDataPro(datadir, prodataname):
         sweep_time_mean = []
         for sweep_index in range(len(TP_list)):
             # read in SIS data for each sweep step
-            temp_mV, temp_uA, temp_tp, temp_pot, temp_time =                   \
-            getSISdata(sweepdir + str(sweep_index + 1) + '.csv')
-            print sweepdir + str(sweep_index + 1) + '.csv'
+            temp_mV, temp_uA, temp_tp, temp_pot, temp_time = getSISdata(sweepdir + str(sweep_index + 1) + '.csv')
+            if verbose:
+                print sweepdir + str(sweep_index + 1) + '.csv'
             sweep_pot.append(temp_pot[0])
             sweep_meas_num.append(len(temp_mV))
             sweep_mV_mean.append(numpy.mean(temp_mV))
@@ -139,8 +140,7 @@ def AstroDataPro(datadir, prodataname):
             sweep_uA_mean.append(numpy.mean(temp_uA))
             sweep_uA_std.append(numpy.std(temp_uA))
             sweep_time_mean.append(numpy.mean(temp_time))
-            temp_TP, TP_freq = getLJdata(sweepdir + "TP" +                     \
-            str(sweep_index + 1) + '.csv')
+            temp_TP, TP_freq = getLJdata(sweepdir + "TP" + str(sweep_index + 1) + '.csv')
             sweep_TP_mean.append(numpy.mean(temp_tp))
             sweep_TP_std.append(numpy.std(temp_tp))
             sweep_TP_num.append(len(temp_TP))
@@ -159,9 +159,8 @@ def AstroDataPro(datadir, prodataname):
         matrix[:,9]  = sweep_pot
         matrix[:,10] = sweep_meas_num
         # process the matrix
-        matrix, raw_matrix, mono_matrix, regrid_matrix, conv_matrix =          \
-        ProcessMatrix(matrix, mono_switcher, do_regrid,                        \
-        do_conv, regrid_mesh, min_cdf, sigma, verbose)
+        matrix, raw_matrix, mono_matrix, regrid_matrix, conv_matrix \
+            = ProcessMatrix(matrix, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose)
         # put the information back into 1-D arrays
         sweep_mV_mean   = matrix[:,0]
         sweep_mV_std    = matrix[:,1]
@@ -174,7 +173,7 @@ def AstroDataPro(datadir, prodataname):
         sweep_time_mean = matrix[:,8]
         sweep_pot       = matrix[:,9]
         sweep_meas_num  = matrix[:,10]
-        ### save the results of this calulations
+        ### save the results of this calculations
         n = open(prodataname, 'w')
         n.write('mV_mean,mV_std,uA_mean,uA_std,TP_mean,TP_std,TP_num,TP_freq,\
 time_mean,pot,meas_num\n')
@@ -191,35 +190,180 @@ time_mean,pot,meas_num\n')
             str(sweep_pot[sweep_index])       + ',' +                          \
             str(sweep_meas_num[sweep_index]) +'\n')
         n.close()
+    else:
+        print "No total Power data was found in ", datadir
+        print "Killing Script"
+        sys.exit()
+
     return astrosweep_found, sweep_mV_mean, sweep_TP_mean
 
+def GetSpecData(datadir, specdataname, do_norm=True,  norm_freq=1.42, norm_band=0.060,  mono_switcher_mV=True,
+                do_regrid_mV=True, do_conv_mV=False, regrid_mesh_mV=0.01, min_cdf_mV=0.90, sigma_mV=0.03,
+                do_freq_conv=False, min_cdf_freq=0.90, sigma_GHz=0.05, verbose=False):
+    do_renamespec = False
+    import sys
+    from sys import platform
+    import glob, numpy
+    from profunc import getSISdata, readspec, ProcessMatrix, renamespec
+    from domath import conv
+    specsweep_found = False
+    if platform == 'win32':
+         sweepdir = datadir + 'sweep\\'
+    elif platform == 'darwin':
+        sweepdir = datadir + 'sweep/'
+    spec_list = glob.glob(sweepdir + "spec*.csv")
+    if not spec_list == []:
+        specsweep_found = True
+        sweep_pot       = []
+        sweep_mV_mean   = []
+        sweep_freqs     = []
+        sweep_pwr       = []
+        for sweep_index in range(len(spec_list)):
+            # read in SIS data for each sweep step
+            biasfilename = sweepdir + str(sweep_index + 1) + '.csv'
+            specfilename = sweepdir + "spec" +str(sweep_index + 1) + '.csv'
+            temp_mV, temp_uA, temp_tp, temp_pot, temp_time = getSISdata(biasfilename)
+            if verbose:
+                print specfilename
+            sweep_pot.append(temp_pot[0])
+            sweep_mV_mean.append(numpy.mean(temp_mV))
 
-def SweepPro(datadir, proparamsfile, prodataname_fast, prodataname_unpump, prodataname_ast):
+            # this is an option I once needed to replace a bad header for the spectral data file
+            if do_renamespec:
+                renamespec(specfilename)
+
+            # read in the spectral data
+            temp_freqs, temp_pwr = readspec(specfilename)
+            # start to process the spectral data, normalize it and put it in a 2D list
+            if sweep_freqs == []:
+                sweep_freqs = temp_freqs
+                # Find normalization band indexes
+                normfreq_indexes = []
+                norm_radius = norm_band/2.0
+                freqs_out_of_band = True
+                for freq_index in range(len(sweep_freqs)):
+                    if abs(sweep_freqs[freq_index]-norm_freq) <= norm_radius:
+                        normfreq_indexes.append(freq_index)
+                        freqs_out_of_band = False
+                if freqs_out_of_band:
+                    print "No frequencies were for the center frequency of ", norm_freq, " GHz"
+                    print "for the band_with of ", norm_band, "GHz"
+                    print "In the directory ", datadir, " for sweep 1"
+                    print "Killing Script"
+                    sys.exit()
+            # make sure the frequencies of all spectra in a given sweep line up
+            elif not ((abs(sweep_freqs[0] - temp_freqs[0]) < 0.0001) and (abs(sweep_freqs[-1] - temp_freqs[-1]) < 0.0001)):
+                print "Somehow the sweep start and stop frequencies in the sweep dir ", datadir
+                print "are not the same for sweep 1 and sweep ", sweep_index
+                print "Killing script"
+                sys.exit()
+
+            # Normalization
+            if do_norm:
+                inband_spec_pwr = []
+                for norm_index in range(len(normfreq_indexes)):
+                    inband_spec_pwr.append(temp_pwr[norm_index])
+                ave_inband_spec_pwr = numpy.mean(inband_spec_pwr)
+                norm_scale = numpy.mean(temp_tp)/ave_inband_spec_pwr
+                sweep_pwr.append(temp_pwr*norm_scale)
+            else:
+                 sweep_pwr.append(temp_pwr)
+
+        ### Process the array that the spectra so the the there are regularly spaced units of mV, and convolved
+        spec_mV_array = numpy.array(sweep_pwr)
+        # put the mV data on the 2D array of pwr(mV,freq) so that it can be sorted
+        mV_len   = len(spec_mV_array[:,0])
+        freq_len = len(spec_mV_array[0,:])
+        data_matrix = numpy.zeros((mV_len,freq_len+1))
+        data_matrix[:,0]  = sweep_mV_mean
+        data_matrix[:,1:] = spec_mV_array
+
+        # Process the matrix in mV
+        data_matrix, raw_matrix, mono_matrix, regrid_matrix, conv_matrix \
+            = ProcessMatrix(data_matrix, mono_switcher_mV, do_regrid_mV, do_conv_mV, regrid_mesh_mV,
+                            min_cdf_mV, sigma_mV, verbose)
+        new_mV_list   = list(data_matrix[:,0])
+        new_mV_len    = len(new_mV_list)
+        spec_mV_array = data_matrix[:,1:]
+        ### Do a convolution of the matrix in frequency
+        if do_freq_conv:
+            spec_mV_array_transpose = numpy.matrix.transpose(spec_mV_array)
+            # put the frequency data on the 2D array of spec_mV_array_transpose so that it can be convolved in the
+            # expected format
+            data_matrix = numpy.zeros((freq_len,new_mV_len+1))
+            data_matrix[:,0]  = sweep_freqs
+            data_matrix[:,1:] = spec_mV_array_transpose
+            freq_mesh = abs(sweep_freqs[1] - sweep_freqs[0])
+            conv_matrix, status = conv(data_matrix, freq_mesh, min_cdf_freq, sigma_GHz, verbose)
+
+            # transpose the data back to maintain a constant format
+            spec_mV_array = numpy.matrix.transpose(conv_matrix[:,1:])
+
+        ### save the results in three arrays for plotting
+        #X
+        freq_pre_array = []
+        for n in range(new_mV_len):
+            freq_pre_array.append(sweep_freqs)
+        freq_array = numpy.array(freq_pre_array)
+        numpy.save(specdataname+"_freq.npy",freq_array)
+
+        #Y
+        mV_pre_array = []
+        for n in range(freq_len):
+            mV_pre_array.append(new_mV_list)
+        mV_array = numpy.matrix.transpose(numpy.array(mV_pre_array))
+        numpy.save(specdataname+"_mV.npy",mV_array)
+
+        #Z
+        numpy.save(specdataname+"_pwr.npy",spec_mV_array)
+    else:
+        if verbose:
+            print "Data from the spectrum analyser was not found"
+
+    return specsweep_found
+
+
+def SweepPro(datadir, proparamsfile, prodataname_fast, prodataname_unpump, prodataname_ast, specdataname,
+             mono_switcher_mV=True, do_regrid_mV=True, do_conv_mV=False, regrid_mesh_mV=0.01, min_cdf_mV=0.90, sigma_mV=0.03,
+             do_normspectra=False, norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90,
+             sigma_GHz=0.05,verbose=False):
+
     ###### Make the parameters file
     params_found, standSISdata_found, standmagdata_found =                     \
     ProParmsFiles(datadir, proparamsfile, verbose)
     
     ###### Processing fastIV data (data taken using the bais computer's sweep command)
     fastIV_filename = datadir + 'fastsweep.csv'
-    fastIV_found = ProFastIV(fastIV_filename,  prodataname_fast)
+    fastIV_found \
+        = ProFastIV(fastIV_filename,  prodataname_fast, mono_switcher_mV, do_regrid_mV, do_conv_mV,
+                    regrid_mesh_mV, min_cdf_mV, sigma_mV, verbose)
     
     ###### Processing unpumped IV data (data taken using the bais computer's sweep command)
     #unpumped_found
     unpumped_filename  = datadir + 'unpumpedsweep.csv'
-    unpumped_found    = ProFastIV(unpumped_filename,  prodataname_unpump)        
-    
+    unpumped_found \
+        = ProFastIV(unpumped_filename,  prodataname_unpump, mono_switcher_mV, do_regrid_mV, do_conv_mV,
+                    regrid_mesh_mV, min_cdf_mV, sigma_mV, verbose)
+
     ### get the astronomy quality sweep data for this Y sweep
-    astrosweep_found, sweep_mV_mean, sweep_TP_mean =                         \
-    AstroDataPro(datadir, prodataname_ast)
-    
-    return params_found, standSISdata_found, standmagdata_found,               \
-    fastIV_found, unpumped_found, astrosweep_found, sweep_mV_mean,            \
-    sweep_TP_mean
+    astrosweep_found, sweep_mV_mean, sweep_TP_mean \
+        = AstroDataPro(datadir, prodataname_ast, mono_switcher_mV, do_regrid_mV, do_conv_mV, regrid_mesh_mV, min_cdf_mV,
+                 sigma_mV, verbose)
+
+    ### get and process the spectra when available
+    specsweep_found \
+        = GetSpecData(datadir, specdataname, do_norm=do_normspectra, norm_freq=norm_freq, norm_band=norm_band,
+                      mono_switcher_mV=mono_switcher_mV, do_regrid_mV=do_regrid_mV, do_conv_mV=do_conv_mV,
+                      regrid_mesh_mV=regrid_mesh_mV, min_cdf_mV=min_cdf_mV, sigma_mV=sigma_mV,
+                      do_freq_conv=do_freq_conv, min_cdf_freq=min_cdf_freq, sigma_GHz=sigma_GHz, verbose=verbose)
+
+    return params_found, standSISdata_found, standmagdata_found, fastIV_found, unpumped_found, astrosweep_found, \
+           specsweep_found, sweep_mV_mean, sweep_TP_mean
 
 
-def SweepDataPro(datadir, verbose=False, search_4Sweeps=True, search_str='Y',  \
-Snums=[], mono_switcher=True, do_regrid=True, regrid_mesh=0.01,                \
-do_conv=True, sigma=0.03, min_cdf=0.95):
+def SweepDataPro(datadir, verbose=False, search_4Sweeps=True, search_str='Y', Snums=[],
+                 mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01, do_conv_mV=False, sigma_mV=0.03, min_cdf_mV=0.95,
+                 do_normspectra=False, norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90, sigma_GHz=0.05):
     import sys
     from sys import platform
     import os
@@ -282,18 +426,22 @@ do_conv=True, sigma=0.03, min_cdf=0.95):
         prodataname_fast   = prodatadir + 'fastIV.csv'
         prodataname_unpump = prodatadir + 'unpumped.csv'
         prodataname_ast    = prodatadir + 'data.csv'
+        specdataname       = prodatadir + 'specdata'
         
-        params_found, standSISdata_found, standmagdata_found,                  \
-        fastIV_found, unpumped_found, astrosweep_found,                        \
-        _sweep_mV_mean,_sweep_TP_mean = SweepPro(sweepdir,                     \
-        proparamsfile, prodataname_fast, prodataname_unpump,                   \
-        prodataname_ast)
+        params_found, standSISdata_found, standmagdata_found, fastIV_found, unpumped_found, astrosweep_found,          \
+        specsweep_found, sweep_mV_mean, sweep_TP_mean \
+            = SweepPro(sweepdir, proparamsfile, prodataname_fast, prodataname_unpump, prodataname_ast, specdataname,
+             mono_switcher_mV=mono_switcher_mV, do_regrid_mV=do_regrid_mV, do_conv_mV=do_conv_mV,
+             regrid_mesh_mV=regrid_mesh_mV, min_cdf_mV=min_cdf_mV, sigma_mV=sigma_mV,
+             do_normspectra=do_normspectra, norm_freq=norm_freq, norm_band=norm_band, do_freq_conv=do_freq_conv,
+             min_cdf_freq=min_cdf_freq, sigma_GHz=sigma_GHz,verbose=verbose)
 
     return
 
-def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y',       \
-Ynums=[], useOFFdata=False, Off_datadir='', mono_switcher=True,                \
-do_regrid=True, regrid_mesh=0.01, do_conv=True, sigma=0.03, min_cdf=0.95):
+def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[], useOFFdata=False, Off_datadir='',
+             mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01, do_conv_mV=False, sigma_mV=0.03, min_cdf_mV=0.95,
+             do_normspectra=False, norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90,
+             sigma_GHz=0.05):
     import sys
     from sys import platform
     import os
@@ -362,12 +510,15 @@ do_regrid=True, regrid_mesh=0.01, do_conv=True, sigma=0.03, min_cdf=0.95):
         hotprodataname_fast   = prodatadir + 'hotfastIV.csv'
         hotprodataname_unpump = prodatadir + 'hotunpumped.csv'
         hotprodataname_ast    = prodatadir + 'hotdata.csv'
+        hotspecdataname       = prodatadir + 'hotspecdata'
         
-        hotparams_found, hotstandSISdata_found, hotstandmagdata_found,         \
-        fastIVhot_found, hotunpumped_found, astrosweephot_found,               \
-        hot_sweep_mV_mean,hot_sweep_TP_mean = SweepPro(hotdir,                 \
-        hotproparamsfile, hotprodataname_fast, hotprodataname_unpump,          \
-        hotprodataname_ast)
+        hotparams_found, hotstandSISdata_found, hotstandmagdata_found, fastIVhot_found, hotunpumped_found, \
+        astrosweephot_found, hotspecsweep_found, hot_sweep_mV_mean,hot_sweep_TP_mean \
+            = SweepPro(hotdir, hotproparamsfile, hotprodataname_fast, hotprodataname_unpump, hotprodataname_ast,
+                       hotspecdataname, mono_switcher_mV=mono_switcher_mV, do_regrid_mV=do_regrid_mV,
+                       do_conv_mV=do_conv_mV, regrid_mesh_mV=regrid_mesh_mV, min_cdf_mV=min_cdf_mV, sigma_mV=sigma_mV,
+                       do_normspectra=do_normspectra, norm_freq=norm_freq, norm_band=norm_band,
+                       do_freq_conv=do_freq_conv,min_cdf_freq=min_cdf_freq, sigma_GHz=sigma_GHz,verbose=verbose)
         
         ####################################
         #### Start Cold data Processing ####
@@ -380,12 +531,15 @@ do_regrid=True, regrid_mesh=0.01, do_conv=True, sigma=0.03, min_cdf=0.95):
         coldprodataname_fast   = prodatadir + 'coldfastIV.csv'
         coldprodataname_unpump = prodatadir + 'coldunpumped.csv'
         coldprodataname_ast    = prodatadir + 'colddata.csv'
+        coldspecdataname       = prodatadir + 'coldspecdata'
         
-        coldparams_found, coldstandSISdata_found, coldstandmagdata_found,         \
-        fastIVcold_found, coldunpumped_found, astrosweepcold_found,               \
-        cold_sweep_mV_mean,cold_sweep_TP_mean = SweepPro(colddir,                 \
-        coldproparamsfile, coldprodataname_fast, coldprodataname_unpump,          \
-        coldprodataname_ast)
+        coldparams_found, coldstandSISdata_found, coldstandmagdata_found, fastIVcold_found, coldunpumped_found,        \
+        astrosweepcold_found, coldspecsweep_found, cold_sweep_mV_mean,cold_sweep_TP_mean                                                    \
+            = SweepPro(colddir, coldproparamsfile, coldprodataname_fast, coldprodataname_unpump, coldprodataname_ast,
+                       coldspecdataname, mono_switcher_mV=mono_switcher_mV, do_regrid_mV=do_regrid_mV,
+                       do_conv_mV=do_conv_mV, regrid_mesh_mV=regrid_mesh_mV, min_cdf_mV=min_cdf_mV, sigma_mV=sigma_mV,
+                       do_normspectra=do_normspectra, norm_freq=norm_freq, norm_band=norm_band,
+                       do_freq_conv=do_freq_conv,min_cdf_freq=min_cdf_freq, sigma_GHz=sigma_GHz,verbose=verbose)
         
         ####################################
         ###### The Yfactor calulation ######
@@ -393,8 +547,9 @@ do_regrid=True, regrid_mesh=0.01, do_conv=True, sigma=0.03, min_cdf=0.95):
         off_tp = 0 # need to fix this in the future
         if (astrosweephot_found and astrosweepcold_found):
             if verbose:
-                print "doing Y factor calulation"
-            mV_Yfactor, Yfactor, status = data2Yfactor(hot_sweep_mV_mean, cold_sweep_mV_mean, off_tp, hot_sweep_TP_mean, cold_sweep_TP_mean, regrid_mesh, verbose)
+                print "doing Y factor calculation"
+            mV_Yfactor, Yfactor, status = data2Yfactor(hot_sweep_mV_mean, cold_sweep_mV_mean, off_tp,
+                                                       hot_sweep_TP_mean, cold_sweep_TP_mean, regrid_mesh, verbose)
             # save the results of the Y factor calculation 
             o = open(prodatadir + 'Ydata.csv', 'w')
             o.write('mV_Yfactor,Yfactor\n')
@@ -418,31 +573,31 @@ setnum  = 3
 
 if platform == 'win32':
     datadir = "C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\set" +str(setnum) + "\\"
-    #datadir = "C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\test\\"
+    #datadir = "C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\warmmag\\"
 elif platform == 'darwin':    
-    #datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/test3/'
-    datadir     = '/Users/chw3k5/Dropbox/kappa_data/NA38/IVsweep/set' + str(setnum) + '/'
+    datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/warmmag/'
+    #datadir     = '/Users/chw3k5/Dropbox/kappa_data/NA38/IVsweep/set' + str(setnum) + '/'
 
-
-search_4Ynums = True # (the default is True)
-search_str = 'Y' # default is 'Y'
-Ynums=['Y0001'] # make a list array seporate array values with commas like Ynums = ['Y01', 'Y02'] (defult is empty set [])
-
-useOFFdata = False # True or False
-Off_datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/'
-
-###########################################
-######### Data Processing Options #########
-###########################################
-
-mono_switcher = True # makes data monotonic in mV (defualt = True)
-
-do_regrid     = True # regrids data to uniform spacing (defualt = True)
-regrid_mesh   = 0.01 # in mV (default = 0.01)
-
-do_conv = True # does a guassian convolation of the data after regridding (default is True)
-sigma   = 0.03 # in mV (default = 0.03)
-min_cdf = 0.95 # fraction of Guassian used in kernal calulation (defualt = 0.95)
+#
+# search_4Ynums = True # (the default is True)
+# search_str = 'Y' # default is 'Y'
+# Ynums=['Y0001'] # make a list array separate array values with commas like Ynums = ['Y01', 'Y02'] (defult is empty set [])
+#
+# useOFFdata = False # True or False
+# Off_datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/'
+#
+# ###########################################
+# ######### Data Processing Options #########
+# ###########################################
+#
+# mono_switcher = True # makes data monotonic in mV (default = True)
+#
+# do_regrid     = True # regrids data to uniform spacing (default = True)
+# regrid_mesh   = 0.01 # in mV (default = 0.01)
+#
+# do_conv = True # does a gaussian convolution of the data after regridding (default is False)
+# sigma   = 0.03 # in mV (default = 0.03)
+# min_cdf = 0.95 # fraction of Gaussian used in kernel calculation (default = 0.95)
 
 #YdataPro(datadir, verbose=True)
-#SweepDataPro(datadir, verbose=True, search_4Sweeps=False, Snums=['00001'])
+SweepDataPro(datadir, verbose=True, search_4Sweeps=True, Snums=['00001'], do_normspectra=True, do_conv_mV=True, do_freq_conv=True)

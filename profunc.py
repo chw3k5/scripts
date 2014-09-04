@@ -1,15 +1,17 @@
 def getparams(filename):
     import atpy
     import numpy
-    K_val     = 'null'
-    magisweep = 'null'
-    magiset   = 'null'
-    magpot    = 'null'
-    sisisweep = 'null'
-    sisiset   = 'null'
-    UCA_volt  = 'null'
-    LOfreq    = 'null'
-    IFband    = 'null'
+    K_val        = None
+    magisweep    = None
+    magiset      = None
+    magpot       = None
+    sisisweep    = None
+    sisiset      = None
+    UCA_volt     = None
+    sisi_set_pot = None
+    sisi_magpot  = None
+    LOfreq       = None
+    IFband       = None
     params = atpy.Table(filename, type="ascii", delimiter=",")
     for params_index in range(len(params.param)):
         if params.param[params_index] == 'temp':
@@ -34,36 +36,42 @@ def getparams(filename):
             sisiset = float(params.value[params_index])
         elif params.param[params_index] == 'UCA_volt':
             UCA_volt = float(params.value[params_index])
+        elif params.param[params_index] == 'sisi_set_pot':
+            sisi_set_pot = float(params.value[params_index])    
+        elif params.param[params_index] == 'sisi_magpot':
+            sisi_magpot = float(params.value[params_index])
         elif params.param[params_index] == 'LOfreq':
             LOfreq = float(params.value[params_index])
         elif params.param[params_index] == 'IFband':
             IFband = float(params.value[params_index])
-    return K_val, magisweep, magiset, magpot, sisisweep, sisiset, UCA_volt, LOfreq, IFband
+    return K_val, magisweep, magiset, magpot, sisisweep, sisiset, UCA_volt, sisi_set_pot, sisi_magpot, LOfreq, IFband
     
 def getproparams(filename):
     import atpy
     import numpy
-    K_val      = 'null'
-    magisweep  = 'null'
-    magiset    = 'null'
-    magpot     = 'null'
-    meanmag_V  = 'null'
-    stdmag_V   = 'null'
-    meanmag_mA = 'null'
-    stdmag_mA  = 'null'
-    sisisweep  = 'null'
-    sisiset    = 'null'
-    UCA_volt   = 'null'
-    meanSIS_mV = 'null'
-    stdSIS_mV  = 'null'
-    meanSIS_uA = 'null'
-    stdSIS_uA  = 'null'
-    meanSIS_tp = 'null'
-    stdSIS_tp  = 'null'
-    SIS_pot    = 'null'
-    del_time   = 'null'
-    LOfreq     = 'null'
-    IFband     = 'null'
+    K_val        = None
+    magisweep    = None
+    magiset      = None
+    magpot       = None
+    meanmag_V    = None
+    stdmag_V     = None
+    meanmag_mA   = None
+    stdmag_mA    = None
+    sisisweep    = None
+    sisiset      = None
+    UCA_volt     = None
+    sisi_set_pot = None
+    sisi_magpot  = None
+    meanSIS_mV   = None
+    stdSIS_mV    = None
+    meanSIS_uA   = None
+    stdSIS_uA    = None
+    meanSIS_tp   = None
+    stdSIS_tp    = None
+    SIS_pot      = None
+    del_time     = None
+    LOfreq       = None
+    IFband       = None
     params = atpy.Table(filename, type="ascii", delimiter=",")
     for params_index in range(len(params.param)):
         if params.param[params_index] == 'temp':
@@ -96,6 +104,10 @@ def getproparams(filename):
             sisiset = float(params.value[params_index])
         elif params.param[params_index] == 'UCA_volt':
             UCA_volt = float(params.value[params_index])
+        elif params.param[params_index] == 'sisi_set_pot':
+            sisi_set_pot = float(params.value[params_index])
+        elif params.param[params_index] == 'sisi_magpot':
+            sisi_magpot = float(params.value[params_index])
         elif params.param[params_index] == 'meanSIS_mV':
             meanSIS_mV = float(params.value[params_index])
         elif params.param[params_index] == 'stdSIS_mV':
@@ -116,7 +128,9 @@ def getproparams(filename):
             LOfreq = float(params.value[params_index])
         elif params.param[params_index] == 'IFband':
             IFband = float(params.value[params_index])
-    return K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, meanmag_mA, stdmag_mA, sisisweep, sisiset, UCA_volt, meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, stdSIS_tp, SIS_pot, del_time, LOfreq, IFband
+    return K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, meanmag_mA, stdmag_mA, sisisweep, sisiset, UCA_volt,\
+            sisi_set_pot, sisi_magpot,meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, stdSIS_tp, SIS_pot, \
+            del_time, LOfreq, IFband
 
 def get_fastIV(filename):
     import atpy
@@ -172,22 +186,22 @@ def getmagdata(filename):
 def getLJdata(filename):
     import shutil
     import atpy
+    import os
     from sys import platform
     # this is a test filename
     #filename = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/test/rawdata/Y0001/hot/sweep/TP1.csv'
-    
+    if platform == 'win32':
+        tempfilename = 'C:\\Users\\MtDewar\\Documents\\deleteME.csv'
+    elif platform == 'darwin':
+        tempfilename = '/Users/chw3k5/deleteME.csv'
+
     with open(filename, 'r') as f:
         first_line = f.readline()
         data =  f.read().splitlines(True)
-    if platform == 'win32':
-        shutil.copyfile(filename,'C:\\Users\\MtDewar\\Documents\\deleteME.csv')
-        with open('C:\\Users\\MtDewar\\Documents\\deleteME.csv', 'w') as fout:
-            fout.writelines(data[0:])
-    elif platform == 'darwin':
-        shutil.copyfile(filename,'/Users/chw3k5/deleteME.csv')
-        with open('/Users/chw3k5/deleteME.csv', 'w') as fout:
-            fout.writelines(data[0:])
-    
+    shutil.copyfile(filename,tempfilename)
+    with open(tempfilename, 'w') as fout:
+        fout.writelines(data[0:])
+
     position=first_line.find('=', 0)
     if not position == -1:
         TP_freq = float(first_line[position+1:])
@@ -196,15 +210,39 @@ def getLJdata(filename):
         print "The frequency of the total power measurment could not be found."
         print "The function getLJdata in profunc.py was looking for a number after an equals sign '='."
         print "Returning a null list"
-    
-    if platform == 'win32':
-         data = atpy.Table('C:\\Users\\MtDewar\\Documents\\deleteME.csv', type="ascii", delimiter=",")
-    if platform == 'darwin':
-        data = atpy.Table('/Users/chw3k5/deleteME.csv', type="ascii", delimiter=",")
+
+    data = atpy.Table(tempfilename, type="ascii", delimiter=",")
     TP = data.tp
+    os.remove(tempfilename)
+
     return TP, TP_freq
 
- 
+def renamespec(filename):
+    import os
+    old = open(filename, 'r')
+    t = open('temp.csv', 'w')
+    first = True
+    for line in old:
+        if first:
+            t.write("GHz,pwr\n")
+            print line
+            first = False
+        else:
+            t.write(line)
+
+    os.remove(filename)
+    os.rename('temp.csv', filename)
+    return
+
+
+def readspec(filename):
+    import atpy
+    data = atpy.Table(filename, type="ascii", delimiter=",")
+    freqs = data.GHz
+    pwr  = data.pwr
+    return freqs, pwr
+
+
 def getproSweep(datadir):
     import atpy
     datafile  = datadir + 'data.csv'
@@ -381,7 +419,7 @@ def ProcessMatrix(raw_matrix, mono_switcher, do_regrid, do_conv, regrid_mesh, mi
     mono_matrix   = False
     regrid_matrix = False
     conv_matrix   = False
-    # make the data monotinic in mV
+    # make the data monotonic in mV
     if (mono_switcher or do_regrid or do_conv):
         mono_matrix  = numpy.asarray(sorted(matrix,  key=itemgetter(0)))
         matrix  = mono_matrix               
@@ -389,7 +427,7 @@ def ProcessMatrix(raw_matrix, mono_switcher, do_regrid, do_conv, regrid_mesh, mi
     if (do_regrid or do_conv):
         regrid_matrix, status  = regrid(matrix,  regrid_mesh, verbose)
         matrix = regrid_matrix
-    # do a convoltion to the data, this does not effect mV
+    # do a convolution to the data, this does not effect mV
     if do_conv:
         conv_matrix, status  = conv(matrix,  regrid_mesh, min_cdf, sigma, verbose)
         matrix = conv_matrix
