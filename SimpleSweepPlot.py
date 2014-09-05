@@ -40,10 +40,11 @@ def SimpleSweepPlot(datadir, search_4Snums=False, Snums='', verbose=False, stand
         prodatadir = datadir + 'prodata/'
         plotdir    = datadir + 'plots/'
     if os.path.isdir(plotdir):
+        None
         # remove old processed data
-        shutil.rmtree(plotdir)
+        # shutil.rmtree(plotdir)
         # make a folder for new processed data
-        os.makedirs(plotdir)
+        # os.makedirs(plotdir)
     else:
         # make a folder for new processed data
         os.makedirs(plotdir)
@@ -311,5 +312,5 @@ def SimpleSweepPlot(datadir, search_4Snums=False, Snums='', verbose=False, stand
 #show_plot=show_plot, save_plot=save_plot, do_eps=do_eps,                       \
 #show_fastIV=show_fastIV, show_unpumped=show_unpumped)
 
-datadir    = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/warmmag/'
-SimpleSweepPlot(datadir, search_4Snums=True, std_num=3, do_eps=False, Snums=['00002'])
+#datadir    = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/warmmag/'
+#SimpleSweepPlot(datadir, search_4Snums=True, std_num=3, do_eps=False, Snums=['00002'])

@@ -1413,6 +1413,7 @@ def setLOI(uA_user, verbose, careful):
         sys.exit()
     
     # set the SIS voltage
+    time.sleep(1)
     mV_sis, uA_sis, cheat_mVpot = measSIS(verbose)
     
     # does the uA current measured with full LO attenuation exceeds the user specified value

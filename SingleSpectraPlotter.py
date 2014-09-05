@@ -1,4 +1,4 @@
-def SingleSpectraPlotter(datadir, search_4Snums=False, Snums='', verbose=False, standdev=True,
+def SingleSpectraPlotter(datadir, search_4Snums=False, Snums='', verbose=False,
                     show_plot=False, save_plot=True, do_eps=False):
     import sys
     import os
@@ -40,10 +40,11 @@ def SingleSpectraPlotter(datadir, search_4Snums=False, Snums='', verbose=False, 
         prodatadir = datadir + 'prodata/'
         plotdir    = datadir + 'plots/'
     if os.path.isdir(plotdir):
+        None
         # remove old processed data
-        shutil.rmtree(plotdir)
+        # shutil.rmtree(plotdir)
         # make a folder for new processed data
-        os.makedirs(plotdir)
+        # os.makedirs(plotdir)
     else:
         # make a folder for new processed data
         os.makedirs(plotdir)
@@ -92,7 +93,7 @@ def SingleSpectraPlotter(datadir, search_4Snums=False, Snums='', verbose=False, 
         offset_scale = 0.1
 
         X_offset = X_min - X_ran*offset_scale
-        Y_offset = Y_max + Y_ran*offset_scale
+        Y_offset = Y_min - Y_ran*offset_scale
         Z_offset = Z_min - Z_ran*0.4
 
         num_of_lines = 20.0
@@ -109,7 +110,7 @@ def SingleSpectraPlotter(datadir, search_4Snums=False, Snums='', verbose=False, 
         ax.set_xlabel('IF Frequency (GHz)')
         ax.set_xlim(X_min, X_max)
         ax.set_ylabel('Bias Voltage (mV)')
-        ax.set_ylim(Y_min, Y_max)
+        ax.set_ylim(Y_max, Y_min)
         ax.set_zlabel('Recieved Power')
         ax.set_zlim(Z_min, Z_max)
 
@@ -135,9 +136,9 @@ def SingleSpectraPlotter(datadir, search_4Snums=False, Snums='', verbose=False, 
 
     return
 
-from sys import platform
-if platform == 'win32':
-    datadir = "C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\warmmag\\"
-elif platform == 'darwin':
-    datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/warmmag/'
-SingleSpectraPlotter(datadir, search_4Snums=True, Snums=['00001'])
+#from sys import platform
+#if platform == 'win32':
+#    datadir = "C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\warmmag\\"
+#elif platform == 'darwin':
+#    datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/warmmag/'
+#SingleSpectraPlotter(datadir, search_4Snums=True, Snums=['00001'])

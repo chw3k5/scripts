@@ -72,7 +72,7 @@ def getspec(filename, verbose=False, linear_sc=True, freq_start=0, freq_stop=6, 
     if linear_sc:
         sa.write("LN")
         # Reference Level
-        sa.write("RL 200 uV")
+        sa.write("RL 400 uV")
     else:
         sa.write("LG 10DB")
     # put the 'trace data format' of returned values as real numbers, option P
@@ -208,7 +208,7 @@ def getspecPlusTP(spec_filename, TP_filename, TPSampleFrequency, verbose=False, 
     if linear_sc:
         sa.write("LN")
         # Reference Level
-        sa.write("RL 200 uV")
+        sa.write("RL 400 uV")
     else:
         sa.write("LG 10DB")
     # put the 'trace data format' of returned values as real numbers, option P
@@ -251,7 +251,7 @@ def getspecPlusTP(spec_filename, TP_filename, TPSampleFrequency, verbose=False, 
     trace_list = raw_trace.rsplit(',')
     n = open(spec_filename, 'w')
     if linear_sc:
-        n.write('GHz,units\n')
+        n.write('GHz,pwr\n')
     else:
         n.write('GHz,dB\n')
     for freq_index in range(len(freq_list)):
@@ -275,4 +275,4 @@ def getspecPlusTP(spec_filename, TP_filename, TPSampleFrequency, verbose=False, 
     return
 
     return
-getspec('C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\test\\SpecTest.csv')
+#getspec('C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\test\\SpecTest.csv')

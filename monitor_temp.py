@@ -275,16 +275,16 @@ while monitoring:
             print alarm_subject
             
             alarm_body_text = ''
-            alarm_body_text = alarm_body_text + "RECEIVER TEMP = " + str('%2.3f' % current_temp4) + "K\nlast " 
-            + str('%2.2f' % Nhours) + " hours (mean, std) = (" + str('%2.3f' % Nsecs_mean4) + 'K, ' + str('%2.3f' % Nsecs_std4) + "K)\n"
-            + "all measurements " + str('%3.2f' % totalhours) + " hours (mean, std) = (" + str('%2.3f' % temp4_mean) 
-            + 'K, ' + str('%2.3f' % temp4_std) + "K)\n\n" 
-            + "INNER SHIELD = " + str('%2.3f' % current_temp2) + "K\nlast " 
-            + str('%2.2f' % Nhours) +" hours (mean, std) = (" + str('%2.3f' % Nsecs_mean2) + 'K, ' + str('%2.3f' % Nsecs_std2) 
-            + "K)\nall measurements " + str('%3.2f' % totalhours) + " hours (mean, std) = (" + str('%2.3f' % temp2_mean) 
-            + 'K, ' + str('%2.3f' % temp2_std) + "K)\n\n" 
-            + "OUTER SHIELD = " + str('%2.3f' % current_temp3) + "K\nlast " + str('%2.2f' % Nhours) +" hours (mean, std) = (" 
-            + str('%2.3f' % Nsecs_mean3) + 'K, ' + str('%2.3f' % Nsecs_std3) + "K)\nall measurements " + str('%3.2f' % totalhours) 
+            alarm_body_text = alarm_body_text + "RECEIVER TEMP = " + str('%2.3f' % current_temp4) + "K\nlast " \
+            + str('%2.2f' % Nhours) + " hours (mean, std) = (" + str('%2.3f' % Nsecs_mean4) + 'K, ' + str('%2.3f' % Nsecs_std4) + "K)\n" \
+            + "all measurements " + str('%3.2f' % totalhours) + " hours (mean, std) = (" + str('%2.3f' % temp4_mean) \
+            + 'K, ' + str('%2.3f' % temp4_std) + "K)\n\n" \
+            + "INNER SHIELD = " + str('%2.3f' % current_temp2) + "K\nlast " \
+            + str('%2.2f' % Nhours) +" hours (mean, std) = (" + str('%2.3f' % Nsecs_mean2) + 'K, ' + str('%2.3f' % Nsecs_std2) \
+            + "K)\nall measurements " + str('%3.2f' % totalhours) + " hours (mean, std) = (" + str('%2.3f' % temp2_mean) \
+            + 'K, ' + str('%2.3f' % temp2_std) + "K)\n\n" \
+            + "OUTER SHIELD = " + str('%2.3f' % current_temp3) + "K\nlast " + str('%2.2f' % Nhours) +" hours (mean, std) = ("\
+            + str('%2.3f' % Nsecs_mean3) + 'K, ' + str('%2.3f' % Nsecs_std3) + "K)\nall measurements " + str('%3.2f' % totalhours)\
             + " hours (mean, std) = (" + str('%2.3f' % temp3_mean) + 'K, ' + str('%2.3f' % temp3_std) + "K)\n\n" 
             
             email_caleb(alarm_subject, alarm_body_text)
@@ -295,8 +295,8 @@ while monitoring:
                 subject = "periodic cryostat update - " + str('%2.3f' % current_temp4) + "K"            
                 body_text = ''
                 body_text = body_text + "Receiver temp = " + str('%2.3f' % current_temp4) + "K\nlast " 
-                body_text = body_text + str('%2.2f' % Nhours) +" hours (mean, std) = (" 
-            	body_text = body_text + str('%2.3f' % Nsecs_mean4) + 'K, ' + str('%2.3f' % Nsecs_std4) 
+                body_text = body_text + str('%2.2f' % Nhours) +" hours (mean, std) = ("
+                body_text = body_text + str('%2.3f' % Nsecs_mean4) + 'K, ' + str('%2.3f' % Nsecs_std4)
                 body_text = body_text + "K)\nall measurements " + str('%3.2f' % totalhours) 
                 body_text = body_text + " hours (mean, std) = (" + str('%2.3f' % temp4_mean) 
                 body_text = body_text + 'K, ' + str('%2.3f' % temp4_std) + "K)\n\n" 

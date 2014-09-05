@@ -9,7 +9,7 @@ def ProParmsFiles(dirnames, proparamsfile, verbose):
     if os.path.isfile(paramsfile):
         params_found  = True
         # load the params file for the data
-        K_val, magisweep, magiset, magpot, sisisweep, sisiset, UCA_volt, sisi_set_pot, sisi_magpot, LOfreq, IFband \
+        K_val, magisweep, magiset, magpot, LOuAsearch, LOuAset, UCA_volt, LOuA_set_pot, LOuA_magpot, LOfreq, IFband \
             = getparams(paramsfile)
     
     ##### Processing Standard SIS bias measurments ######
@@ -47,12 +47,12 @@ def ProParmsFiles(dirnames, proparamsfile, verbose):
         n.write('meanmag_mA,' + str(numpy.mean(standmagdata_mA)) + '\n')
         n.write('stdmag_mA,'  + str(numpy.std(standmagdata_mA))  + '\n')
     if params_found:
-        if sisisweep == True:
-            n.write('sisisweep,True\n')
-            n.write('sisiset,'  + str(sisiset)    + '\n')
+        if LOuAsearch == True:
+            n.write('LOuAsearch,True\n')
+            n.write('LOuAset,'  + str(LOuAset)    + '\n')
             n.write('UCA_volt,' + str(UCA_volt)   + '\n')
         else:
-            n.write('sisisweep,False\n')
+            n.write('LOuAsearch,False\n')
             n.write('UCA_volt,' + str(UCA_volt) + '\n')
     if standSISdata_found:
         n.write('meanSIS_mV,' + str(numpy.mean(standSISdata_mV)) + '\n')
@@ -568,15 +568,15 @@ from sys import platform
 verbose=True # True or False (default is False)
 
 ##### location of IV and TP parameter files, the data files
-setnum  = 3
+#setnum  = 3
 #datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/set'+str(setnum)+'/'
 
-if platform == 'win32':
-    datadir = "C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\set" +str(setnum) + "\\"
-    #datadir = "C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\warmmag\\"
-elif platform == 'darwin':    
-    datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/warmmag/'
-    #datadir     = '/Users/chw3k5/Dropbox/kappa_data/NA38/IVsweep/set' + str(setnum) + '/'
+#if platform == 'win32':
+#    datadir = "C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\set" +str(setnum) + "\\"
+#    #datadir = "C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\warmmag\\"
+#elif platform == 'darwin':
+#    datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/warmmag/'
+#    #datadir     = '/Users/chw3k5/Dropbox/kappa_data/NA38/IVsweep/set' + str(setnum) + '/'
 
 #
 # search_4Ynums = True # (the default is True)
@@ -600,4 +600,4 @@ elif platform == 'darwin':
 # min_cdf = 0.95 # fraction of Gaussian used in kernel calculation (default = 0.95)
 
 #YdataPro(datadir, verbose=True)
-SweepDataPro(datadir, verbose=True, search_4Sweeps=True, Snums=['00001'], do_normspectra=True, do_conv_mV=True, do_freq_conv=True)
+#SweepDataPro(datadir, verbose=True, search_4Sweeps=True, Snums=['00001'], do_normspectra=True, do_conv_mV=True, do_freq_conv=True)

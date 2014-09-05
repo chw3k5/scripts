@@ -5,11 +5,11 @@ def getparams(filename):
     magisweep    = None
     magiset      = None
     magpot       = None
-    sisisweep    = None
-    sisiset      = None
+    LOuAsearch    = None
+    LOuAset      = None
     UCA_volt     = None
-    sisi_set_pot = None
-    sisi_magpot  = None
+    LOuA_set_pot = None
+    LOuA_magpot  = None
     LOfreq       = None
     IFband       = None
     params = atpy.Table(filename, type="ascii", delimiter=",")
@@ -26,25 +26,25 @@ def getparams(filename):
             magiset = float(params.value[params_index])
         elif params.param[params_index] == 'magpot':
             magpot = int(numpy.round(float(params.value[params_index])))
-        elif params.param[params_index] == 'sisisweep':
-            sisisweep = params.value[params_index]
-            if sisisweep == 'True':
-                sisisweep = True
+        elif ((params.param[params_index] == 'sisisweep') or (params.param[params_index] == 'LOuAsearch')):
+            LOuAsearch = params.value[params_index]
+            if LOuAsearch == 'True':
+                LOuAsearch = True
             else:
-                sisisweep = False
-        elif params.param[params_index] == 'sisiset':
-            sisiset = float(params.value[params_index])
+                LOuAsearch = False
+        elif ((params.param[params_index] == 'sisiset') or (params.param[params_index] == 'LOuAset')):
+            LOuAset = float(params.value[params_index])
         elif params.param[params_index] == 'UCA_volt':
             UCA_volt = float(params.value[params_index])
-        elif params.param[params_index] == 'sisi_set_pot':
-            sisi_set_pot = float(params.value[params_index])    
-        elif params.param[params_index] == 'sisi_magpot':
-            sisi_magpot = float(params.value[params_index])
+        elif ((params.param[params_index] == 'sisi_set_pot') or (params.param[params_index] == 'LOuA_set_pot')):
+            LOuA_set_pot = float(params.value[params_index])
+        elif ((params.param[params_index] == 'sisi_magpot') or (params.param[params_index] == 'LOuA_magpot')):
+            LOuA_magpot = float(params.value[params_index])
         elif params.param[params_index] == 'LOfreq':
             LOfreq = float(params.value[params_index])
         elif params.param[params_index] == 'IFband':
             IFband = float(params.value[params_index])
-    return K_val, magisweep, magiset, magpot, sisisweep, sisiset, UCA_volt, sisi_set_pot, sisi_magpot, LOfreq, IFband
+    return K_val, magisweep, magiset, magpot, LOuAsearch, LOuAset, UCA_volt, LOuA_set_pot, LOuA_magpot, LOfreq, IFband
     
 def getproparams(filename):
     import atpy
@@ -57,11 +57,11 @@ def getproparams(filename):
     stdmag_V     = None
     meanmag_mA   = None
     stdmag_mA    = None
-    sisisweep    = None
-    sisiset      = None
+    LOuAsearch    = None
+    LOuAset      = None
     UCA_volt     = None
-    sisi_set_pot = None
-    sisi_magpot  = None
+    LOuA_set_pot = None
+    LOuA_magpot  = None
     meanSIS_mV   = None
     stdSIS_mV    = None
     meanSIS_uA   = None
@@ -94,20 +94,20 @@ def getproparams(filename):
             meanmag_mA = float(params.value[params_index])  
         elif params.param[params_index] == 'stdmag_mA':
             stdmag_mA = float(params.value[params_index])
-        elif params.param[params_index] == 'sisisweep':
-            sisisweep = params.value[params_index]
-            if sisisweep == 'True':
-                sisisweep = True
+        elif params.param[params_index] == 'LOuAsearch':
+            LOuAsearch = params.value[params_index]
+            if LOuAsearch == 'True':
+                LOuAsearch = True
             else:
-                sisisweep = False
-        elif params.param[params_index] == 'sisiset':
-            sisiset = float(params.value[params_index])
+                LOuAsearch = False
+        elif params.param[params_index] == 'LOuAset':
+            LOuAset = float(params.value[params_index])
         elif params.param[params_index] == 'UCA_volt':
             UCA_volt = float(params.value[params_index])
-        elif params.param[params_index] == 'sisi_set_pot':
-            sisi_set_pot = float(params.value[params_index])
-        elif params.param[params_index] == 'sisi_magpot':
-            sisi_magpot = float(params.value[params_index])
+        elif params.param[params_index] == 'LOuA_set_pot':
+            LOuA_set_pot = float(params.value[params_index])
+        elif params.param[params_index] == 'LOuA_magpot':
+            LOuA_magpot = float(params.value[params_index])
         elif params.param[params_index] == 'meanSIS_mV':
             meanSIS_mV = float(params.value[params_index])
         elif params.param[params_index] == 'stdSIS_mV':
@@ -128,8 +128,8 @@ def getproparams(filename):
             LOfreq = float(params.value[params_index])
         elif params.param[params_index] == 'IFband':
             IFband = float(params.value[params_index])
-    return K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, meanmag_mA, stdmag_mA, sisisweep, sisiset, UCA_volt,\
-            sisi_set_pot, sisi_magpot,meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, stdSIS_tp, SIS_pot, \
+    return K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, meanmag_mA, stdmag_mA, LOuAsearch, LOuAset, UCA_volt,\
+            LOuA_set_pot, LOuA_magpot,meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, stdSIS_tp, SIS_pot, \
             del_time, LOfreq, IFband
 
 def get_fastIV(filename):
@@ -229,7 +229,8 @@ def renamespec(filename):
             first = False
         else:
             t.write(line)
-
+    old.close()
+    t.close()
     os.remove(filename)
     os.rename('temp.csv', filename)
     return

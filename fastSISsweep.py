@@ -46,10 +46,7 @@ def fastSISsweep(SweepStart, SweepStop, SweepStep, fullname, verbose):
         for jj in range(len(pee)):
             n.write(str(pee[jj])+','+str(vee[jj])+','+str(eye[jj])+','+str(tee[jj])+'\n')
         n.close()
-        
-        temp_str='rm temp.txt'
-        os.system(temp_str)
-
+        os.remove('temp.txt')
     return
     
 def getfastSISsweep(SweepStart, SweepStop, SweepStep, verbose):
@@ -94,8 +91,6 @@ def getfastSISsweep(SweepStart, SweepStop, SweepStep, verbose):
         mV  = [putty.number[ii] for ii, v in enumerate(putty.type) if v=='v']
         uA  = [putty.number[ii] for ii, v in enumerate(putty.type) if v=='i']
         tp  = [putty.number[ii] for ii, v in enumerate(putty.type) if v=='t']
-        
-        temp_str='rm temp.txt'
-        os.system(temp_str)
+        os.remove('temp.txt')
 
     return pot, mV, uA, tp
