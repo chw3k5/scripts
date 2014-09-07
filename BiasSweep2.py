@@ -157,7 +157,8 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
               sisPot_feedFalse_start=65100, sisPot_feedFalse_stop=57000, sisPot_feedFalse_step=100,
               sisPot_feedTrue_start=65000, sisPot_feedTrue_stop=52000, sisPot_feedTrue_step=100,
               getspecs=False, spec_linear_sc=True, spec_freq_start=0, spec_freq_stop=6,
-              spec_sweep_time='AUTO', spec_video_band=10, spec_resol_band=30, spec_attenu=0,
+              spec_sweep_time='AUTO', spec_video_band=10, spec_resol_band=30,
+              spec_attenu=0, lin_ref_lev=300, aveNum=1,
               Kaxis=0, sisVaxis=1, magaxis=2, LOpowaxis=3, LOfreqaxis=4, IFbandaxis=5,
               K_list=[296],
               LOfreq_start=672, LOfreq_stop=672, LOfreq_step=1,
@@ -278,7 +279,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
         magpot_list = makeLists(magpotsweep_start, magpotsweep_stop, magpotsweep_step)
 
     # LO Frequency
-    LOfreq_list = makeLists(LOfreq_start, LOfreq_stop, LOfreq_step)
+    LOfreq_list = list(makeLists(LOfreq_start, LOfreq_stop, LOfreq_step))
     # this a catch for if the value of presearch needed to be changed
     # presearch is not an effective tool if both the LO frequency and LO power are being changed in single run
     if ((1 < len(LOfreq_list)) and do_LOuApresearch):
@@ -817,7 +818,8 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
             if getspecs:
                 getspecPlusTP(spec_filename, TP_filename, TPSampleFrequency, verbose=verbose, linear_sc=spec_linear_sc,
                   freq_start=spec_freq_start, freq_stop=spec_freq_stop, sweep_time=spec_sweep_time,
-                  video_band=spec_video_band, resol_band=spec_resol_band, attenu=spec_attenu)
+                  video_band=spec_video_band, resol_band=spec_resol_band, attenu=spec_attenu,
+                  lin_ref_lev=lin_ref_lev, aveNum=aveNum,)
             else:
                 LJ_streamTP(TP_filename, TPSampleFrequency, TPSampleTime, verbose)
         else:

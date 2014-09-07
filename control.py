@@ -172,6 +172,7 @@ def CommandOutput(sleep_time, channel):
         tn.write("setbias " + channel + " \n")
         time.sleep(sleep_time)
         out = tn.read_very_eager()
+        tn.close()
     else:
         tn = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)
         tn.close()
@@ -833,6 +834,7 @@ def CommandOutput_TP(sleep_time, sispot, channel):
         tn.write("sweep " + channel + " " + sispot + " " + sispot +  " 1  \n")
         time.sleep(sleep_time)
         out = tn.read_very_eager()
+        tn.close()
     else:
         tn = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)
         tn.close()

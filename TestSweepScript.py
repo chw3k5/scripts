@@ -17,13 +17,13 @@ if not func_dir_exists:
     sys.path.append(func_dir)
 
 if platform == 'win32':
-    datadir = 'C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\sweep\\LOfreq\\'
+    datadir = 'C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\sweep\\LOfreq2\\'
 elif platform == 'darwin':
     datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/test5/'
     
 from BiasSweep2 import BiasSweep
 BiasSweep(datadir, verbose=False, verboseTop=True, verboseSet=True, careful=False,
-          sweepNstart=10, Ynum=5, testmode=False,
+          sweepNstart=98, Ynum=49, testmode=False,
           do_fastsweep=True, do_unpumpedsweep=True, fastsweep_feedback=False,
           SweepStart_feedTrue=65000, SweepStop_feedTrue=52000, SweepStep_feedTrue=100,
           SweepStart_feedFalse=65100, SweepStop_feedFalse=57000, SweepStep_feedFalse=100,
@@ -31,12 +31,13 @@ BiasSweep(datadir, verbose=False, verboseTop=True, verboseSet=True, careful=Fals
           TPSampleFrequency=100, TPSampleTime=2,
           sisVsweep_start=-0.1, sisVsweep_stop=2.5, sisVsweep_step=0.1,
           sisPot_feedFalse_start=65100, sisPot_feedFalse_stop=57000, sisPot_feedFalse_step=100,
-          sisPot_feedTrue_start=60000, sisPot_feedTrue_stop=52000, sisPot_feedTrue_step=500,
+          sisPot_feedTrue_start=60000, sisPot_feedTrue_stop=55110, sisPot_feedTrue_step=300,
           getspecs=True, spec_linear_sc=True, spec_freq_start=0, spec_freq_stop=6,
-          spec_sweep_time='AUTO', spec_video_band=100, spec_resol_band=100, spec_attenu=0,
+          spec_sweep_time='AUTO', spec_video_band=100, spec_resol_band=100,
+          spec_attenu=0, lin_ref_lev=500, aveNum=8,
           Kaxis=0, sisVaxis=1, magaxis=2, LOpowaxis=3, LOfreqaxis=4, IFbandaxis=5,
           K_list=[296, 80],
-          LOfreq_start=655, LOfreq_stop=692, LOfreq_step=1,
+          LOfreq_start=684.75, LOfreq_stop=692, LOfreq_step=0.25,
           IFband_start=1.42, IFband_stop=1.42, IFband_step=0.10,
           do_magisweep=False, mag_meas=10,
           magisweep_start=32, magisweep_stop=32, magisweep_step=1,
