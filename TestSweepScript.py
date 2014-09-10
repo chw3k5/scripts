@@ -17,13 +17,13 @@ if not func_dir_exists:
     sys.path.append(func_dir)
 
 if platform == 'win32':
-    datadir = 'C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\sweep\\LOfreq2\\'
+    datadir = 'C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\sweep\\WARMTEST\\'
 elif platform == 'darwin':
     datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/test5/'
     
 from BiasSweep2 import BiasSweep
 BiasSweep(datadir, verbose=False, verboseTop=True, verboseSet=True, careful=False,
-          sweepNstart=98, Ynum=49, testmode=False,
+          sweepNstart=98, Ynum=49, testmode=False, warmmode=True,
           do_fastsweep=True, do_unpumpedsweep=True, fastsweep_feedback=False,
           SweepStart_feedTrue=65000, SweepStop_feedTrue=52000, SweepStep_feedTrue=100,
           SweepStart_feedFalse=65100, SweepStop_feedFalse=57000, SweepStep_feedFalse=100,
@@ -44,10 +44,10 @@ BiasSweep(datadir, verbose=False, verboseTop=True, verboseSet=True, careful=Fals
           magpotsweep_start=10000, magpotsweep_stop=10000, magpotsweep_step=-500,
           do_LOuAsearch=True, UCA_meas=10,
           LOuAsearch_start=12, LOuAsearch_stop=12, LOuAsearch_step=1,
-          LOuA_magpot=1000, LOuA_set_pot=56800, LOuA_cheat_num=56666,
+          LOuA_magpot=1000, LOuA_set_pot=56800,
           UCAsweep_min=0.00, UCAsweep_max=0.00, UCAsweep_step=0.05,
           sweepShape="rectangular",
-          FinishedEmail=True, FiveMinEmail=True, PeriodicEmail=True,
+          FinishedEmail=False, FiveMinEmail=False, PeriodicEmail=False,
           seconds_per_email=1800, chopper_off=False, do_LOuApresearch=False)
 
 
