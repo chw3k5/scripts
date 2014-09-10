@@ -490,6 +490,8 @@ def test2():
     for n in range(200):
         GoForth()
         time.sleep(2)
+        GoBack()
+        time.sleep(2)
     DisableDrive()
     return
 

@@ -2,7 +2,7 @@
 ###### setLOI ######
 ####################
 
-sleep_time = 1 # in seconds (time between setting the UCA value and first measuring the responce in the SIS bias)
+sleep_time = 2 # in seconds (time between setting the UCA value and first measuring the responce in the SIS bias)
 
 # min and max accepted values
 uA_max = 40

@@ -1,163 +1,27 @@
-##############################################
-##############################################
-########## Local Oscillator Control ##########
-##############################################
-##############################################
+import telnetlib
+import time
+import numpy
+import sys
+from LabJack_control import LabJackU3_DAQ0
 
-    # I have to install
-    # libusb=1.0 from http://sourceforge.net/projects/libusb/files/libusb-1.0/libusb-1.0.18/
-    # LabJackPython-10-22-2012.zip from http://github.com/labjack/exodriver 
-    # or http://labjack.com/support/linux-and-mac-os-x-drivers
-    # then the python part
-    # from http://labjack.com/support/labjackpython
-    # download the link, for me it was: http://labjack.com/sites/default/files/2014/04/LabJackPython-4-24-2014.zip
-    # the after unpaking the package, go to that folder and type: "sudo python setup.py install" in the asme directory as setup.py
-    #
-
-    
-    #  lj.open(self, firstFound = True, serial = None, localId = None, devNumber = None, handleOnly = False, LJSocket = None)
-    
-    # configU3(self, LocalID = None, TimerCounterConfig = None, FIOAnalog = None, FIODirection = None, FIOState = None, EIOAnalog = None, EIODirection = None, EIOState = None, CIODirection = None, CIOState = None, DAC1Enable = None, DAC0 = None, DAC1 = None, TimerClockConfig = None, TimerClockDivisor = None, CompatibilityOptions = None )
-    
-    # getTemperature()
-    
-    # getAIN(self, posChannel, negChannel = 31, longSettle=False, quickSample=False)
-    
-    # binaryToCalibratedAnalogVoltage(self, bits, isLowVoltage = True, isSingleEnded = True, isSpecialSetting = False, channelNumber = 0)
-
-    # getCalibrationData(self)
-    
-    # 
-    # AddRequestS(u3Handle,"LJ_ioGET_AIN", 0, 0.0, 0, 0.0)
-    
-    # AddRequest(ID, LJ_ioPUT_COUNTER_ENABLE,0,1,0,0)
-
-
-############################
-###### LabJackU3_DAQ0 ######
-############################
-
-def LabJackU3_DAQ0(UCA_voltage):
-    import u3
-    status = False
-    if (0 <= UCA_voltage) and (UCA_voltage <= 5):
-        lj = u3.U3()
-        lj.writeRegister(5000, UCA_voltage)
-        lj.close()
-        status = True
-    else:
-        print "UCA_voltage was not set properly, it was either greater than 5, less than 0, or not a number. UCA_voltage = "+str(UCA_voltage)+". Returning Status false" 
-    return status
-
-
-############################
-###### LabJackU3_ANI0 ######
-############################
-
-def LabJackU3_AIN0():
-    import u3
-    lj = u3.U3()
-    tp = lj.getAIN(0)
-    lj.close()
-    return tp
-    
-
-#########################
-###### LJ_streamTP ######
-#########################
-def LJ_streamTP(filename, SampleFrequency, SampleTime, verbose): 
-    # Peter N. Saeta, 2013 November 11
-    # is a genuis
-    
-    # Caleb Wheeler found this code on the internet and used it like a
-    # monkey. Modified May 20, 2014
-    
-    # This code uses the LabJack to record 1 or more voltages at a
-    # regular cadence. It runs until you stop it with Ctrl-C.
-    # Edit the values below (above the import u3 statement)
-    # to match your requirements. Note that the Resolution parameter
-    # sets the accuracy of the data. The smaller the number, the better
-    # the accuracy, but the slower the sampling rate must be. See
-    # http://labjack.com/support/u3/users-guide/3.2 for details.
-    
-    import u3
-    import time
-    from LabJack_config import NumChannels, Resolution, wavenames, loop_max
-    
-    # Prepare the u3 interface for streaming
-    
-    d = u3.U3()        # initialize the interface; assumes a single U3 is plugged in to a USB port
-    d.configU3()    # set default configuration
-    d.configIO( FIOAnalog = 1 )        # ask for analog inputs
-    
-    # In case the stream was left running from a previous execution
-    try: d.streamStop()
-    except: pass
-    
-    
-    d.streamConfig( NumChannels = NumChannels,
-        PChannels = range(NumChannels),
-        NChannels = [ 31 for x in range(NumChannels) ],
-        Resolution = Resolution,
-        SampleFrequency = SampleFrequency )
-    
-    #d.packetsPerRequest = 1000
-    
-    # Try to measure a data set.
-    def measure():
-        try:
-            for r in d.streamData():
-                if r is not None:
-                    if r['errors'] or r['numPackets'] != d.packetsPerRequest or r['missed']:
-                        print "error: errors = '%s', numpackets = %d, missed = '%s'" % (r['errors'], r['numPackets'], r['missed'])
-                    break
-        finally:
-            pass
-        return r
-    
-    # Write a set of data to the file
-    def writeData( r ):
-        chans = [ r['AIN%d' % (n)] for n in range(NumChannels) ]
-        for i in range(len(chans[0])):
-            f.write( "\t".join( ['%.6f' % c[i] for c in chans] ) + '\n' )
-    
-    with open(filename, 'w') as f:
-        f.write( "frequency=%d\n" % SampleFrequency)
-        if wavenames == []:
-            wavenames = ['wave%d' % n for n in range(NumChannels)]
-        f.write( '\t'.join(wavenames) + '\n')
-    
-    # start the stream
-    d.streamStart()
-    loop = 0
-    
-    try:
-        finished = False
-        start = time.time()
-        while not finished:
-            with open(filename, 'a') as f:
-                writeData( measure() )
-            loop += 1
-            if loop_max < loop + 1 :
-                finished = True
-            diff_time = time.time() - start
-            if SampleTime < diff_time:
-                finished = True
-                
-            if verbose:
-                print( "[%.4d %.2f s]" % (loop, diff_time))
-            
-    finally:
-        d.streamStop()
-        d.close()
+def opentelnet():
+    global thzbiascomputer
+    thzbiascomputer = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)
     return
 
+def closetelnet():
+    thzbiascomputer.close()
+    return
 
-####################################
-####################################
-########## MAGNET CONTROL ##########
-####################################
-####################################
+def restartTelnet(sleep_time):
+    try:
+        thzbiascomputer.close()
+    except UnboundLocalError:
+        print "The bias computer connection is closed already."
+        print "Starting it now"
+    time.sleep(sleep_time)
+    thzbiascomputer = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)
+    return
 
 
 # This is used by both the the magnet control and the sisbias control
@@ -165,22 +29,36 @@ def LJ_streamTP(filename, SampleFrequency, SampleTime, verbose):
 ###### CommandOutput ######
 ###########################
 def CommandOutput(sleep_time, channel):
-    import telnetlib
-    import time
+    out = []
     if sleep_time < 30:
-        tn = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)
-        tn.write("setbias " + channel + " \n")
-        time.sleep(sleep_time)
-        out = tn.read_very_eager()
+        thzbiascomputer.write("setbias " + channel + " \n")
+        junk = thzbiascomputer.read_until('v = ', float(sleep_time))
+        line = thzbiascomputer.read_until('\n', float(sleep_time))
+        out.append(line)
+        junk = thzbiascomputer.read_until('i = ', float(sleep_time))
+        line = thzbiascomputer.read_until('\n', float(sleep_time))
+        out.append(line)
+        junk = thzbiascomputer.read_until('f = ', float(sleep_time))
+        line = thzbiascomputer.read_until('\n', float(sleep_time))
+        out.append(line)
+        junk = thzbiascomputer.read_until('p = ', float(sleep_time))
+        line = thzbiascomputer.read_until('\n', float(sleep_time))
+        out.append(line)
     else:
-        tn = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)
-        tn.close()
-        time.sleep(sleep_time/2.0)
-        tn = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)
-        tn.write("setbias " + channel + " \n")
-        time.sleep(sleep_time/2.0)
-        out = tn.read_very_eager()
-        tn.close()
+        restartTelnet(sleep_time)
+        thzbiascomputer.write("setbias " + channel + " \n")
+        junk = thzbiascomputer.read_until('v = ', float(sleep_time))
+        line = thzbiascomputer.read_until('\n', float(sleep_time))
+        out.append(line)
+        junk = thzbiascomputer.read_until('i = ', float(sleep_time))
+        line = thzbiascomputer.read_until('\n', float(sleep_time))
+        out.append(line)
+        junk = thzbiascomputer.read_until('f = ', float(sleep_time))
+        line = thzbiascomputer.read_until('\n', float(sleep_time))
+        out.append(line)
+        junk = thzbiascomputer.read_until('p = ', float(sleep_time))
+        line = thzbiascomputer.read_until('\n', float(sleep_time))
+        out.append(line)
     return out
 
 
@@ -189,67 +67,79 @@ def CommandOutput(sleep_time, channel):
 ###### attempt_meas ######
 ##########################
 def attempt_meas(sleep_time, channel):
-    import numpy
     V   = -999999
     A   = -999999
     pot = -999999
-    
+
     out = CommandOutput(sleep_time, channel)
-    print out.replace('\r', "Here")
-    
-    if float(channel) < 8: 
-        parse1 = out.replace('sis ' + channel + ' ', '')
-    else:
-        parse1 = out.replace('mag ' + channel + ' ', '')
-    parse2 = parse1.replace(' = ', ',')
-    
-    end_position1 = parse2.find('\n', 0)
-    end_position2 = parse2.find('\n', end_position1+1)
-    end_position3 = parse2.find('\n', end_position2+1)
-    end_position4 = parse2.find('\n', end_position3+1)
-    
-    V_string   = parse2[0:end_position1]
-    A_string   = parse2[end_position1+1:end_position2]
-    f_string   = parse2[end_position2+1:end_position3]
-    pot_string = parse2[end_position3+1:end_position4]
-    
-    V_start   = V_string.find( ',',0)
-    A_start   = A_string.find( ',',0)
-    pot_start = pot_string.find(',',0)
-    
-    V_temp   = V_string[V_start+1:]
-    A_temp   = A_string[A_start+1:]
-    pot_temp = pot_string[pot_start+1:]
-    
+
+    #if float(channel) < 8:
+    #    parse1 = out.replace('sis ' + channel + ' ', '')
+    #else:
+    #    parse1 = out.replace('mag ' + channel + ' ', '')
+    #parse2 = parse1.replace(' = ', ',')
+
+    #end_position1 = parse2.find('\n', 0)
+    #end_position2 = parse2.find('\n', end_position1+1)
+    #end_position3 = parse2.find('\n', end_position2+1)
+    #end_position4 = parse2.find('\n', end_position3+1)
+
+    #V_string   = parse2[0:end_position1]
+    #A_string   = parse2[end_position1+1:end_position2]
+    #f_string   = parse2[end_position2+1:end_position3]
+    #pot_string = parse2[end_position3+1:end_position4]
+
+    #V_start   = V_string.find( ',',0)
+    #A_start   = A_string.find( ',',0)
+    #pot_start = pot_string.find(',',0)
+
+    #V_temp   = V_string[V_start+1:]
+    #A_temp   = A_string[A_start+1:]
+    #pot_temp = pot_string[pot_start+1:]
+
+    V_temp    = out[0]
+    A_temp    = out[1]
+    f_temp    = out[2]
+    pot_temp  = out[3]
+
     truth_list1 = []
-    truth_list1.append(V_temp  == '')
-    truth_list1.append(A_temp  == '')
-    truth_list1.append(f_string     == '')
+    truth_list1.append(V_temp   == '')
+    truth_list1.append(A_temp   == '')
+    truth_list1.append(f_temp   == '')
     truth_list1.append(pot_temp == '')
     redo = False
     if any(truth_list1):
         redo = True
     else:
-        V   = float(V_string[V_start+1:])
-        A   = float(A_string[A_start+1:])
-        pot = int(numpy.round(float(pot_string[pot_start+1:])))
-    
-        truth_list2 = []
-        truth_list2.append(    20 <= abs(V))
-        truth_list2.append(   200 <= abs(A))
-        truth_list2.append(130000 <= pot)
-        if any(truth_list2):
+        try:
+            V    = float(V_temp)
+            A    = float(A_temp)
+            pot  = int(numpy.round(float(pot_temp)))
+
+            truth_list2 = []
+            truth_list2.append(    20 <= abs(V))
+            truth_list2.append(   200 <= abs(A))
+            truth_list2.append(130000 <= pot)
+            if any(truth_list2):
+                redo = True
+        except ValueError:
             redo = True
     return redo, V, A, pot
+
+
+
+####################################
+####################################
+########## MAGNET CONTROL ##########
+####################################
+####################################
 
 #####################
 ###### measmag ######
 #####################
 
 def measmag(verbose):
-    import sys
     from mag_config import sleep_list
-    
     channel = '9'
     
     message_list = []
@@ -295,10 +185,6 @@ def measmag(verbose):
 ####################
 
 def setmag(magpot, verbose):
-    import telnetlib
-    import numpy
-    import sys
-    
     mA_mag  = -999998
     V_mag   = -999998
     pot_mag = -999998 
@@ -317,10 +203,9 @@ def setmag(magpot, verbose):
             sys.exit()
         
     #set the pot position of the magnet and recound the current and volage
-    tn = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)    
-    tn.write("setbias 9 "+str(numpy.round(magpot)) + " \n")
+    thzbiascomputer.write("setbias 9 "+str(numpy.round(magpot)) + " \n")
     # time.sleep(SleepPerMes)     
-    tn.close()
+
     
     V_mag, mA_mag, pot_mag = measmag(verbose)
     return V_mag, mA_mag, pot_mag
@@ -349,10 +234,9 @@ def setmag_only(magpot):
             sys.exit()
         
     #set the pot position of the magnet and record the current and voltage
-    tn = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)    
-    tn.write("setbias 9 "+str(numpy.round(magpot)) + " \n")
+    thzbiascomputer.write("setbias 9 "+str(numpy.round(magpot)) + " \n")
     # time.sleep(SleepPerMes)     
-    tn.close()
+
     return
 
 ############################
@@ -378,31 +262,25 @@ def setmag_highlow(magpot):
             print "killing script"
             sys.exit()
     elif ((0 <= magpot) and (magpot <65100)):
-        tn = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)    
-        tn.write("setbias 9 0 \n")    
-        tn.close()
+        thzbiascomputer.write("setbias 9 0 \n")
+
     else:
-        tn = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)    
-        tn.write("setbias 9 129796 \n")    
-        tn.close()
+        thzbiascomputer.write("setbias 9 129796 \n")
+
     sleep(0.5)
     #set the pot position of the magnet and record the current and voltage
-    tn = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)    
-    tn.write("setbias 9 "+str(numpy.round(magpot)) + " \n")
+    thzbiascomputer.write("setbias 9 "+str(numpy.round(magpot)) + " \n")
     # time.sleep(SleepPerMes)     
-    tn.close()
+
     return
 ######################
 ####### setmagI ######
-######################    
-    
+######################
 def setmagI(mA_user, verbose, careful):
-    import sys
-    import numpy
     from mag_config import step_decision, max_pot_pos, min_pot_pos, \
     high_pot_pos, low_pot_pos, loop1_thresh, pot_diff_thresh, loop1_max, \
     loop1_restar_max, subloop_max, subloop_min, rail_meas
-    
+
     # find the max magnet current
     V_max, mA_max, pot_max = setmag(max_pot_pos, verbose)
     # find the min magnet current
@@ -607,8 +485,7 @@ def setmagI(mA_user, verbose, careful):
 #####################
 
 def measSIS(verbose):
-    import sys
-    from sisbias_config import SleepPerMes, sleep_list
+    from sisbias_config import sleep_list
     
     channel = '0'
     
@@ -654,19 +531,16 @@ def measSIS(verbose):
 #########################
 
 def setfeedback(feedback):
-    import telnetlib
-    import time
     from sisbias_config import SleepPerMes_feedback
     
     status=False
-    tn = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)
     if feedback:
-        tn.write("feedback 1 \n")
+        thzbiascomputer.write("feedback 1 \n")
         time.sleep(SleepPerMes_feedback)
     else:
-        tn.write("feedback 0 \n")
+        thzbiascomputer.write("feedback 0 \n")
         time.sleep(SleepPerMes_feedback)
-    out1 = tn.read_very_eager()
+    out1 = thzbiascomputer.read_very_eager()
     if feedback:
         if out1 == 'Enabling SIS feedback loop (V-mode)\n':
             status=True
@@ -681,7 +555,7 @@ def setfeedback(feedback):
                   " Check the connection to the THz bias computer"
     else:
         print 'The variable feedback can only be True or False. Returning status=False'    
-    tn.close()
+
     
     return status 
   
@@ -691,10 +565,6 @@ def setfeedback(feedback):
 ####################  
 
 def setSIS(sispot, feedback, verbose, careful):
-    import telnetlib
-    import time
-    import numpy
-    import sys
     from sisbias_config import SleepPerMes, feedon_low, feedon_high, feedoff_low, feedoff_high
     
     uA_sis  = -999998
@@ -751,10 +621,9 @@ def setSIS(sispot, feedback, verbose, careful):
             print "reseting pot to safe value: " + str(sispot)
 
     #set the pot position of the magnet and record the current and voltage
-    tn = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)    
-    tn.write("setbias 0 "+str(numpy.round(sispot)) + " \n")
+    thzbiascomputer.write("setbias 0 "+str(numpy.round(sispot)) + " \n")
     #time.sleep(SleepPerMes)     
-    tn.close()
+
     
     mV_sis, uA_sis, pot_sis = measSIS(verbose)
 
@@ -767,10 +636,6 @@ def setSIS(sispot, feedback, verbose, careful):
 #########################
 
 def setSIS_only(sispot, feedback, verbose, careful):
-    import telnetlib
-    import time
-    import numpy
-    import sys
     from sisbias_config import SleepPerMes, feedon_low, feedon_high, feedoff_low, feedoff_high    
     
     # safty catches, to keep the SIS bias within nominal ranges   
@@ -815,34 +680,45 @@ def setSIS_only(sispot, feedback, verbose, careful):
                 sispot = 65100
             print "careful is off, so the show must go on"
             print "reseting pot to safe value: " + str(sispot)
-
     #set the pot position of the magnet and record the current and voltage
-    tn = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)    
-    tn.write("setbias 0 "+str(numpy.round(sispot)) + " \n")
-    time.sleep(SleepPerMes)     
-    tn.close()
+    thzbiascomputer.write("setbias 0 "+str(numpy.round(sispot)) + " \n")
+    time.sleep(SleepPerMes)
     return
 
 ##############################
 ###### CommandOutput_TP ######
 ##############################
 def CommandOutput_TP(sleep_time, sispot, channel):
-    import telnetlib
-    import time
+    out = []
     if sleep_time < 30:
-        tn = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)
-        tn.write("sweep " + channel + " " + sispot + " " + sispot +  " 1  \n")
-        time.sleep(sleep_time)
-        out = tn.read_very_eager()
+        thzbiascomputer.write("setbias " + channel + " \n")
+        junk = thzbiascomputer.read_until('v = ', float(sleep_time))
+        line = thzbiascomputer.read_until('\n', float(sleep_time))
+        out.append(line)
+        junk = thzbiascomputer.read_until('i = ', float(sleep_time))
+        line = thzbiascomputer.read_until('\n', float(sleep_time))
+        out.append(line)
+        junk = thzbiascomputer.read_until('t = ', float(sleep_time))
+        line = thzbiascomputer.read_until('\n', float(sleep_time))
+        out.append(line)
+        junk = thzbiascomputer.read_until('p = ', float(sleep_time))
+        line = thzbiascomputer.read_until('\n', float(sleep_time))
+        out.append(line)
     else:
-        tn = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)
-        tn.close()
-        time.sleep(sleep_time/2.0)
-        tn = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)
-        tn.write("sweep " + channel + " " + sispot + " " + sispot +  " 1  \n")
-        time.sleep(sleep_time/2.0)
-        out = tn.read_very_eager()
-        tn.close()
+        restartTelnet(sleep_time)
+        thzbiascomputer.write("setbias " + channel + " \n")
+        junk = thzbiascomputer.read_until('v = ', float(sleep_time))
+        line = thzbiascomputer.read_until('\n', float(sleep_time))
+        out.append(line)
+        junk = thzbiascomputer.read_until('i = ', float(sleep_time))
+        line = thzbiascomputer.read_until('\n', float(sleep_time))
+        out.append(line)
+        junk = thzbiascomputer.read_until('t = ', float(sleep_time))
+        line = thzbiascomputer.read_until('\n', float(sleep_time))
+        out.append(line)
+        junk = thzbiascomputer.read_until('p = ', float(sleep_time))
+        line = thzbiascomputer.read_until('\n', float(sleep_time))
+        out.append(line)
     return out
 
 
@@ -850,8 +726,6 @@ def CommandOutput_TP(sleep_time, sispot, channel):
 ###### attempt_measTP ######
 ############################
 def attempt_measTP(sleep_time, sispot, channel):
-    import time
-    import numpy
     mV_sis  = -999999
     uA_sis  = -999999
     tp_sis  = -999999
@@ -859,30 +733,12 @@ def attempt_measTP(sleep_time, sispot, channel):
     
     sispot = str(numpy.round(sispot))
     out = CommandOutput_TP(sleep_time, sispot, channel)
-    
-    parse1 = out.replace('sis 0 ', '')
-    parse2 = parse1.replace(' = ', ',')
-    
-    end_position1 = parse2.find('\n', 0)
-    end_position2 = parse2.find('\n', end_position1+1)
-    end_position3 = parse2.find('\n', end_position2+1)
-    end_position4 = parse2.find('\n', end_position3+1)
-    
-    mV_string  = parse2[0:end_position1]
-    uA_string  = parse2[end_position1+1:end_position2]
-    tp_string  = parse2[end_position2+1:end_position3]
-    pot_string = parse2[end_position3+1:end_position4]
-    
-    mV_start  =  mV_string.find(',',0)
-    uA_start  =  uA_string.find(',',0)
-    tp_start  =  tp_string.find(',',0)
-    pot_start = pot_string.find(',',0)
-    
-    mV_sis_temp  =  mV_string[mV_start+1:]
-    uA_sis_temp  =  uA_string[uA_start+1:]
-    tp_sis_temp  =  tp_string[tp_start+1:]
-    pot_sis_temp = pot_string[pot_start+1:]
-    
+
+    mV_sis_temp  = out[0]
+    uA_sis_temp  = out[1]
+    tp_sis_temp  = out[2]
+    pot_sis_temp = out[3]
+
     truth_list1 = []
     truth_list1.append(mV_sis_temp  == '')
     truth_list1.append(uA_sis_temp  == '')
@@ -893,10 +749,10 @@ def attempt_measTP(sleep_time, sispot, channel):
     if any(truth_list1):
         redo = True
     else:
-        mV_sis  = float(mV_string[mV_start+1:])
-        uA_sis  = float(uA_string[uA_start+1:])
-        tp_sis  = float(tp_string[tp_start+1:])
-        pot_sis = int(numpy.round(float(pot_string[pot_start+1:])))
+        mV_sis  = float(mV_sis_temp)
+        uA_sis  = float(uA_sis_temp)
+        tp_sis  = float(tp_sis_temp)
+        pot_sis = int(numpy.round(float(pot_sis_temp)))
             
         truth_list2 = []
         truth_list2.append(    20 <= mV_sis )
@@ -913,8 +769,6 @@ def attempt_measTP(sleep_time, sispot, channel):
 #######################
 
 def setSIS_TP(sispot, feedback, verbose, careful):
-    import sys
-    import time
     from sisbias_config import SleepPerMes, sleep_list
     channel = '0'
 
@@ -971,7 +825,6 @@ def setSIS_TP(sispot, feedback, verbose, careful):
 ###### measSIS_TP ######
 ########################
 def measSIS_TP(sispot, feedback, verbose, careful):
-    import sys
     from sisbias_config import SleepPerMes, sleep_list
     channel = '0'
     message_list = []
@@ -1017,9 +870,6 @@ def measSIS_TP(sispot, feedback, verbose, careful):
 #########################
 
 def setSIS_Volt(mV_user, verbose, careful, cheat_num):
-    import sys
-    import numpy
-    import time
     from matplotlib import pyplot as plt
     from domath import regrid, conv
     from operator import itemgetter
@@ -1391,9 +1241,6 @@ def setSIS_Volt(mV_user, verbose, careful, cheat_num):
 ####################
 
 def setLOI(uA_user, verbose, careful):
-    import sys
-    import time
-    import numpy
     from setLOI_config import uA_max, uA_min, sleep_time, max_meas_per_loop, scan_count_max, count_min
     
     # check to make sure the user input was within the range of values that can be achieved
@@ -1547,20 +1394,26 @@ def setLOI(uA_user, verbose, careful):
 ######################
   
 def zeropots(verbose=True):
-    from sisbias_config import zeropots_center_pos, zeropots_feedback, zeropots_careful, zeropots_max_count
-    from sisbias_config import zeropots_do_mag, zeropots_do_sis, zeropots_do_LO, UCA_voltage
-    from LOinput import RFoff
+    from sisbias_config import zeropots_center_pos, zeropots_feedback, zeropots_careful, zeropots_max_count,\
+        zeropots_do_mag, zeropots_do_sis, zeropots_do_LO, UCA_voltage
+    # from LOinput import RFoff
     status   = False
     finished = False  
     count = 0
-    
     if (zeropots_do_mag and zeropots_do_sis):
         while not finished:
             count = count + 1
             if zeropots_do_mag:
+                time.sleep(1)
                 V_mag,  mA_mag, pot_mag = setmag(zeropots_center_pos, verbose)
+                if verbose:
+                    print V_mag,  mA_mag, pot_mag, " Magnet"
             if zeropots_do_sis:
                 mV_sis, uA_sis, pot_sis = setSIS(zeropots_center_pos, zeropots_feedback, verbose, zeropots_careful)
+                time.sleep(1)
+                if verbose:
+                    print mV_sis, uA_sis, pot_sis, " SIS bias"
+
             if ((pot_mag == zeropots_center_pos) and (pot_sis == zeropots_center_pos)):
                 status   = True
                 finished = True
@@ -1572,17 +1425,19 @@ def zeropots(verbose=True):
                 finished = True
             elif ((pot_mag == zeropots_center_pos) and not (pot_sis == zeropots_center_pos)):
                 if verbose:
-                    print "The electromagnet was set to the central pot positiom: " + str(zeropots_center_pos)
+                    print "The electromagnet was set to the central pot position: " + str(zeropots_center_pos)
                     print "But, the SIS bias pot was not set properly, it value is: " + str(pot_sis)
                 zeropots_do_mag = False
             elif (not (pot_mag == zeropots_center_pos) and (pot_sis == zeropots_center_pos)):
                 if verbose:
-                    print "The SIS bias pot was set to the central pot positiom: " + str(zeropots_center_pos)
+                    print "The SIS bias pot was set to the central pot position: " + str(zeropots_center_pos)
                     print "But, the electromagnet pot was not set properly, it value is: " + str(pot_mag)
                 zeropots_do_sis = False
             elif (not (pot_mag == zeropots_center_pos) and not (pot_sis == zeropots_center_pos)):
                 if verbose:
                     print "Neither the SIS pot nor the elecromagnet pot were zeroed."
+                    print str(pot_mag) + ":pot_mag"
+                    print str(pot_sis) + ":pot_sis"
                     print "Trying again: attempt " + str(count + 1) + " of " + str(zeropots_max_count)
 
     elif zeropots_do_sis:
@@ -1636,7 +1491,7 @@ def zeropots(verbose=True):
                 print "returning status = False"
         
         # turn off the Anritsu signal generator
-        RFoff()
-        print "The Anritsu Signal generator has been sent the command to turn off its RF output."
+        # RFoff()
+        # print "The Anritsu Signal generator has been sent the command to turn off its RF output."
                 
     return status

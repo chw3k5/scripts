@@ -141,7 +141,8 @@ def getspec(filename, verbose=False, linear_sc=True, freq_start=0, freq_stop=6, 
 
 
 def getspecPlusTP(spec_filename, TP_filename, TPSampleFrequency, verbose=False, linear_sc=True,
-                  freq_start=0, freq_stop=6, sweep_time='AUTO', video_band=10, resol_band=30, attenu=0):
+                  freq_start=0, freq_stop=6, sweep_time='AUTO', video_band=10, resol_band=30, attenu=0,
+                  aveNum=1, lin_ref_lev=500):
     import visa
     import numpy
     import time
@@ -203,12 +204,12 @@ def getspecPlusTP(spec_filename, TP_filename, TPSampleFrequency, verbose=False, 
     # set the attenuation on the input\
     sa.write("AT " +  attenu_str)
     # averaging is turned on or off here
-    sa.write("VAVG 1")
+    sa.write("VAVG " + str(aveNum))
     #set the scale
     if linear_sc:
         sa.write("LN")
         # Reference Level
-        sa.write("RL 400 uV")
+        sa.write("RL " + str('%3.f' % lin_ref_lev) +" uV")
     else:
         sa.write("LG 10DB")
     # put the 'trace data format' of returned values as real numbers, option P
@@ -225,7 +226,7 @@ def getspecPlusTP(spec_filename, TP_filename, TPSampleFrequency, verbose=False, 
     # trigger a new sweep to start
     sa.write('clrw tra')
     extra_sleep = sweep_time_float*extra_sleep_fraction + extra_sleep_float
-    sweep_sleep = sweep_time_float+extra_sleep
+    sweep_sleep = (sweep_time_float+extra_sleep)*aveNum
     if verbose:
         print "sweeping..."
         print "Getting total power from the LabJack while sweeping for " + str('%2.3f' % sweep_sleep) + "s"

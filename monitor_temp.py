@@ -257,7 +257,7 @@ while monitoring:
         current_temp4 = temp4[len(temp4)-1]
 
         
-        if high_alarm_temperature <= current_temp4:
+        if high_alarm_temperature < current_temp4:
             alarm = True
         if current_temp4 < low_alarm_temperature:
             alarm = True
