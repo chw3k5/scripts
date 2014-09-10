@@ -549,7 +549,7 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
             if verbose:
                 print "doing Y factor calculation"
             mV_Yfactor, Yfactor, status = data2Yfactor(hot_sweep_mV_mean, cold_sweep_mV_mean, off_tp,
-                                                       hot_sweep_TP_mean, cold_sweep_TP_mean, regrid_mesh, verbose)
+                                                       hot_sweep_TP_mean, cold_sweep_TP_mean, regrid_mesh_mV, verbose)
             # save the results of the Y factor calculation 
             o = open(prodatadir + 'Ydata.csv', 'w')
             o.write('mV_Yfactor,Yfactor\n')
@@ -565,7 +565,7 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
 ######### General Options #########
 ###################################
 from sys import platform
-verbose=True # True or False (default is False)
+#verbose=True # True or False (default is False)
 
 ##### location of IV and TP parameter files, the data files
 #setnum  = 3

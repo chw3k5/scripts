@@ -1,6 +1,9 @@
 # intersecting_line.py
 # This is the location of the Kappa Scripts on Caleb's Mac
 import sys
+
+from oldscripts import YdataPro
+
 func_dir='/Users/chw3k5/Documents/Grad_School/Kappa/scripts'
 func_dir_exists=False
 for n in range(len(sys.path)):
@@ -19,7 +22,6 @@ import shutil
 matplotlib.rc('text', usetex=True)
 from matplotlib import pyplot as plt
 from operator import itemgetter
-from YdataPro import YdataPro
 from profunc import getYnums, getproparams, getprodata
 
 #####################    

@@ -1,28 +1,43 @@
 import sys
 
 # Import this is the directory that has my scripts
+from Plotting import SingleSpectraPlotter, YfactorSweepsPlotter, SimpleSweepPlot
+
 platform = sys.platform
-from datapro import SweepDataPro
-from SimpleSweepPlot import SimpleSweepPlot
-from SingleSpectraPlotter import SingleSpectraPlotter
+from datapro import SweepDataPro, YdataPro
 
-# The directory what the data is kept
-if platform == 'win32':
-    datadir = 'C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\sweep\\test1\\'
-elif platform == 'darwin':
-    datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/warmmag/'
 
-do_SweepDataPro = False
-do_SimpleSweepPlot = False
-do_SingeSpectraPlotter = True
 
+all_Single_Sweeps = True
+all_Ydata         = False
+
+### For Single Sweep ###
+do_SweepDataPro        = False
+do_SimpleSweepPlot     = False
+do_SingeSpectraPlotter = False
+
+### For Y-factor data and Sweeps ###
+do_YdataPro             = False
+do_YfactotSweepsPlotter = False
 
 ####################
 ### The Programs ###
 ####################
 
+### For Single Sweeps ###
+if all_Single_Sweeps:
+    do_SweepDataPro        = True
+    do_SimpleSweepPlot     = True
+    do_SingeSpectraPlotter = True
+
+# The directory what the data is kept
+if platform == 'win32':
+    datadir = 'C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\sweep\\warmmag\\'
+elif platform == 'darwin':
+    datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/warmmag/'
+
 if do_SweepDataPro:
-    SweepDataPro(datadir, verbose=True, search_4Sweeps=True, search_str='Y', Snums=[],
+    SweepDataPro(datadir, verbose=True, search_4Sweeps=False, search_str='Y', Snums=['00003'],
                  mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01, do_conv_mV=True, sigma_mV=0.08, min_cdf_mV=0.95,
                  do_normspectra=True, norm_freq=1.42, norm_band=0.060, do_freq_conv=True, min_cdf_freq=0.90, sigma_GHz=0.10)
 
@@ -35,3 +50,23 @@ if do_SimpleSweepPlot:
 if do_SingeSpectraPlotter:
     SingleSpectraPlotter(datadir, search_4Snums=True, Snums='', verbose=False,
                         show_plot=False, save_plot=True, do_eps=False)
+
+
+
+
+### For Y factor sweeps ###
+if all_Ydata:
+    do_YdataPro             = True
+    do_YfactotSweepsPlotter = True
+
+# The directory what the data is kept
+if platform == 'win32':
+    datadir = 'C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\sweep\\LOfreq\\'
+elif platform == 'darwin':
+    datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/LOfreq/'
+
+if do_YdataPro:
+    YdataPro(datadir, verbose=True, search_4Ynums=True, search_str='Y', Ynums=[], useOFFdata=False, Off_datadir='',
+             mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01, do_conv_mV=False, sigma_mV=0.03, min_cdf_mV=0.95,
+             do_normspectra=False, norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90,
+             sigma_GHz=0.05)

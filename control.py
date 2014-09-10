@@ -195,6 +195,7 @@ def attempt_meas(sleep_time, channel):
     pot = -999999
     
     out = CommandOutput(sleep_time, channel)
+    print out.replace('\r', "Here")
     
     if float(channel) < 8: 
         parse1 = out.replace('sis ' + channel + ' ', '')

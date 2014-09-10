@@ -6,7 +6,7 @@ def viewYfactorData(setnum, search_4Ynums, Ynums, verbose, standdev, std_num, do
     import numpy
     import shutil
     from matplotlib import pyplot as plt
-    matplotlib.rc('text', usetex=True)
+    #matplotlib.rc('text', usetex=True)
     
     # Import this is the directory that has my scripts
     func_dir='/Users/chw3k5/Documents/Grad_School/Kappa/scripts'

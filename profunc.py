@@ -57,7 +57,7 @@ def getproparams(filename):
     stdmag_V     = None
     meanmag_mA   = None
     stdmag_mA    = None
-    LOuAsearch    = None
+    LOuAsearch   = None
     LOuAset      = None
     UCA_volt     = None
     LOuA_set_pot = None
@@ -129,8 +129,8 @@ def getproparams(filename):
         elif params.param[params_index] == 'IFband':
             IFband = float(params.value[params_index])
     return K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, meanmag_mA, stdmag_mA, LOuAsearch, LOuAset, UCA_volt,\
-            LOuA_set_pot, LOuA_magpot,meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, stdSIS_tp, SIS_pot, \
-            del_time, LOfreq, IFband
+           LOuA_set_pot, LOuA_magpot,meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, stdSIS_tp, SIS_pot, \
+           del_time, LOfreq, IFband
 
 def get_fastIV(filename):
     import atpy
@@ -375,11 +375,19 @@ def getproYdata(datadir):
     
 def getYnums(datadir, search_str):
     import os
+    import sys
     # get the Y numbers from the directory names in the datadir directory
     alldirs = []
     for root, dirs, files in os.walk(datadir):
         alldirs.append(dirs)
-    topdirs = alldirs[0]
+    try:
+        topdirs = alldirs[0]
+    except IndexError:
+        print "This error happens when the directory specified:" + str(datadir)
+        print "Does not exist. Check that the directory is correct and try egain."
+        print "Here is the variable that had the error 'alldirs':"+str(alldirs)
+        print "Killing script."
+        sys.exit()
     Ynums = []
     for topdir_index in range(len(topdirs)):
         test_dir = topdirs[topdir_index]
