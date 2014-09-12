@@ -141,6 +141,8 @@ def AstroDataPro(datadir, prodataname, mono_switcher, do_regrid, do_conv, regrid
             sweep_uA_std.append(numpy.std(temp_uA))
             sweep_time_mean.append(numpy.mean(temp_time))
             temp_TP, TP_freq = getLJdata(sweepdir + "TP" + str(sweep_index + 1) + '.csv')
+            if sweep_index == 0:
+                TP_int_time = len(temp_TP)/TP_freq
             sweep_TP_mean.append(numpy.mean(temp_tp))
             sweep_TP_std.append(numpy.std(temp_tp))
             sweep_TP_num.append(len(temp_TP))
@@ -195,7 +197,7 @@ time_mean,pot,meas_num\n')
         print "Killing Script"
         sys.exit()
 
-    return astrosweep_found, sweep_mV_mean, sweep_TP_mean
+    return astrosweep_found, sweep_mV_mean, sweep_TP_mean, TP_int_time
 
 def GetSpecData(datadir, specdataname, do_norm=True,  norm_freq=1.42, norm_band=0.060,  mono_switcher_mV=True,
                 do_regrid_mV=True, do_conv_mV=False, regrid_mesh_mV=0.01, min_cdf_mV=0.90, sigma_mV=0.03,
@@ -346,9 +348,12 @@ def SweepPro(datadir, proparamsfile, prodataname_fast, prodataname_unpump, proda
                     regrid_mesh_mV, min_cdf_mV, sigma_mV, verbose)
 
     ### get the astronomy quality sweep data for this Y sweep
-    astrosweep_found, sweep_mV_mean, sweep_TP_mean \
+    astrosweep_found, sweep_mV_mean, sweep_TP_mean, TP_int_time \
         = AstroDataPro(datadir, prodataname_ast, mono_switcher_mV, do_regrid_mV, do_conv_mV, regrid_mesh_mV, min_cdf_mV,
                  sigma_mV, verbose)
+    n = open(proparamsfile, 'a')
+    n.write('TP_int_time,'  + str(TP_int_time)  + '\n')
+    n.close()
 
     ### get and process the spectra when available
     specsweep_found \
@@ -460,7 +465,7 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
         sys.path.append(func_dir)
 
     from profunc import getYnums
-    from domath import data2Yfactor
+    from domath import data2Yfactor, Specdata2Yfactor
     if platform == 'win32':
         prodatadir = datadir + "prodata\\"
     elif platform == 'darwin':
@@ -548,14 +553,21 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
         if (astrosweephot_found and astrosweepcold_found):
             if verbose:
                 print "doing Y factor calculation"
-            mV_Yfactor, Yfactor, status = data2Yfactor(hot_sweep_mV_mean, cold_sweep_mV_mean, off_tp,
-                                                       hot_sweep_TP_mean, cold_sweep_TP_mean, regrid_mesh_mV, verbose)
+            mV_Yfactor, Yfactor, status \
+                = data2Yfactor(hot_sweep_mV_mean, cold_sweep_mV_mean, off_tp,
+                               hot_sweep_TP_mean, cold_sweep_TP_mean, regrid_mesh_mV, verbose)
             # save the results of the Y factor calculation 
             o = open(prodatadir + 'Ydata.csv', 'w')
             o.write('mV_Yfactor,Yfactor\n')
             for sweep_index in range(len(mV_Yfactor)):
                 o.write(str(mV_Yfactor[sweep_index]) + ',' + str(Yfactor[sweep_index]) + '\n')    
             o.close()
+
+        if (hotspecsweep_found and coldspecsweep_found):
+            if verbose:
+                print "doing spectral Y factor calculation"
+            status = Specdata2Yfactor(prodatadir, verbose=verbose)
+
     if verbose:
         print "The YdataPro function has completed"
         

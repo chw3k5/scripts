@@ -1,11 +1,17 @@
+import atpy
+import numpy
+import os
+import shutil
+from sys import platform
+from domath import regrid, conv, derivative # Caleb's Programs
+from operator import itemgetter
+
 def getparams(filename):
-    import atpy
-    import numpy
     K_val        = None
     magisweep    = None
     magiset      = None
     magpot       = None
-    LOuAsearch    = None
+    LOuAsearch   = None
     LOuAset      = None
     UCA_volt     = None
     LOuA_set_pot = None
@@ -47,8 +53,6 @@ def getparams(filename):
     return K_val, magisweep, magiset, magpot, LOuAsearch, LOuAset, UCA_volt, LOuA_set_pot, LOuA_magpot, LOfreq, IFband
     
 def getproparams(filename):
-    import atpy
-    import numpy
     K_val        = None
     magisweep    = None
     magiset      = None
@@ -72,6 +76,7 @@ def getproparams(filename):
     del_time     = None
     LOfreq       = None
     IFband       = None
+    TP_int_time  = None
     params = atpy.Table(filename, type="ascii", delimiter=",")
     for params_index in range(len(params.param)):
         if params.param[params_index] == 'temp':
@@ -128,12 +133,13 @@ def getproparams(filename):
             LOfreq = float(params.value[params_index])
         elif params.param[params_index] == 'IFband':
             IFband = float(params.value[params_index])
+        elif params.param[params_index] == 'TP_int_time':
+            TP_int_time = float(params.value[params_index])
     return K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, meanmag_mA, stdmag_mA, LOuAsearch, LOuAset, UCA_volt,\
            LOuA_set_pot, LOuA_magpot,meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, stdSIS_tp, SIS_pot, \
-           del_time, LOfreq, IFband
+           del_time, LOfreq, IFband, TP_int_time
 
 def get_fastIV(filename):
-    import atpy
     mV   = []
     uA   = []
     tp   = []
@@ -150,7 +156,6 @@ def get_fastIV(filename):
     return mV, uA, tp, pot
   
 def getSISdata(filename):
-    import atpy
     mV   = []
     uA   = []
     tp   = []
@@ -169,7 +174,6 @@ def getSISdata(filename):
     return mV, uA, tp, pot, time
     
 def getmagdata(filename):
-    import atpy
     V   = []
     mA  = []
     pot = []
@@ -184,12 +188,6 @@ def getmagdata(filename):
     return V, mA, pot
     
 def getLJdata(filename):
-    import shutil
-    import atpy
-    import os
-    from sys import platform
-    # this is a test filename
-    #filename = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/test/rawdata/Y0001/hot/sweep/TP1.csv'
     if platform == 'win32':
         tempfilename = 'C:\\Users\\MtDewar\\Documents\\deleteME.csv'
     elif platform == 'darwin':
@@ -218,7 +216,6 @@ def getLJdata(filename):
     return TP, TP_freq
 
 def renamespec(filename):
-    import os
     old = open(filename, 'r')
     t = open('temp.csv', 'w')
     first = True
@@ -237,7 +234,6 @@ def renamespec(filename):
 
 
 def readspec(filename):
-    import atpy
     data = atpy.Table(filename, type="ascii", delimiter=",")
     freqs = data.GHz
     pwr  = data.pwr
@@ -245,31 +241,43 @@ def readspec(filename):
 
 
 def getproSweep(datadir):
-    import atpy
     datafile  = datadir + 'data.csv'
-    
-    temp = atpy.Table(datafile, type="ascii", delimiter=",")    
-    mV_mean   = temp.mV_mean
-    mV_std    = temp.mV_std
-    uA_mean   = temp.uA_mean
-    uA_std    = temp.uA_std
-    TP_mean   = temp.TP_mean
-    TP_std    = temp.TP_std
-    TP_num    = temp.TP_num
-    TP_freq   = temp.TP_freq
-    time_mean = temp.time_mean
-    pot       = temp.pot
-    meas_num  = temp.meas_num
+    if os.path.exists(datafile):
+        temp = atpy.Table(datafile, type="ascii", delimiter=",")
+        mV_mean   = temp.mV_mean
+        mV_std    = temp.mV_std
+        uA_mean   = temp.uA_mean
+        uA_std    = temp.uA_std
+        TP_mean   = temp.TP_mean
+        TP_std    = temp.TP_std
+        TP_num    = temp.TP_num
+        TP_freq   = temp.TP_freq
+        time_mean = temp.time_mean
+        pot       = temp.pot
+        meas_num  = temp.meas_num
+        astroprodata_found = True
+    else:
+        mV_mean   = None
+        mV_std    = None
+        uA_mean   = None
+        uA_std    = None
+        TP_mean   = None
+        TP_std    = None
+        TP_num    = None
+        TP_freq   = None
+        time_mean = None
+        pot       = None
+        meas_num  = None
+        astroprodata_found = False
     
     return mV_mean, mV_std,  uA_mean, uA_std,TP_mean, TP_std, TP_num, TP_freq, \
-    time_mean, pot, meas_num
+    time_mean, pot, meas_num, astroprodata_found
      
 def getproYdata(datadir):
-    import atpy
     hotdatafile  = datadir + 'hotdata.csv'
     colddatafile = datadir + 'colddata.csv'
     Ydatafile    = datadir + 'Ydata.csv'
-    
+
     temp = atpy.Table(hotdatafile, type="ascii", delimiter=",")    
     hot_mV_mean   = temp.mV_mean
     hot_mV_std    = temp.mV_std
@@ -374,8 +382,6 @@ def getproYdata(datadir):
     hot_meas_num, cold_meas_num
     
 def getYnums(datadir, search_str):
-    import os
-    import sys
     # get the Y numbers from the directory names in the datadir directory
     alldirs = []
     for root, dirs, files in os.walk(datadir):
@@ -397,8 +403,6 @@ def getYnums(datadir, search_str):
     return Ynums
     
 def getSnums(datadir):
-    import os
-    import sys
     search_str = 'Y'
     # get the Y numbers from the directory names in the datadir directory
     alldirs = []
@@ -421,9 +425,6 @@ def getSnums(datadir):
     return Snums
 
 def ProcessMatrix(raw_matrix, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose):
-    import numpy
-    from domath import regrid, conv
-    from operator import itemgetter
     matrix        = raw_matrix
     mono_matrix   = False
     regrid_matrix = False
@@ -444,8 +445,6 @@ def ProcessMatrix(raw_matrix, mono_switcher, do_regrid, do_conv, regrid_mesh, mi
     return matrix, raw_matrix, mono_matrix, regrid_matrix, conv_matrix
     
 def do_derivative(matrix, der1_int, do_der1_conv, der1_min_cdf, der1_sigma, der2_int, do_der2_conv, der2_min_cdf, der2_sigma, regrid_mesh, verbose):
-    from domath import conv, derivative
-    
     status, der1 = derivative(matrix, der1_int)
     
     if do_der1_conv:

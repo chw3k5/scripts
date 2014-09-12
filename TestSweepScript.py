@@ -57,11 +57,13 @@ BiasSweep(datadir, verbose=False, verboseTop=True, verboseSet=True, careful=Fals
 #             do_normspectra=True, norm_freq=1.42, norm_band=0.060, do_freq_conv=True, min_cdf_freq=0.90, sigma_GHz=0.10)
 
 
-#from SimpleSweepPlot import SimpleSweepPlot
-#SimpleSweepPlot(datadir, search_4Snums=True, Snums='', verbose=True, standdev=True, std_num=3, do_title=True,
-#                show_plot=False, save_plot=True, do_eps=False, show_fastIV=True, show_unpumped=True,
-#                find_lin_mVuA=False, linif=0.3, der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
-#                der2_int=1, do_der2_conv=True, der2_min_cdf=0.95, der2_sigma=0.05)
+from Plotting import SimpleSweepPlot
+SimpleSweepPlot(datadir, search_4Snums=True, Snums='', verbose=True, show_standdev=True, std_num=3, display_params=True,
+                show_plot=False, save_plot=True, do_eps=False,
+                find_lin_mVuA=False, linif=0.3, der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
+                der2_int=1, do_der2_conv=True, der2_min_cdf=0.95, der2_sigma=0.05,
+                plot_astromVuA=True, plot_astromVtp=True, plot_fastmVuA=False, plot_fastmVtp=False,
+                plot_unpumpmVuA=False, plot_unpumpmVtp=False)
 
 #from SingleSpectraPlotter import SingleSpectraPlotter
 #SingleSpectraPlotter(datadir, search_4Snums=True, Snums='', verbose=False,

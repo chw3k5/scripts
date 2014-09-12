@@ -1,4 +1,5 @@
-def viewYfactorData(setnum, search_4Ynums, Ynums, verbose, standdev, std_num, do_title, show_plot, save_plot, do_eps, do_Ycut, start_Yplot, end_Yplot, datadir, show_fastIV):
+def viewYfactorData(setnum, search_4Ynums, Ynums, verbose, standdev, std_num, do_title, show_plot, save_plot,
+                    do_eps, do_Ycut, start_Yplot, end_Yplot, datadir, show_fastIV):
 
     import sys
     import os
@@ -51,7 +52,10 @@ def viewYfactorData(setnum, search_4Ynums, Ynums, verbose, standdev, std_num, do
             print "ploting for Ynum: " + str(Ynum)
 	    
         proYdatadir  = prodatadir + Ynum + '/'
-        Yfactor, mV, hot_mV_std, cold_mV_std, hot_uA_mean, cold_uA_mean, hot_uA_std, cold_uA_std, hot_TP_mean, cold_TP_mean, hot_TP_std, cold_TP_std, hot_TP_num, cold_TP_num, hot_TP_freq, cold_TP_freq, hot_time_mean, cold_time_mean, hot_pot, cold_pot, hot_meas_num, cold_meas_num = getproYdata(proYdatadir)
+        Yfactor, mV, hot_mV_std, cold_mV_std, hot_uA_mean, cold_uA_mean, hot_uA_std, cold_uA_std, hot_TP_mean, \
+        cold_TP_mean, hot_TP_std, cold_TP_std, hot_TP_num, cold_TP_num, hot_TP_freq, cold_TP_freq, hot_time_mean, \
+        cold_time_mean, hot_pot, cold_pot, hot_meas_num, cold_meas_num \
+            = getproYdata(proYdatadir)
         
         # get fastIV processed data
         if show_fastIV:
@@ -80,7 +84,7 @@ def viewYfactorData(setnum, search_4Ynums, Ynums, verbose, standdev, std_num, do
         fig, ax1 = plt.subplots()
         
         if do_Ycut:
-	    ycut_low = numpy.where(mV < start_Yplot)
+            ycut_low = numpy.where(mV < start_Yplot)
             ycut_low_ind = ycut_low[0][-1]
             ycut_high = numpy.where(mV > end_Yplot)
             ycut_high_ind = ycut_high[0][0]

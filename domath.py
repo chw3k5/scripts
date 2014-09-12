@@ -1,9 +1,12 @@
+import numpy
+import scipy.stats
+import math
+import sys
+
 ####################
 ###### regrid ######
 ####################
-
 def regrid(data, mesh, verbose):
-    import numpy
     # my regrid function likes data to be in one 2D-array with 
     # data[:,0] to be the data that is being made to have even spacing.
     # My regridding function requires that the data be monotonic when compared
@@ -127,11 +130,7 @@ def regrid(data, mesh, verbose):
 ##################
 ###### conv ######
 ##################
-
 def conv(data, mesh, min_cdf, sigma, verbose):
-    import numpy as np
-    import scipy.stats
-    import math
     status = False
     if ((not verbose == 'Y') or (not verbose == 'T') or (verbose == True)):
         print 'Doing convolution of data cdf = ' + str(min_cdf) + '  sigma = ' +str(sigma)
@@ -149,18 +148,18 @@ def conv(data, mesh, min_cdf, sigma, verbose):
             finished=True
     Xnorm=range(-n,n+1)
     norm=scipy.stats.norm(0, sigmaSteps).pdf(Xnorm)
-    normMatrix=np.zeros((mV_len,mV_len+len(norm)-1),dtype=float)
+    normMatrix=numpy.zeros((mV_len,mV_len+len(norm)-1),dtype=float)
     
     # matrix kernal for convolution
     for m in range(0,mV_len):
-        tempVec=np.zeros((mV_len+len(norm)-1),dtype=float)
+        tempVec=numpy.zeros((mV_len+len(norm)-1),dtype=float)
         tempVec[m:m+2*n+1]=norm
         normMatrix[m,]=tempVec
     normMatrix2=normMatrix[:,n:len(normMatrix[0,:])-n]
     # here is the point where the actual convolution takes place
-    weight=np.sum(normMatrix2,axis=1)
+    weight=numpy.sum(normMatrix2,axis=1)
     for p in range(len(data[0,:])-1):        
-        data[:,p+1] = np.dot(data[:,p+1], normMatrix2)/weight
+        data[:,p+1] = numpy.dot(data[:,p+1], normMatrix2)/weight
         status = True
     return data, status
 
@@ -168,9 +167,7 @@ def conv(data, mesh, min_cdf, sigma, verbose):
 #######################
 ###### derivaive ######
 #######################
-
 def derivative(data, deriv_int):
-    import numpy
     # y'=df(mV)/dmV
     # y'=d(data[:,1:])/d(data[:,0])
     last_index = len(data[:,0])
@@ -196,7 +193,6 @@ def derivative(data, deriv_int):
 ########################
 
 def findlinear(x, ydprime, linif, verbose):
-    import numpy
     status = True
     if len(x) == len(ydprime):
         status = True
@@ -232,7 +228,6 @@ def findlinear(x, ydprime, linif, verbose):
 
 def resfitter(x, y, lin_start, lin_end):
     # this reports the slopes and the data for the bestfit lines for linear regions
-    import numpy
     big=-1
     Y=numpy.zeros((2,len(lin_end)))
     X=numpy.zeros((2,len(lin_end)))
@@ -255,8 +250,6 @@ def resfitter(x, y, lin_start, lin_end):
     return slopes, intercepts, X, Y
     
 def linfit(X, Y, linif, der1_int, do_der1_conv, der1_min_cdf, der1_sigma, der2_int, do_der2_conv, der2_min_cdf, der2_sigma, verbose):
-    import numpy
-    from profunc import do_derivative  
     matrix = numpy.zeros((len(X),2))
     matrix[:,0] = X
     matrix[:,1] = Y                
@@ -276,7 +269,6 @@ def linfit(X, Y, linif, der1_int, do_der1_conv, der1_min_cdf, der1_sigma, der2_i
 ############################
 
 def AllanVar(data, tau, verbose):
-    import numpy
     data_len = len(data)
     T_max = int(numpy.floor(float(data_len)/(tau*4.0)))
     Variance = numpy.zeros(T_max)
@@ -356,85 +348,147 @@ def AllanVarM(data, M, verbose):
     return Variance
 
 
+#########################
+###### FindOverlap ######
+#########################
+def FindOverlap(X, Y, mesh):
+    status   = True
+    finished = False
+    count_X        = 0
+    count_Y        = 0
+    loop_count     = 0
+    loop_count_max = len(X)+len(Y)-1
+
+    X_test = X/mesh
+    Y_test = Y/mesh
+
+    while not finished:
+        if round(X_test[count_X])==round(Y_test[count_Y]):
+            finished=True
+        elif round(X_test[count_X])<round(Y_test[count_Y]):
+            count_X += 1
+        else:
+            count_Y += 1
+        loop_count=loop_count+1
+        if loop_count > loop_count_max:
+            print "The loop has gone on long enough to exceed the length of both Y_mV and X_mV, something is wrong maybe with the regridding. Status=False"
+            status=False
+        if ((count_X>=len(X)-1) or (count_Y>=len(Y)-1)):
+            finished=True
+            print "It seems the mV values of Y and X do not overlap, returning status=False"
+            status=False
+    if status:
+        length  = min(len(X[count_X:]),len(Y[count_Y:]))
+    else:
+        length  = None
+
+    return status, count_X, count_Y, length
+
 ##########################
 ###### data2Yfactor ######
 ##########################
-    
 def data2Yfactor(hot_mV, cold_mV, off_tp, hot_tp, cold_tp, mesh, verbose):
-    import numpy
     status=True
     # the first thing that we need to do is find the over lap in the mV range for off, hot and cold
     off=numpy.mean(off_tp)
-    count_hot=0
-    count_cold=0
-    loop_count=0
-    loop_count_max=len(hot_mV)+len(cold_mV)-1
-    finished=False
-    
-    hot_test=hot_mV/mesh
-    cold_test=cold_mV/mesh
-    
-    while not finished:
-        if round(hot_test[count_hot])==round(cold_test[count_cold]):
-            finished=True
-        elif round(hot_test[count_hot])<round(cold_test[count_cold]):
-            count_hot=count_hot+1
-        else:
-            count_cold=count_cold+1
-        loop_count=loop_count+1
-        if loop_count > loop_count_max:
-            print "The loop has gone on long enough to exceed the length of both cold_mV and hot_mV, something is wrong maybe with the regridding. Status=False"
-            status=False
-            mV_Yfactor=0 
-            Yfactor= 0
-        if ((count_hot>=len(hot_mV)-1) or (count_cold>=len(cold_mV)-1)):
-            finished=True
-            print "It seems the mV values of cold and hot do not overlap, ruturning status=False"
-            status=False
-            mV_Yfactor=0 
-            Yfactor= 0
-            
+    status, start_index_hot, start_index_cold, len_mV = FindOverlap(hot_mV, cold_mV, mesh)
     if status:
-        len_mV=min(len(hot_mV[count_hot:]),len(cold_mV[count_cold:]))
-        mV_Yfactor = numpy.zeros((len_mV))
-        Yfactor    = numpy.zeros((len_mV))
-    	
-        for x in range(min(len(hot_mV[count_hot:]),len(cold_mV[count_cold:]))):
-            mV_Yfactor[x]=hot_mV[count_hot+x]
-            Yfactor[x]=((hot_tp[x]-off)/(cold_tp[x]-off))
-        # this feature is now found in the function Ydatastats
-        #max_Yfactor=-1
-        #mV_max_Yfactor=-999999
-        #min_Yfactor=999999
-        #mV_min_Yfactor=-999999
-        #count=0
-        #summer=0
-        #for x in range(len(Yfactor)):
-        #    if ((mV_Yfactor[x] >= start_Yrange) and (mV_Yfactor[x] <= end_Yrange)):
-        #        count=count+1
-        #        summer=summer+Yfactor[x]
-        #        if max_Yfactor < Yfactor[x]:
-        #            max_Yfactor = Yfactor[x]
-        #            mV_max_Yfactor = mV_Yfactor[x]
-        #       if min_Yfactor > Yfactor[x]:
-        #            min_Yfactor = Yfactor[x]
-        #            mV_min_Yfactor = mV_Yfactor[x]
-        #mean_Yfactor=summer/count
-        #if ((mV_max_Yfactor==-999999) or (max_Yfactor==-1)):
-        #    status=False
-        #    print "The was a problem finding the mV of the max Yfactor"
-        #if ((mV_min_Yfactor==-999999) or (min_Yfactor==999999)):
-        #    status=False
-        #    print "The was a problem finding the mV of the min Yfactor"
+        mV_Yfactor = hot_mV[start_index_hot:start_index_hot+len_mV]
+        # The Y-Factor calculation
+        Yfactor    = []
+        for x in range(len_mV):
+            Yfactor.append((hot_tp[x]-off)/(cold_tp[x]-off))
+    else:
+        mV_Yfactor = None
+        Yfactor    = None
+        print "data2Yfactor failed"
 
     return mV_Yfactor, Yfactor, status
+
+
+##############################
+###### Specdata2Yfactor ######
+##############################
+def Specdata2Yfactor(prodatadir, verbose=False):
+    hot_freqs_file  = prodatadir + "hotspecdata_freq.npy"
+    hot_mVs_file    = prodatadir + "hotspecdata_mV.npy"
+    hot_pwr_file    = prodatadir + "hotspecdata_pwr.npy"
+    cold_freqs_file = prodatadir + "coldspecdata_freq.npy"
+    cold_mVs_file   = prodatadir + "coldspecdata_mV.npy"
+    cold_pwr_file   = prodatadir + "coldspecdata_pwr.npy"
+
+    hot_freqs  = numpy.load(hot_freqs_file)
+    hot_mVs    = numpy.load(hot_mVs_file)
+    hot_pwr    = numpy.load(hot_pwr_file)
+    cold_freqs = numpy.load(cold_freqs_file)
+    cold_mVs   = numpy.load(cold_mVs_file)
+    cold_pwr   = numpy.load(cold_pwr_file)
+
+    mV_mesh = abs(hot_mVs[1,0] - hot_mVs[0,0])
+    mV_mesh_test = abs(cold_mVs[1,0] - cold_mVs[0,0])
+    if not ((mV_mesh - mV_mesh_test) < 0.0001):
+        print "The mV mesh of the hot and cold spectral frequency surface do not match in the directory:"
+        print prodatadir
+        print mV_mesh, " is the hot mV mesh"
+        print mV_mesh_test, " is the cold mV mesh"
+        sys.exit()
+
+    # Find the Overlap of the hot and cold Matrices in mV
+    hot_mV  =  hot_mVs[:,0]
+    cold_mV = cold_mVs[:,0]
+    status, start_index_hot_mV, start_index_cold_mV, len_mV = FindOverlap(hot_mV, cold_mV, mV_mesh)
+    if status:
+        end_index_hot_mV  = start_index_hot_mV+len_mV
+        end_index_cold_mV = start_index_cold_mV+len_mV
+        hot_freqs  = hot_freqs[start_index_hot_mV:end_index_hot_mV,:]
+        hot_mVs    = hot_mVs[start_index_hot_mV:end_index_hot_mV,:]
+        hot_pwr    = hot_pwr[start_index_hot_mV:end_index_hot_mV,:]
+        cold_freqs = cold_freqs[start_index_cold_mV:end_index_cold_mV,:]
+        cold_mVs   = cold_mVs[start_index_cold_mV:end_index_cold_mV,:]
+        cold_pwr   = cold_pwr[start_index_cold_mV:end_index_cold_mV,:]
+
+        # Find the Overlap of the hot and cold Matrices in frequency
+        freq_mesh      = abs(hot_freqs[0,1]  - hot_freqs[0,0])
+        freq_mesh_test = abs(cold_freqs[0,1] - cold_freqs[0,0])
+        if not ((freq_mesh - freq_mesh_test) < 0.0001):
+            print "The freq mesh of the hot and cold spectral frequency surface do not match in the directory:"
+            print prodatadir
+            print freq_mesh, " is the hot freq mesh"
+            print freq_mesh_test, " is the cold freq mesh"
+            sys.exit()
+
+        hot_freq  =  hot_freqs[0,:]
+        cold_freq = cold_freqs[0,:]
+        status, start_index_hot_freq, start_index_cold_freq, len_freq = FindOverlap(hot_freq, cold_freq, freq_mesh)
+        if status:
+            end_index_hot_freq  = start_index_hot_freq+len_freq
+            end_index_cold_freq = start_index_cold_freq+len_freq
+            hot_freqs  = hot_freqs[:,start_index_hot_freq:end_index_hot_freq]
+            hot_mVs    = hot_mVs[:,start_index_hot_freq:end_index_hot_freq]
+            hot_pwr    = hot_pwr[:,start_index_hot_freq:end_index_hot_freq]
+            cold_freqs = cold_freqs[:,start_index_cold_freq:end_index_cold_freq]
+            cold_mVs   = cold_mVs[:,start_index_cold_freq:end_index_cold_freq]
+            cold_pwr   = cold_pwr[:,start_index_cold_freq:end_index_cold_freq]
+
+            if status:
+                YspecmV = hot_pwr/cold_pwr
+                numpy.save(prodatadir + "Y.npy",YspecmV)
+                numpy.save(prodatadir + "Y_freq.npy",hot_freqs)
+                numpy.save(prodatadir + "Y_mV.npy",hot_mVs)
+
+    if not status:
+        print "The Specdata2Yfactor failed in the directory:"
+        print prodatadir
+        print "Killing the script"
+        sys.exit()
+
+    return status
 
 
 #########################
 ###### Ydata_stats ######
 #########################
-    
-def Ydata_stats(mV_Yfactor, Yfactor, start_Yrange, end_Yrange):
+def Ydata_stats(freq_Yfactor, Yfactor, start_Yrange, end_Yrange):
     status = True
     max_Yfactor=-1
     mV_max_Yfactor=-999999
