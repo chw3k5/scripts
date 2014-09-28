@@ -115,7 +115,7 @@ for iii in range(len(Y_list)):
                         z_handle="Y factor at " + str('%1.2f' % temp_data.YmV[0]) + 'mV'
                         levels = numpy.arange(1.3, 2.11, 0.05)
                 else:
-           	    print "The z_option selected was not found. The option was: "+ str(z_option)
+                    print "The z_option selected was not found. The option was: "+ str(z_option)
                     sys.exit()
                 
                 mV_handle = str('%1.2f' % temp_data.YmV[0]) + 'mV'

@@ -24,6 +24,45 @@ def clearall():
     for var in all:
         del globals()[var]
 clearall()
+
+def GenEmailText(temp_data, Nhours, totalhours):
+
+
+    hours_format_str = '%3.2f'
+    temps_format_str = '%2.3f'
+
+    body_text = ''
+
+    for single_data in temp_data:
+        monitor_num   = single_data[0]
+        current_temp  = single_data[1]
+        alldata_mean  = single_data[2]
+        alldata_std   = single_data[3]
+        Nsecdata_mean = single_data[4]
+        Nsecdata_std  = single_data[5]
+
+        if monitor_num == 4:
+            body_text += "Receiver temp = "
+        elif monitor_num == 3:
+            body_text += "Inner shield  = "
+        elif monitor_num == 2:
+            body_text += "Outer shield  = "
+        else:
+            body_text += "Monitor " + str(monitor_num) + " = "
+
+        current_temp_str = str(temps_format_str % current_temp4) + "K\n"
+
+        Nhours_temp_str  = "Over the last " + str(hours_format_str % Nhours) + " hours:\n"
+        Nhours_temp_str += str(temps_format_str % Nsecdata_mean) + " K  (" + str(temps_format_str % Nsecdata_std) + ") K\n"
+
+        all_temp_str  = "Over the length of the temperature file " + str(hours_format_str % totalhours) + " hours:\n"
+        all_temp_str += str(temps_format_str % alldata_mean) + " K  (" + str(temps_format_str % alldata_std) + ") K\n"
+
+        body_text += current_temp_str + Nhours_temp_str + all_temp_str + '\n'
+
+
+    return body_text
+
 ###############################################################################
 import serial, signal, time, os, sys, atpy, numpy, matplotlib
 from matplotlib import pyplot as plt
@@ -73,20 +112,20 @@ filename = 'temperatures5.csv'
 max_count = 5 # in loops (set to -1 to set to infinity)
 max_time  = 60 # in seconds (set to -1 to set to infinity)
 
-monitor_time  = 3*7*24*60*60 # in seconds (This is the total time that is scrip will monitor temperatures from the lakeshore)
+monitor_time  = 3*7*24*60*60 # in seconds (This is the total time that is scrip will monitor temperatures from the Lakeshore monitor)
 monitor_sleep = 5*60   # in seconds
 
-Nsecs        =  24*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
+Nsecs        =  1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
 
 PeriodicEmail = True
-seconds_per_email = 9*60*60 #12*60*60 # in seconds
+seconds_per_email = 1*60*60 #12*60*60 # in seconds
 
-high_alarm_temperature = 4.3 # in Kelvin
-low_alarm_temperature  = 0 # in Kelvin
+high_alarm_temperature = 300. # in Kelvin
+low_alarm_temperature  = 100. # in Kelvin
 
 meas_period      = 7.0 # in seconds
 rest_time        = 0.5 # in seconds
-num_of_temp2read = 6   # 
+num_of_temp2read = 3   #
 sleep_per_meas   = meas_period - 2*rest_time*num_of_temp2read
 if sleep_per_meas <= 0:
     sleep_per_meas = 0
@@ -259,8 +298,10 @@ while monitoring:
         
         if high_alarm_temperature < current_temp4:
             alarm = True
+            alarm_msg = "High alarm Temperature of " + str(high_alarm_temperature) + " K  has been passed.\n"
         if current_temp4 < low_alarm_temperature:
             alarm = True
+            alarm_msg = "Low alarm Temperature of " + str(low_alarm_temperature) + " K  has been passed.\n"
         else:
             alarm = False
         ###################
@@ -273,47 +314,30 @@ while monitoring:
         if alarm:
             alarm_subject = "CRYOSTAT ALARM - " + str('%2.3f' % current_temp4) + "K"
             print alarm_subject
-            
-            alarm_body_text = ''
-            alarm_body_text = alarm_body_text + "RECEIVER TEMP = " + str('%2.3f' % current_temp4) + "K\nlast " \
-            + str('%2.2f' % Nhours) + " hours (mean, std) = (" + str('%2.3f' % Nsecs_mean4) + 'K, ' + str('%2.3f' % Nsecs_std4) + "K)\n" \
-            + "all measurements " + str('%3.2f' % totalhours) + " hours (mean, std) = (" + str('%2.3f' % temp4_mean) \
-            + 'K, ' + str('%2.3f' % temp4_std) + "K)\n\n" \
-            + "INNER SHIELD = " + str('%2.3f' % current_temp2) + "K\nlast " \
-            + str('%2.2f' % Nhours) +" hours (mean, std) = (" + str('%2.3f' % Nsecs_mean2) + 'K, ' + str('%2.3f' % Nsecs_std2) \
-            + "K)\nall measurements " + str('%3.2f' % totalhours) + " hours (mean, std) = (" + str('%2.3f' % temp2_mean) \
-            + 'K, ' + str('%2.3f' % temp2_std) + "K)\n\n" \
-            + "OUTER SHIELD = " + str('%2.3f' % current_temp3) + "K\nlast " + str('%2.2f' % Nhours) +" hours (mean, std) = ("\
-            + str('%2.3f' % Nsecs_mean3) + 'K, ' + str('%2.3f' % Nsecs_std3) + "K)\nall measurements " + str('%3.2f' % totalhours)\
-            + " hours (mean, std) = (" + str('%2.3f' % temp3_mean) + 'K, ' + str('%2.3f' % temp3_std) + "K)\n\n" 
-            
+
+            temp_data = [(4,current_temp4, temp4_mean, temp4_std, Nsecs_mean4, Nsecs_std4),
+                         (3,current_temp3, temp3_mean, temp3_std, Nsecs_mean3, Nsecs_std2),
+                         (2,current_temp2, temp2_mean, temp2_std, Nsecs_mean2, Nsecs_std2)]
+
+            body_text = GenEmailText(temp_data, Nhours, totalhours)
+
+            alarm_body_text = alarm_msg + body_text
             email_caleb(alarm_subject, alarm_body_text)
             text_caleb(alarm_subject)
             #email_groppi(alarm_subject, alarm_body_text)
+
+            Email_time = current_time
+            EmailTrigger = False
+
         else:
             if EmailTrigger:
                 subject = "periodic cryostat update - " + str('%2.3f' % current_temp4) + "K"            
-                body_text = ''
-                body_text = body_text + "Receiver temp = " + str('%2.3f' % current_temp4) + "K\nlast " 
-                body_text = body_text + str('%2.2f' % Nhours) +" hours (mean, std) = ("
-                body_text = body_text + str('%2.3f' % Nsecs_mean4) + 'K, ' + str('%2.3f' % Nsecs_std4)
-                body_text = body_text + "K)\nall measurements " + str('%3.2f' % totalhours) 
-                body_text = body_text + " hours (mean, std) = (" + str('%2.3f' % temp4_mean) 
-                body_text = body_text + 'K, ' + str('%2.3f' % temp4_std) + "K)\n\n" 
-            
-                body_text = body_text + "Inner shield = " + str('%2.3f' % current_temp2) + "K\nlast " 
-                body_text = body_text + str('%2.2f' % Nhours) +" hours (mean, std) = (" 
-                body_text = body_text + str('%2.3f' % Nsecs_mean2) + 'K, ' + str('%2.3f' % Nsecs_std2) 
-                body_text = body_text + "K)\nall measurements " + str('%3.2f' % totalhours) 
-                body_text = body_text + " hours (mean, std) = (" + str('%2.3f' % temp2_mean) 
-                body_text = body_text + 'K, ' + str('%2.3f' % temp2_std) + "K)\n\n" 
-                
-                body_text = body_text + "Outer shield = " + str('%2.3f' % current_temp3) + "K\nlast " 
-                body_text = body_text + str('%2.2f' % Nhours) +" hours (mean, std) = (" 
-                body_text = body_text + str('%2.3f' % Nsecs_mean3) + 'K, ' + str('%2.3f' % Nsecs_std3) 
-                body_text = body_text + "K)\nall measurements " + str('%3.2f' % totalhours) 
-                body_text = body_text + " hours (mean, std) = (" + str('%2.3f' % temp3_mean) 
-                body_text = body_text + 'K, ' + str('%2.3f' % temp2_std) + "K)\n\n"
+
+                temp_data = [(4,current_temp4, temp4_mean, temp4_std, Nsecs_mean4, Nsecs_std4),
+                             (3,current_temp3, temp3_mean, temp3_std, Nsecs_mean3, Nsecs_std2),
+                             (2,current_temp2, temp2_mean, temp2_std, Nsecs_mean2, Nsecs_std2)]
+
+                body_text = GenEmailText(temp_data, Nhours, totalhours)
                 
                 email_caleb(subject, body_text)
                 Email_time = current_time

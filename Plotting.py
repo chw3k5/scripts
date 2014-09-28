@@ -1,37 +1,15 @@
 from sys import platform
+import sys
 import os
 import numpy
 import matplotlib
 from matplotlib import pyplot as plt
 #if platform == 'darwin':
 #    matplotlib.rc('text', usetex=True)
-from profunc import getproparams,  getproSweep, get_fastIV, getproYdata # Caleb's Functions
+from profunc import getproparams, getmultiParams,  getproSweep, get_fastIV, getproYdata, GetProDirsNames # Caleb's Functions
 from domath  import linfit # Caleb's Functions
 
 
-def GetProDirsNames(datadir, search_4nums, nums):
-    if platform == 'win32':
-        prodatadir = datadir + 'prodata\\'
-        plotdir    = datadir + 'plots\\'
-    elif platform == 'darwin':
-        prodatadir = datadir + 'prodata/'
-        plotdir    = datadir + 'plots/'
-    if os.path.isdir(plotdir):
-        None
-        # remove old processed data
-        # shutil.rmtree(plotdir)
-        # make a folder for new processed data
-        # os.makedirs(plotdir)
-    else:
-        # make a folder for new processed data
-        os.makedirs(plotdir)
-    if search_4nums:
-        # get the Y numbers from the directory names in the datadir directory
-        alldirs = []
-        for root, dirs, files in os.walk(prodatadir):
-            alldirs.append(dirs)
-        nums = alldirs[0]
-    return nums, prodatadir, plotdir
 
 
 def GetAllTheProFastSweepData(prodatadir):
@@ -60,6 +38,91 @@ def GetAllTheProFastSweepData(prodatadir):
     return fastprodata_found, unpumpedprodata_found, \
     mV_fast, uA_fast, tp_fast, pot_fast, \
     mV_unpumped, uA_unpumped, tp_unpumped, pot_unpumped
+
+
+
+def DataTrimmer(min_trim, max_trim, ordered_set, trim_list):
+    set_max = max(ordered_set)
+    set_min = min(ordered_set)
+    min_trimmed = ordered_set
+    min4min_trim = None
+    status = True
+    trimmed = None
+
+    if max_trim < min_trim:
+        print "max_trim is less than or equal to min_trim, min trim must be strictly less than max_trim"
+        print "min_trim:", min_trim
+        print "max_trim:", max_trim
+        print "returning status=False"
+        status = False
+    else:
+        # Min trim
+        if min_trim < set_max:
+            for index_min_trim in range(len(ordered_set[:])):
+               if min_trim <= ordered_set[index_min_trim]:
+                    min_trimmed = ordered_set[index_min_trim:]
+                    min4min_trim = min(min_trimmed)
+                    break
+
+            # Max trim
+            if min4min_trim < max_trim:
+                for index_max_trim in reversed(range(len(min_trimmed[:]))):
+                    if ordered_set[index_max_trim] <= max_trim:
+                        trimmed = ordered_set[:index_max_trim]
+                        break
+            else:
+                print max_trim, "=max_trim is greater than the minimum of the the ordered set that has been already been trimmed sweep, that is:", min4min_trim
+                print "The min value of the ordered set before trimming was:", set_min
+                print "It is likely that the difference of max_trim and min_trim is greater that the spacing of values in the ordered set"
+                print "min_trim:", min_trim
+                print "max_trim:", max_trim
+                print "ordered_set:", ordered_set
+                print "min_trimmed:", min4min_trim
+                print "returning status=False"
+                status = False
+        else:
+            print min_trim, "=mV_min is greater than the max value of mV for a sweep:", set_max
+            print "returning status=False"
+            status = False
+
+    # trim the corresponding values in the list dependent variables
+    trimmed_list = []
+    if ((trim_list != []) and (status)):
+        list_length = len(trimmed)
+        index_max_trim = index_min_trim + list_length
+        for trim in trim_list:
+            trimmed_list.append(trim[index_min_trim:index_max_trim])
+
+    return status, trimmed, trimmed_list
+
+def Params_2_str(param_vals, format_str, btype=None):
+    if btype == 'sq':
+        out_str = "["
+    elif btype == 'curl':
+        out_str = "{"
+    elif btype == 'round':
+        out_str = "("
+    else:
+        out_str = ''
+    try:
+        out_str += str(format_str % param_vals)
+    except TypeError:
+        vals_len = len(param_vals)
+        if vals_len == 1:
+            out_str += str(format_str % param_vals)
+        elif 1 < vals_len:
+            for n in range(vals_len - 1):
+                out_str += str(format_str % param_vals[n]) + ', '
+            out_str += str(format_str % param_vals[-1])
+    if btype == 'sq':
+        out_str += "]"
+    elif btype == 'curl':
+        out_str += "}"
+    elif btype == 'round':
+        out_str += ")"
+
+    return out_str
+
 
 
 def SimpleSweepPlot(datadir, search_4Snums=False, Snums='', verbose=False, show_standdev=True, std_num=1, display_params=True,
@@ -405,12 +468,8 @@ def SimpleSweepPlot(datadir, search_4Snums=False, Snums='', verbose=False, show_
 
 
 
-
-
-
-
-
-def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, show_standdev=True, std_num=1, display_params=True,
+def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, mV_min=None, mV_max=None,
+                         show_standdev=True, std_num=1, display_params=True,
                          show_plot=False, save_plot=True, do_eps=True,
                          find_lin_mVuA=False, linif=0.3, der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
                          der2_int=1, do_der2_conv=True, der2_min_cdf=0.95, der2_sigma=0.05,
@@ -447,14 +506,17 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
     legendloc  = 2
 
     ### Axis Limits ###
-    xlimL  =  -1
-    xlimR  =   4
+    # X-axis
+    if mV_min is not None:
+        xlimL = mV_min
+    if mV_max is not None:
+        xlimR = mV_max
+
+    # Y-axis
     ylimL1 = -10
     ylimR1 = 100
     ylimL2 =   0
-    ylimR2 =   10
-    # Some Calculations that don't need to be preformed every loop
-    xscale = abs(xlimR  - xlimL)
+    ylimR2 =  10
     yscale = abs(ylimR2 - ylimL2)
 
     ### Parameter Colors
@@ -502,11 +564,113 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
             = GetAllTheProFastSweepData(proYdatadir + "cold")
 
         ### Get the Processed Parameters of the Sweep
-        paramsfile = proYdatadir + 'proparams.csv'
+        paramsfile_list = []
+        paramsfile_list.append(proYdatadir + 'hotproparams.csv')
+        paramsfile_list.append(proYdatadir + 'coldproparams.csv')
         K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, meanmag_mA, stdmag_mA, LOuAsweep, LOuAset, UCA_volt,  \
         LOuA_set_pot, LOuA_magpot, meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, stdSIS_tp, SIS_pot, \
         del_time, LOfreq, IFband, TP_int_time \
-            = getproparams(paramsfile)
+            = getmultiParams(paramsfile_list)
+
+        ##########################################
+        ### Find X axis mins and maxs and trim ###
+        ##########################################
+        if mV_min is None:
+            xlimL = min(mV)
+            if hotfastprodata_found:
+                xlimL = min(min(hotmV_fast),xlimL)
+            if coldfastprodata_found:
+                xlimL = min(min(coldmV_fast),xlimL)
+            if hotunpumpedprodata_found:
+                xlimL = min(min(hotmV_unpumped),xlimL)
+            if coldunpumpedprodata_found:
+                xlimL = min(min(coldmV_unpumped),xlimL)
+        if mV_max is None:
+            xlimR = max(mV)
+            if hotfastprodata_found:
+                xlimR = max(max(hotmV_fast),xlimR)
+            if coldfastprodata_found:
+                xlimR = max(max(coldmV_fast),xlimR)
+            if hotunpumpedprodata_found:
+                xlimR = max(max(hotmV_unpumped),xlimR)
+            if coldunpumpedprodata_found:
+                xlimR = max(max(coldmV_unpumped),xlimR)
+
+        # set the X scale here
+        xscale = abs(xlimR  - xlimL)
+
+        # The trimming part of the script for mV values on the X-axis
+        if ((mV_min is None) and (mV_max is None)):
+            if verbose:
+                print "Data trimming is not selected"
+                print "the plot X-axis min and max will depend on the lines being plotted"
+        else:
+            if verbose:
+                print "Beginning data trimming in mV"
+            if mV_min is None:
+                mV_min = xlimL
+            if mV_max is None:
+                mV_max = xlimR
+
+            # Astro Sweep mV trim
+            astro_trim_list = [Yfactor, hot_mV_std, cold_mV_std, hot_uA_mean, cold_uA_mean, hot_uA_std,
+                               cold_uA_std, hot_TP_mean, cold_TP_mean, hot_TP_std, cold_TP_std, hot_TP_num,
+                               cold_TP_num, hot_TP_freq, cold_TP_freq, hot_time_mean, cold_time_mean, hot_pot,
+                               cold_pot, hot_meas_num, cold_meas_num]
+
+
+            status, mV, astro_trimmed_list = DataTrimmer(mV_min, mV_max, mV, astro_trim_list)
+            if not status:
+                print "The program failed the the ASTRO Sweep trimming"
+                print "killing the script"
+                sys.exit()
+            [Yfactor, hot_mV_std, cold_mV_std, hot_uA_mean, cold_uA_mean, hot_uA_std,
+             cold_uA_std, hot_TP_mean, cold_TP_mean, hot_TP_std, cold_TP_std, hot_TP_num,
+             cold_TP_num, hot_TP_freq, cold_TP_freq, hot_time_mean, cold_time_mean, hot_pot,
+             cold_pot, hot_meas_num, cold_meas_num] = astro_trimmed_list
+
+
+
+            # fast hot sweep mV trim
+            if hotfastprodata_found:
+                hotfast_trim_list = [hotuA_fast, hottp_fast, hotpot_fast]
+
+                status, hotmV_fast, hotfast_trimmed_list = DataTrimmer(mV_min, mV_max, hotmV_fast, hotfast_trim_list)
+                if not status:
+                    print "The program failed the the fast hot Sweep trimming"
+                    print "killing the script"
+                    sys.exit()
+                [hotuA_fast, hottp_fast, hotpot_fast] = hotfast_trimmed_list
+
+            # fast cold sweep mV trim
+            if coldfastprodata_found:
+                coldfast_trim_list = [colduA_fast, coldtp_fast, coldpot_fast]
+                status, coldmV_fast, coldfast_trimmed_list = DataTrimmer(mV_min, mV_max, coldmV_fast, coldfast_trim_list)
+                if not status:
+                    print "The program failed the the fast cold Sweep trimming"
+                    print "killing the script"
+                    sys.exit()
+                [colduA_fast, coldtp_fast, coldpot_fast] = coldfast_trimmed_list
+
+            # unpumped hot sweep mV trim
+            if hotunpumpedprodata_found:
+                hotunpumped_trim_list = [hotuA_unpumped, hottp_unpumped, hotpot_unpumped]
+                status, hotmV_unpumped, hotunpumped_trimmed_list = DataTrimmer(mV_min, mV_max, hotmV_unpumped, hotunpumped_trim_list)
+                if not status:
+                    print "The program failed the the unpumped hot Sweep trimming"
+                    print "killing the script"
+                    sys.exit()
+                [hotuA_unpumped, hottp_unpumped, hotpot_unpumped] = hotunpumped_trimmed_list
+
+            # unpumped cold sweep mV trim
+            if coldunpumpedprodata_found:
+                coldunpumped_trim_list = [colduA_unpumped, coldtp_unpumped, coldpot_unpumped]
+                status, coldmV_unpumped, coldunpumped_trimmed_list = DataTrimmer(mV_min, mV_max, coldmV_unpumped, coldunpumped_trim_list)
+                if not status:
+                    print "The program failed the the unpumped cold Sweep trimming"
+                    print "killing the script"
+                    sys.exit()
+                [colduA_unpumped, coldtp_unpumped, coldpot_unpumped] = coldunpumped_trimmed_list
 
 
         ############################
@@ -734,28 +898,36 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
             ypos = ylimR2 - yincrement
 
             if LOuAset is not None:
-                plt.text(xpos, ypos, str('%2.3f' % LOuAset) + " uA LO", color = LOpwr_color)
+                LOuAset_str = Params_2_str(LOuAset, '%2.3f')
+                plt.text(xpos, ypos, LOuAset_str + " uA LO", color = LOpwr_color)
                 ypos -= yincrement
             if UCA_volt is not None:
-                plt.text(    xpos, ypos, str('%1.5f' % UCA_volt) + " V  UCA", color = LOpwr_color)
+                UCA_volt_str = Params_2_str(UCA_volt, '%1.5f')
+                plt.text(xpos, ypos, UCA_volt_str + " V  UCA", color = LOpwr_color)
                 ypos -= yincrement
             if meanSIS_mV is not None:
+                meanSIS_mV_str = Params_2_str(meanSIS_mV, '%2.2f')
                 if stdSIS_mV is not None:
-                    plt.text(xpos, ypos, str('%1.3f' % meanSIS_mV) + " (" + str('%1.3f' % stdSIS_mV) + ") mV", color = LOpwr_color)
+                    stdSIS_mV_str = Params_2_str(stdSIS_mV, '%2.2f', 'round')
+                    plt.text(xpos, ypos, meanSIS_mV_str + " " + stdSIS_mV_str + " mV", color = LOpwr_color)
                 else:
                     plt.text(xpos, ypos, str('%1.3f' % meanSIS_mV) + " mV", color = LOpwr_color)
                 ypos -= yincrement
             if meanSIS_uA is not None:
+                meanSIS_uA_str = Params_2_str(meanSIS_uA, '%2.2f')
                 if stdSIS_uA is not None:
-                    plt.text(xpos, ypos, str('%2.2f' % meanSIS_uA) + " (" + str('%2.2f' % stdSIS_uA) + ") uA", color = LOpwr_color)
+                    stdSIS_uA_str = Params_2_str(stdSIS_uA, '%2.2f', 'round')
+                    plt.text(xpos, ypos, meanSIS_uA_str + " " + stdSIS_uA_str+ " uA", color = LOpwr_color)
                 else:
                     plt.text(xpos, ypos, str('%2.2f' % meanSIS_uA) + " uA", color = LOpwr_color)
                 ypos -= yincrement
             if LOuA_set_pot is not None:
-                plt.text(xpos, ypos, "@" + str('%06.f' % LOuA_set_pot) + " SIS bias pot", color = LOpwr_color)
+                LOuA_set_pot_str = Params_2_str(LOuA_set_pot, '%06.f')
+                plt.text(xpos, ypos, "@" + LOuA_set_pot_str + " SIS bias pot", color = LOpwr_color)
                 ypos -= yincrement
             if LOuA_magpot is not None:
-                plt.text(xpos, ypos, "@" + str('%06.f' % LOuA_magpot) + "  Magnet pot", color = LOpwr_color)
+                LOuA_magpot_str = Params_2_str(LOuA_magpot, '%06f')
+                plt.text(xpos, ypos, "@" + LOuA_magpot_str + "  Magnet pot", color = LOpwr_color)
                 ypos -= yincrement
 
 
@@ -768,24 +940,31 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
             if magiset is not None:
                 plt.text(xpos, ypos,"magnet set value", color = mag_color)
                 ypos -= yincrement
-                plt.text(xpos, ypos, str('%2.4f' % magiset)  + " mA" , color=mag_color)
+                magiset_str = Params_2_str(magiset, '%2.4f')
+                plt.text(xpos, ypos, magiset_str + " mA" , color=mag_color)
                 ypos -= yincrement
             if meanmag_mA is not None:
                 plt.text(xpos, ypos,"magnet meas value", color = mag_color)
                 ypos -= yincrement
-                plt.text(xpos, ypos, str('%2.4f' % meanmag_mA) +  " (" + str('%2.4f' % stdmag_mA) + ") mA", color = mag_color)
+                meanmag_mA_str = Params_2_str(meanmag_mA, '%2.4f')
+                stdmag_mA_str = Params_2_str(stdmag_mA, '%2.4f', 'round')
+                plt.text(xpos, ypos, meanmag_mA_str +  " " + stdmag_mA_str + " mA", color = mag_color)
                 ypos -= yincrement
             if magpot is not None:
-                plt.text(xpos, ypos, str('%06.f' % magpot) + " mag pot", color = mag_color)
+                magpot_str = Params_2_str(magpot, '%06.f')
+                plt.text(xpos, ypos, magpot_str + " mag pot", color = mag_color)
                 ypos -= yincrement
             if LOfreq is not None:
-                plt.text(xpos, ypos, str('%3.2f' % LOfreq) + " GHz", color = LOfreq_color)
+                LOfreq_str = Params_2_str(LOfreq, '%3.2f')
+                plt.text(xpos, ypos, LOfreq_str + " GHz", color = LOfreq_color)
                 ypos -= yincrement
             if IFband is not None:
-                plt.text(xpos, ypos, str('%1.3f' % IFband) + " GHz", color = IFband_color)
+                IFband_str = Params_2_str(IFband, '%1.3f')
+                plt.text(xpos, ypos, IFband_str + " GHz", color = IFband_color)
                 ypos -= yincrement
             if TP_int_time is not None:
-                plt.text(xpos, ypos, str('%1.3f' % TP_int_time) + " secs", color = TP_int_time_color)
+                TP_int_time_str = Params_2_str(TP_int_time, '%1.3f')
+                plt.text(xpos, ypos, TP_int_time_str + " secs", color = TP_int_time_color)
                 ypos -= yincrement
 
         ##################

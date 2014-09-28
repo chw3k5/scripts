@@ -18,8 +18,8 @@ do_SingeSpectraPlotter = False
 
 ### For Y-factor data and Sweeps ###
 do_YdataPro             = False
-do_YfactotSweepsPlotter = False
-do_YSpectra_Plotter     = True
+do_YfactotSweepsPlotter = True
+do_YSpectra_Plotter     = False
 
 ####################
 ### The Programs ###
@@ -67,7 +67,7 @@ if all_Ydata:
 if platform == 'win32':
     datadir = 'C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\sweep\\LOfreq\\'
 elif platform == 'darwin':
-    datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/LOfreq2/'
+    datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/LOfreq/'
 
 if do_YdataPro:
     YdataPro(datadir, verbose=True, search_4Ynums=True, search_str='Y', Ynums=[], useOFFdata=False, Off_datadir='',
@@ -76,7 +76,8 @@ if do_YdataPro:
              sigma_GHz=0.10)
 
 if do_YfactotSweepsPlotter:
-    YfactorSweepsPlotter(datadir, search_4Ynums=True, Ynums='', verbose=True, show_standdev=True, std_num=3,
+    YfactorSweepsPlotter(datadir, search_4Ynums=True, Ynums='', verbose=True, mV_min=0, mV_max=None,
+                         show_standdev=True, std_num=3,
                          display_params=True, show_plot=False, save_plot=True, do_eps=True,
                          find_lin_mVuA=False, linif=0.3, der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
                          der2_int=1, do_der2_conv=True, der2_min_cdf=0.95, der2_sigma=0.05,

@@ -1,9 +1,9 @@
 import atpy
 import numpy
-import os
+import os, sys
 import shutil
 from sys import platform
-from domath import regrid, conv, derivative # Caleb's Programs
+from domath import regrid, conv, derivative, FindOverlap # Caleb's Programs
 from operator import itemgetter
 
 def getparams(filename):
@@ -138,6 +138,264 @@ def getproparams(filename):
     return K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, meanmag_mA, stdmag_mA, LOuAsearch, LOuAset, UCA_volt,\
            LOuA_set_pot, LOuA_magpot,meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, stdSIS_tp, SIS_pot, \
            del_time, LOfreq, IFband, TP_int_time
+
+def getmultiParams(ParamsFile_list):
+    K_val        = []
+    magisweep    = []
+    magiset      = []
+    magpot       = []
+    meanmag_V    = []
+    stdmag_V     = []
+
+    meanmag_mA   = []
+    stdmag_mA    = []
+    LOuAsearch   = []
+    LOuAset      = []
+    UCA_volt     = []
+    LOuA_set_pot = []
+
+    LOuA_magpot  = []
+    meanSIS_mV   = []
+    stdSIS_mV    = []
+    meanSIS_uA   = []
+    stdSIS_uA    = []
+    meanSIS_tp   = []
+
+    stdSIS_tp    = []
+    SIS_pot      = []
+    del_time     = []
+    LOfreq       = []
+    IFband       = []
+    TP_int_time  = []
+
+
+    for ParamsFile in ParamsFile_list:
+
+        K_val_temp, magisweep_temp, magiset_temp, magpot_temp, meanmag_V_temp, stdmag_V_temp, \
+        meanmag_mA_temp, stdmag_mA_temp, LOuAsearch_temp, LOuAset_temp, UCA_volt_temp, LOuA_set_pot_temp,\
+        LOuA_magpot_temp, meanSIS_mV_temp, stdSIS_mV_temp, meanSIS_uA_temp, stdSIS_uA_temp, meanSIS_tp_temp,\
+        stdSIS_tp_temp, SIS_pot_temp, del_time_temp, LOfreq_temp, IFband_temp, TP_int_time_temp \
+            = getproparams(ParamsFile)
+
+        K_val.append(K_val_temp)
+        magisweep.append(magisweep_temp)
+        magiset.append(magiset_temp)
+        magpot.append(magpot_temp)
+        meanmag_V.append(meanmag_V_temp)
+        stdmag_V.append(stdmag_V_temp)
+
+        meanmag_mA.append(meanmag_mA_temp)
+        stdmag_mA.append(stdmag_mA_temp)
+        LOuAsearch.append(LOuAsearch_temp)
+        LOuAset.append(LOuAset_temp)
+        UCA_volt.append(UCA_volt_temp)
+        LOuA_set_pot.append(LOuA_set_pot_temp)
+
+        LOuA_magpot.append(LOuA_magpot_temp)
+        meanSIS_mV.append(meanSIS_mV_temp)
+        stdSIS_mV.append(stdSIS_mV_temp)
+        meanSIS_uA.append(meanSIS_uA_temp)
+        stdSIS_uA.append(stdSIS_uA_temp)
+        meanSIS_tp.append(meanSIS_tp_temp)
+
+        stdSIS_tp.append(stdSIS_tp_temp)
+        SIS_pot.append(SIS_pot_temp)
+        del_time.append(del_time_temp)
+        LOfreq.append(LOfreq_temp)
+        IFband.append(IFband_temp)
+        TP_int_time.append(TP_int_time_temp)
+
+
+    # the test to determine if all the parameters are the same or not
+    K_val_sametest        = True
+    magisweep_sametest    = True
+    magiset_sametest      = True
+    magpot_sametest       = True
+    meanmag_V_sametest    = True
+    stdmag_V_sametest     = True
+
+    meanmag_mA_sametest   = True
+    stdmag_mA_sametest    = True
+    LOuAsearch_sametest   = True
+    LOuAset_sametest      = True
+    UCA_volt_sametest     = True
+    LOuA_set_pot_sametest = True
+
+    LOuA_magpot_sametest  = True
+    meanSIS_mV_sametest   = True
+    stdSIS_mV_sametest    = True
+    meanSIS_uA_sametest   = True
+    stdSIS_uA_sametest    = True
+    meanSIS_tp_sametest   = True
+
+    stdSIS_tp_sametest    = True
+    SIS_pot_sametest      = True
+    del_time_sametest     = True
+    LOfreq_sametest       = True
+    IFband_sametest       = True
+    TP_int_time_sametest  = True
+
+    ParamsFile_list_len = len(ParamsFile_list)
+    if 1 < ParamsFile_list_len:
+        for n in range(ParamsFile_list_len - 1):
+            if K_val[n] != K_val[n+1]:
+                K_val_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if magisweep[n] != magisweep[n+1]:
+                magisweep_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if magiset[n] != magiset[n+1]:
+                magiset_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if magpot[n] != magpot[n+1]:
+                magpot_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if meanmag_V[n] != meanmag_V[n+1]:
+                meanmag_V_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if stdmag_V[n] != stdmag_V[n+1]:
+                stdmag_V_sametest = False
+                break
+
+        for n in range(ParamsFile_list_len - 1):
+            if meanmag_mA[n] != meanmag_mA[n+1]:
+                meanmag_mA_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if stdmag_mA[n] != stdmag_mA[n+1]:
+                stdmag_mA_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if LOuAsearch[n] != LOuAsearch[n+1]:
+                LOuAsearch_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if LOuAset[n] != LOuAset[n+1]:
+                LOuAset_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if UCA_volt[n] != UCA_volt[n+1]:
+                UCA_volt_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if LOuA_set_pot[n] != LOuA_set_pot[n+1]:
+                LOuA_set_pot_sametest = False
+                break
+
+        for n in range(ParamsFile_list_len - 1):
+            if LOuA_magpot[n] != LOuA_magpot[n+1]:
+                LOuA_magpot_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if meanSIS_mV[n] != meanSIS_mV[n+1]:
+                meanSIS_mV_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if stdSIS_mV[n] != stdSIS_mV[n+1]:
+                stdSIS_mV_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if meanSIS_uA[n] != meanSIS_uA[n+1]:
+                meanSIS_uA_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if stdSIS_uA[n] != stdSIS_uA[n+1]:
+                stdSIS_uA_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if meanSIS_tp[n] != meanSIS_tp[n+1]:
+                meanSIS_tp_sametest = False
+                break
+
+        for n in range(ParamsFile_list_len - 1):
+            if  stdSIS_tp[n] !=  stdSIS_tp[n+1]:
+                stdSIS_tp_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if SIS_pot[n] != SIS_pot[n+1]:
+                SIS_pot_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if del_time[n] != del_time[n+1]:
+                del_time_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if LOfreq[n] != LOfreq[n+1]:
+                LOfreq_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if IFband[n] != IFband[n+1]:
+                IFband_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if TP_int_time[n] != TP_int_time[n+1]:
+                TP_int_time_sametest = False
+                break
+
+
+        if K_val_sametest:
+            K_val = K_val[0]
+        if magisweep_sametest:
+            magisweep = magisweep[0]
+        if magiset_sametest:
+            magiset = magiset[0]
+        if magpot_sametest:
+            magpot = magpot[0]
+        if meanmag_V_sametest:
+            meanmag_V = meanmag_V[0]
+        if stdmag_V_sametest:
+            stdmag_V = stdmag_V[0]
+
+        if meanmag_mA_sametest:
+            meanmag_mA = meanmag_mA[0]
+        if stdmag_mA_sametest:
+            stdmag_mA = stdmag_mA[0]
+        if LOuAsearch_sametest:
+            LOuAsearch = LOuAsearch[0]
+        if LOuAset_sametest:
+            LOuAset = LOuAset[0]
+        if UCA_volt_sametest:
+            UCA_volt = UCA_volt[0]
+        if LOuA_set_pot_sametest:
+            LOuA_set_pot = LOuA_set_pot[0]
+
+        if LOuA_magpot_sametest:
+            LOuA_magpot = LOuA_magpot[0]
+        if meanSIS_mV_sametest:
+            meanSIS_mV = meanSIS_mV[0]
+        if stdSIS_mV_sametest:
+            stdSIS_mV = stdSIS_mV[0]
+        if meanSIS_uA_sametest:
+            meanSIS_uA = meanSIS_uA[0]
+        if stdSIS_uA_sametest:
+            stdSIS_uA = stdSIS_uA[0]
+        if meanSIS_tp_sametest:
+            meanSIS_tp = meanSIS_tp[0]
+
+        if stdSIS_tp_sametest:
+            stdSIS_tp = stdSIS_tp[0]
+        if SIS_pot_sametest:
+            SIS_pot = SIS_pot[0]
+        if del_time_sametest:
+            del_time = del_time[0]
+        if LOfreq_sametest:
+            LOfreq = LOfreq[0]
+        if IFband_sametest:
+            IFband = IFband[0]
+        if TP_int_time_sametest:
+            TP_int_time = TP_int_time[0]
+
+    return K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, \
+           meanmag_mA, stdmag_mA, LOuAsearch, LOuAset, UCA_volt,LOuA_set_pot, \
+           LOuA_magpot,meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, \
+           stdSIS_tp, SIS_pot, del_time, LOfreq, IFband, TP_int_time
+
+
 
 def get_fastIV(filename):
     mV   = []
@@ -309,71 +567,56 @@ def getproYdata(datadir):
     Yfactor    = temp.Yfactor
     
     # make sure all the Y mV data overlaps
-    first_hot  = hot_mV_mean[0]
-    first_cold = cold_mV_mean[0]
-    first_Y    = mV_Yfactor[0]
-    max_first  = max(first_hot, first_cold, first_Y)
-    
-    len_hot    = len(hot_mV_mean)
-    len_cold   = len(cold_mV_mean)
-    len_Y      = len(mV_Yfactor)
-    
-    last_hot   = hot_mV_mean[len_hot-1]
-    last_cold  = cold_mV_mean[len_cold-1]
-    last_Y     = mV_Yfactor[len_Y-1]
-    
-    if ((first_hot == first_cold) and (first_cold == first_Y) and (last_hot == last_cold) and (last_cold == last_Y)):
-        mV = hot_mV_mean
+    if 1 < len(hot_mV_mean):
+        mesh = (hot_mV_mean[1]-hot_mV_mean[0])
     else:
-        finished   = False
-        hot_count  = 0
-        cold_count = 0
-        Y_count    = 0
-        first_match = True
-        while not finished:
-            if ((len_hot == hot_count) or (len_cold == cold_count) or (len_Y == Y_count)):
-                finished = True
-            elif ((hot_mV_mean[hot_count] == cold_mV_mean[cold_count]) and (cold_mV_mean[cold_count] == mV_Yfactor[Y_count])):
-                if first_match:
-                    first_match = False
-                    hot_start  = hot_count
-                    cold_start = cold_count
-                    Y_start    = Y_count
-                hot_count  = hot_count  + 1
-                cold_count = cold_count + 1
-                Y_count    = Y_count    + 1
+        mesh=0.01
+    status, hot_start, cold_start, list_length = FindOverlap(hot_mV_mean, cold_mV_mean, mesh)
+    if not status:
+        print "The function 'FindOverlap' failed in 'getproYdata' for file:", datadir
+        print "Killing Script"
+        sys.exit()
+    hot_end  = hot_start  + list_length
 
-            else:
-                if hot_mV_mean[hot_count] < max_first:
-                    hot_count  = hot_count  + 1
-                if cold_mV_mean[cold_count] < max_first:
-                    cold_count = cold_count + 1
-                if mV_Yfactor[Y_count] < max_first:
-                    Y_count = Y_count + 1
-        mV = hot_mV_mean[hot_start:hot_count]
-        hot_mV_std    = hot_mV_std[hot_start:hot_count]
-        hot_uA_mean   = hot_uA_mean[hot_start:hot_count]
-        hot_uA_std    = hot_uA_std[hot_start:hot_count]
-        hot_TP_mean   = hot_TP_mean[hot_start:hot_count]
-        hot_TP_std    = hot_TP_std[hot_start:hot_count]
-        hot_TP_num    = hot_TP_num[hot_start:hot_count]
-        hot_TP_freq   = hot_TP_freq[hot_start:hot_count]
-        hot_time_mean = hot_time_mean[hot_start:hot_count]
-        hot_pot       = hot_pot[hot_start:hot_count]
-        hot_meas_num  = hot_meas_num[hot_start:hot_count]
-        
-        cold_mV_std    = cold_mV_std[cold_start:cold_count]
-        cold_uA_mean   = cold_uA_mean[cold_start:cold_count]
-        cold_uA_std    = cold_uA_std[cold_start:cold_count]
-        cold_TP_mean   = cold_TP_mean[cold_start:cold_count]
-        cold_TP_std    = cold_TP_std[cold_start:cold_count]
-        cold_TP_num    = cold_TP_num[cold_start:cold_count]
-        cold_TP_freq   = cold_TP_freq[cold_start:cold_count]
-        cold_time_mean = cold_time_mean[cold_start:cold_count]
-        cold_pot       = cold_pot[cold_start:cold_count]
-        cold_meas_num  = cold_meas_num[cold_start:cold_count]
-        
-        Yfactor = Yfactor[Y_start:Y_count]
+    mV = hot_mV_mean[hot_start:hot_end]
+    status, mV_start, Yfactor_start, list_length = FindOverlap(mV, mV_Yfactor, mesh)
+    if not status:
+        print "The function 'FindOverlap' (2nd call) failed in 'getproYdata' for file:", datadir
+        print "Killing Script"
+        sys.exit()
+
+    Yfactor_end = Yfactor_start + list_length
+
+    hot_start  += mV_start
+    cold_start += mV_start
+    hot_end     = hot_start  + list_length
+    cold_end    = cold_start + list_length
+
+
+    hot_mV_std    = hot_mV_std[hot_start:hot_end]
+    hot_uA_mean   = hot_uA_mean[hot_start:hot_end]
+    hot_uA_std    = hot_uA_std[hot_start:hot_end]
+    hot_TP_mean   = hot_TP_mean[hot_start:hot_end]
+    hot_TP_std    = hot_TP_std[hot_start:hot_end]
+    hot_TP_num    = hot_TP_num[hot_start:hot_end]
+    hot_TP_freq   = hot_TP_freq[hot_start:hot_end]
+    hot_time_mean = hot_time_mean[hot_start:hot_end]
+    hot_pot       = hot_pot[hot_start:hot_end]
+    hot_meas_num  = hot_meas_num[hot_start:hot_end]
+
+    cold_mV_std    = cold_mV_std[cold_start:cold_end]
+    cold_uA_mean   = cold_uA_mean[cold_start:cold_end]
+    cold_uA_std    = cold_uA_std[cold_start:cold_end]
+    cold_TP_mean   = cold_TP_mean[cold_start:cold_end]
+    cold_TP_std    = cold_TP_std[cold_start:cold_end]
+    cold_TP_num    = cold_TP_num[cold_start:cold_end]
+    cold_TP_freq   = cold_TP_freq[cold_start:cold_end]
+    cold_time_mean = cold_time_mean[cold_start:cold_end]
+    cold_pot       = cold_pot[cold_start:cold_end]
+    cold_meas_num  = cold_meas_num[cold_start:cold_end]
+
+    Yfactor = Yfactor[Yfactor_start:Yfactor_end]
+
         
     return Yfactor, mV, hot_mV_std, cold_mV_std, hot_uA_mean, cold_uA_mean,    \
     hot_uA_std, cold_uA_std, hot_TP_mean, cold_TP_mean, hot_TP_std,            \
@@ -423,6 +666,32 @@ def getSnums(datadir):
             Snums.append(test_dir)
                 
     return Snums
+
+def GetProDirsNames(datadir, search_4nums, nums):
+    if platform == 'win32':
+        prodatadir = datadir + 'prodata\\'
+        plotdir    = datadir + 'plots\\'
+    elif platform == 'darwin':
+        prodatadir = datadir + 'prodata/'
+        plotdir    = datadir + 'plots/'
+    if os.path.isdir(plotdir):
+        None
+        # remove old processed data
+        # shutil.rmtree(plotdir)
+        # make a folder for new processed data
+        # os.makedirs(plotdir)
+    else:
+        # make a folder for new processed data
+        os.makedirs(plotdir)
+    if search_4nums:
+        # get the Y numbers from the directory names in the datadir directory
+        alldirs = []
+        for root, dirs, files in os.walk(prodatadir):
+            alldirs.append(dirs)
+        nums = alldirs[0]
+    return nums, prodatadir, plotdir
+
+
 
 def ProcessMatrix(raw_matrix, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose):
     matrix        = raw_matrix

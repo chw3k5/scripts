@@ -75,7 +75,7 @@ def SetDataPro(setNums, sisi_voltage, Begin_start_Yrange, End_end_Yrange, step_Y
                 temp = atpy.Table(colddatafile, type="ascii", delimiter=",")    
                 cold_mV_mean   = temp.mV_mean
                 cold_mV_std    = temp.mV_std
-           	cold_uA_mean   = temp.uA_mean
+                cold_uA_mean   = temp.uA_mean
                 cold_uA_std    = temp.uA_std
                 cold_TP_mean   = temp.TP_mean
                 cold_TP_std    = temp.TP_std
