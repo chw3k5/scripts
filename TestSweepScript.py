@@ -35,7 +35,7 @@ elif platform == 'darwin':
 from BiasSweep2 import BiasSweep
 if do_sweeps:
     BiasSweep(datadir, verbose=False, verboseTop=True, verboseSet=True, careful=False,
-              sweepNstart=1, Ynum=1, testmode=False, warmmode=True,
+              sweepNstart=2, Ynum=2, testmode=False, warmmode=True,
               do_fastsweep=False, do_unpumpedsweep=False, fastsweep_feedback=False,
               SweepStart_feedTrue=65000, SweepStop_feedTrue=52000, SweepStep_feedTrue=500,
               SweepStart_feedFalse=65100, SweepStop_feedFalse=57000, SweepStep_feedFalse=100,

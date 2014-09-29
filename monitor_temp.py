@@ -107,7 +107,7 @@ if platform == 'win32':
 elif platform == 'darwin':
     folder ='/Users/chw3k5/Documents/Grad_School/Kappa/temperatureData/'
 #Date File Name
-filename = 'temperatures5.csv'
+filename = 'cooldown01.csv'
 
 max_count = 5 # in loops (set to -1 to set to infinity)
 max_time  = 60 # in seconds (set to -1 to set to infinity)
@@ -310,11 +310,11 @@ while monitoring:
         temps_wstats = []
         alarm_monitor = None
         for temp in temps:
-            mon_num   = temp[0]
+            channel   = temp[0]
             temp_data = temp[1]
 
             current_temp = temp_data[-1]
-            if mon_num == alarm_channel:
+            if channel == alarm_channel:
                 alarm_monitor = current_temp
 
             temp_mean    = numpy.mean(temp_data)
@@ -323,7 +323,7 @@ while monitoring:
             Nsecs_mean   = numpy.mean(temp_data[start_last_Nsecs:])
             Nsecs_std    = numpy.std(temp_data)
 
-            temps_wstats.append((mon_num,current_temp, temp_mean, temp_std, Nsecs_mean, Nsecs_std))
+            temps_wstats.append((channel,current_temp, temp_mean, temp_std, Nsecs_mean, Nsecs_std))
 
         alarm = False
         if alarm_monitor is None:
@@ -377,19 +377,29 @@ while monitoring:
         matplotlib.rcParams['legend.fontsize'] = 10.0
         fig, ax1 = plt.subplots()
         
-        plotcolor = "blue"
-        ax1.plot(Ttime, temp4, color=plotcolor, linewidth=3)
-        line1 = plt.Line2D(range(10), range(10), color=plotcolor)
-        plotcolor = "green"
-        ax1.plot(Ttime, temp3, color=plotcolor, linewidth=3)
-        line2 = plt.Line2D(range(10), range(10), color=plotcolor)
-        plotcolor = "red"
-        ax1.plot(Ttime, temp2 , color=plotcolor, linewidth=3)
-        line3 = plt.Line2D(range(10), range(10), color=plotcolor)
-        
+        plotcolors = ["blue", "green", "red", "coral", "dodgerblue", "gold", "forest", "purple"]
+        lines = []
+        names = []
+        for temp_index in range(len(temps)):
+            temp = temps[temp_index]
+            plotcolor = plotcolors[temp_index]
+            channel = temp[0]
+            data    = temp[1]
+            ax1.plot(Ttime, data, color=plotcolor, linewidth=3)
+            line = plt.Line2D(range(10), range(10), color=plotcolor)
+            lines.append(line)
+            if channel == 4:
+                names.append("Receiver")
+            if channel == 3:
+                names.append("Inner Shield")
+            if channel == 2:
+                names.append("Outer Shield")
+            else:
+                names.append("Channel" + str(channel))
+
         ax1.set_xlabel('hours since start')
         ax1.set_ylabel('Temperature (K)')
-        plt.legend((line1,line2, line3),('receiver','Inner shield', 'Outer shield'),numpoints=1, loc=2)
+        plt.legend(tuple(lines),tuple(names),numpoints=1, loc=2)
         plt.savefig(folder + "Alltempdata_Caleb.png")
         
         
@@ -397,40 +407,63 @@ while monitoring:
         plt.clf()
         matplotlib.rcParams['legend.fontsize'] = 10.0
         fig, ax1 = plt.subplots()
-        plotcolor = "blue"
-        ax1.plot(Time_Nsecs, temp4[start_last_Nsecs:], color=plotcolor, linewidth=3)
-        line1 = plt.Line2D(range(10), range(10), color=plotcolor)
-        plotcolor = "green"
-        ax1.plot(Time_Nsecs, temp3[start_last_Nsecs:], color=plotcolor, linewidth=3)
-        line2 = plt.Line2D(range(10), range(10), color=plotcolor)
-        plotcolor = "red"
-        ax1.plot(Time_Nsecs, temp2[start_last_Nsecs:] , color=plotcolor, linewidth=3)
-        line3 = plt.Line2D(range(10), range(10), color=plotcolor)
+
+        lines = []
+        names = []
+        for temp_index in range(len(temps)):
+            temp = temps[temp_index]
+            plotcolor = plotcolors[temp_index]
+            channel = temp[0]
+            data    = temp[1]
+            data    = data[start_last_Nsecs:]
+            ax1.plot(Ttime, data, color=plotcolor, linewidth=3)
+            line = plt.Line2D(range(10), range(10), color=plotcolor)
+            lines.append(line)
+            if channel == 4:
+                names.append("Receiver")
+            if channel == 3:
+                names.append("Inner Shield")
+            if channel == 2:
+                names.append("Outer Shield")
+            else:
+                names.append("Channel" + str(channel))
         
         ax1.set_xlabel('The last ' + str('%2.2f' % Nhours) + ' hours')
         ax1.set_ylabel('Temperature (K)')
-        plt.legend((line1,line2, line3),('receiver','Inner shield', 'Outer shield'),numpoints=1, loc=2)
+        plt.legend(tuple(lines),tuple(names),numpoints=1, loc=2)
         plt.savefig(folder + str(Nsecs) +"secs_Caleb.png")
         
         # Caleb's receiver data, all the data
         plt.clf()
         matplotlib.rcParams['legend.fontsize'] = 10.0
         fig, ax1 = plt.subplots()
-        plotcolor = "blue"
-        ax1.plot(Ttime, temp4, color=plotcolor, linewidth=3)
-        ax1.set_xlabel('hours since start')
-        ax1.set_ylabel('Temperature (K)')
-        plt.savefig(folder + "receiverdata_Caleb.png")
+
+        for temp_index in range(len(temps)):
+            temp = temps[temp_index]
+            channel = temp[0]
+            data    = temp[1]
+            plotcolor = plotcolors[temp_index]
+            if channel == alarm_monitor:
+                ax1.plot(Ttime, data, color=plotcolor, linewidth=3)
+                ax1.set_xlabel('hours since start')
+                ax1.set_ylabel('Temperature (K)')
+                plt.savefig(folder + "receiverdata_Caleb.png")
+
         
         # Caleb's receiver data, last Nsecs
         plt.clf()
         matplotlib.rcParams['legend.fontsize'] = 10.0
         fig, ax1 = plt.subplots()
-        plotcolor = "blue"
-        ax1.set_xlabel('The last ' + str('%2.2f' % Nhours) + ' hours')
-        ax1.set_ylabel('Temperature (K)')
-        ax1.plot(Time_Nsecs, temp4[start_last_Nsecs:], color=plotcolor, linewidth=3)
-        plt.savefig(folder + str(Nsecs) +"secs_receiver.png")
+        for temp_index in range(len(temps)):
+            temp = temps[temp_index]
+            channel = temp[0]
+            data    = temp[1]
+            plotcolor = plotcolors[temp_index]
+            if channel == alarm_monitor:
+                ax1.set_xlabel('The last ' + str('%2.2f' % Nhours) + ' hours')
+                ax1.set_ylabel('Temperature (K)')
+                ax1.plot(Time_Nsecs, data[start_last_Nsecs:], color=plotcolor, linewidth=3)
+                plt.savefig(folder + str(Nsecs) +"secs_receiver.png")
         
         plt.close("all")
         ### end plotting
