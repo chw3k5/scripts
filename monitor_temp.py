@@ -288,7 +288,7 @@ while monitoring:
                 print "channels can only be integers 1-8"
                 print "this was not expected:", channel
                 print "Killing script"
-                sys.exit
+                sys.exit()
             temps.append(temp)
 
 
