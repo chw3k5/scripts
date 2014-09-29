@@ -115,10 +115,10 @@ max_time  = 60 # in seconds (set to -1 to set to infinity)
 monitor_time  = 3*7*24*60*60 # in seconds (This is the total time that is scrip will monitor temperatures from the Lakeshore monitor)
 monitor_sleep = 5*60   # in seconds
 
-Nsecs        =  1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
+Nsecs        =  1*30*60 # in second (look at data and do statistics on the last Nhours of data collection)
 
 PeriodicEmail = True
-seconds_per_email = 1*60*60 #12*60*60 # in seconds
+seconds_per_email = 1*30*60 #12*60*60 # in seconds
 
 alarm_channel = 4
 high_alarm_temperature = 300. # in Kelvin
@@ -391,12 +391,12 @@ while monitoring:
             lines.append(line)
             if channel == 4:
                 names.append("Receiver")
-            if channel == 3:
+            elif channel == 3:
                 names.append("Inner Shield")
-            if channel == 2:
+            elif channel == 2:
                 names.append("Outer Shield")
             else:
-                names.append("Channel" + str(channel))
+                names.append("Channel " + str(channel))
 
         ax1.set_xlabel('hours since start')
         ax1.set_ylabel('Temperature (K)')
@@ -422,12 +422,12 @@ while monitoring:
             lines.append(line)
             if channel == 4:
                 names.append("Receiver")
-            if channel == 3:
+            elif channel == 3:
                 names.append("Inner Shield")
-            if channel == 2:
+            elif channel == 2:
                 names.append("Outer Shield")
             else:
-                names.append("Channel" + str(channel))
+                names.append("Channel " + str(channel))
         
         ax1.set_xlabel('The last ' + str('%2.2f' % Nhours) + ' hours')
         ax1.set_ylabel('Temperature (K)')
