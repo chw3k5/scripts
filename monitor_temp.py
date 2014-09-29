@@ -28,7 +28,7 @@ clearall()
 def GenEmailText(temp_data, Nhours, totalhours):
 
 
-    hours_format_str = '%3.2f'
+    hours_format_str = '%3.1f'
     temps_format_str = '%2.3f'
 
     body_text = ''
@@ -50,7 +50,7 @@ def GenEmailText(temp_data, Nhours, totalhours):
         else:
             body_text += "Monitor " + str(monitor_num) + " = "
 
-        current_temp_str = str(temps_format_str % current_temp4) + "K\n"
+        current_temp_str = str(temps_format_str % current_temp) + "K\n"
 
         Nhours_temp_str  = "Over the last " + str(hours_format_str % Nhours) + " hours:\n"
         Nhours_temp_str += str(temps_format_str % Nsecdata_mean) + " K  (" + str(temps_format_str % Nsecdata_std) + ") K\n"
@@ -120,12 +120,15 @@ Nsecs        =  1*60*60 # in second (look at data and do statistics on the last 
 PeriodicEmail = True
 seconds_per_email = 1*60*60 #12*60*60 # in seconds
 
+alarm_channel = 4
 high_alarm_temperature = 300. # in Kelvin
 low_alarm_temperature  = 100. # in Kelvin
 
 meas_period      = 7.0 # in seconds
 rest_time        = 0.5 # in seconds
-num_of_temp2read = 3   #
+
+channels = [4,3,2]
+num_of_temp2read = len(channels) #
 sleep_per_meas   = meas_period - 2*rest_time*num_of_temp2read
 if sleep_per_meas <= 0:
     sleep_per_meas = 0
@@ -138,7 +141,6 @@ testing = False
 ###############################################################################
 ###### Start the giant while loop that periodically measures temperature ######
 ###############################################################################
-alarm = False
 monitoring = True
 start_monitor_time = time.time()
 Email_time = start_monitor_time
@@ -204,13 +206,16 @@ while monitoring:
             return temp
             
         # turn all of this into a function
-        def checkTemps():
+        def checkTemps(channels):
             # Open and create the file if necessary
             if os.path.lexists(folder+filename):
                 writefile=open(folder+filename, 'a')
             else:
                 writefile=open(folder+filename, 'w')
-                line2write = "time,temp2,temp3,temp4"
+                line2write = "time,"
+                for chan_index in range(len(channels)-1):
+                    line2write += "temp"+str(channels[chan_index])+","
+                line2write += "temp"+str(channels[-1])
                 writefile.write(line2write + '\n')
             ###############################################################################
             # Read Temperatures and append them to the data file
@@ -222,13 +227,16 @@ while monitoring:
                 while not finished:
                     run_time = time.time() - start_time
                     count = count + 1
-                    temp2 = get_temp(2)
-                    temp3 = get_temp(3)
-                    temp4 = get_temp(4)
-            
+                    temps = []
+                    for channel in channels:
+                        temp = get_temp(channel)
+                        temps.append(temp)
                     time.sleep(sleep_per_meas)
 
-                    line2write = str(time.time()) + ',' + str(temp2) + ',' + str(temp3) + ',' + str(temp4) \
+                    line2write = str(time.time()) + ','
+                    for temp_index in range(len(temps)-1):
+                        line2write += str(temps[temp_index]) + ','
+                    line2write += str(temps[-1])
 
                     if verbose:
                         print line2write
@@ -253,13 +261,36 @@ while monitoring:
             return
         
         ### now the definitions are over, the fun starts now
-        checkTemps()
+        checkTemps(channels)
         Nhours = float(Nsecs)/3600.0
         data  = atpy.Table(folder + filename, type="ascii", delimiter=",")
         Ttime = data.time
-        temp2 = data.temp2
-        temp3 = data.temp3
-        temp4 = data.temp4
+
+        temps = []
+        for channel in channels:
+            if channel == 1:
+                temp = (1,data.temp1)
+            elif channel == 2:
+                temp = (2,data.temp2)
+            elif channel == 3:
+                temp = (3,data.temp3)
+            elif channel == 4:
+                temp = (4,data.temp4)
+            elif channel == 5:
+                temp = (5,data.temp5)
+            elif channel == 6:
+                temp = (6,data.temp6)
+            elif channel == 7:
+                temp = (7,data.temp7)
+            elif channel == 8:
+                temp = (8,data.temp8)
+            else:
+                print "channels can only be integers 1-8"
+                print "this was not expected:", channel
+                print "Killing script"
+                sys.exit
+            temps.append(temp)
+
 
         # cut data to the last Nsecs
         start_last_Nsecs = 0
@@ -276,34 +307,37 @@ while monitoring:
         totalhours = float(Ttime[len(Ttime)-1])
         # get the time of the last Necs and set that value to zero for those plots
         Time_Nsecs = Ttime[start_last_Nsecs:] - Ttime[start_last_Nsecs]
+        temps_wstats = []
+        alarm_monitor = None
+        for temp in temps:
+            mon_num   = temp[0]
+            temp_data = temp[1]
 
-        temp2_mean    = numpy.mean(temp2)
-        Nsecs_mean2   = numpy.mean(temp2[start_last_Nsecs:])
-        temp2_std     = numpy.std(temp2)
-        Nsecs_std2    = numpy.std(temp2)
-        current_temp2 = temp2[len(temp2)-1]
-        
-        temp3_mean    = numpy.mean(temp3)
-        Nsecs_mean3   = numpy.mean(temp3[start_last_Nsecs:])
-        temp3_std     = numpy.std(temp3)
-        Nsecs_std3    = numpy.std(temp3)
-        current_temp3 = temp3[len(temp3)-1]
-        
-        temp4_mean    = numpy.mean(temp4)
-        Nsecs_mean4   = numpy.mean(temp4[start_last_Nsecs:])
-        temp4_std     = numpy.std(temp4)
-        Nsecs_std4    = numpy.std(temp4)
-        current_temp4 = temp4[len(temp4)-1]
+            current_temp = temp_data[-1]
+            if mon_num == alarm_channel:
+                alarm_monitor = current_temp
 
-        
-        if high_alarm_temperature < current_temp4:
-            alarm = True
-            alarm_msg = "High alarm Temperature of " + str(high_alarm_temperature) + " K  has been passed.\n"
-        if current_temp4 < low_alarm_temperature:
-            alarm = True
-            alarm_msg = "Low alarm Temperature of " + str(low_alarm_temperature) + " K  has been passed.\n"
+            temp_mean    = numpy.mean(temp_data)
+            temp_std     = numpy.std(temp_data)
+
+            Nsecs_mean   = numpy.mean(temp_data[start_last_Nsecs:])
+            Nsecs_std    = numpy.std(temp_data)
+
+            temps_wstats.append((mon_num,current_temp, temp_mean, temp_std, Nsecs_mean, Nsecs_std))
+
+        alarm = False
+        if alarm_monitor is None:
+            print "The selected alarm channel", alarm_channel, "is not on an actively be processed by this code."
+            print "killing script"
+            sys.exit()
         else:
-            alarm = False
+            if high_alarm_temperature <= alarm_monitor:
+                alarm = True
+                alarm_msg = "High alarm Temperature of " + str(high_alarm_temperature) + " K  has been reached.\n"
+            if alarm_monitor <= low_alarm_temperature:
+                alarm = True
+                alarm_msg = "Low alarm Temperature of " + str(low_alarm_temperature) + " K  has been reached.\n"
+
         ###################
         ### send emails ###
         ###################
@@ -311,15 +345,11 @@ while monitoring:
             ElapsedEmailTime = current_time - Email_time
             if seconds_per_email < ElapsedEmailTime:
                 EmailTrigger = True
+
         if alarm:
-            alarm_subject = "CRYOSTAT ALARM - " + str('%2.3f' % current_temp4) + "K"
+            alarm_subject = "CRYOSTAT ALARM - " + str('%2.3f' % alarm_monitor) + "K"
             print alarm_subject
-
-            temp_data = [(4,current_temp4, temp4_mean, temp4_std, Nsecs_mean4, Nsecs_std4),
-                         (3,current_temp3, temp3_mean, temp3_std, Nsecs_mean3, Nsecs_std2),
-                         (2,current_temp2, temp2_mean, temp2_std, Nsecs_mean2, Nsecs_std2)]
-
-            body_text = GenEmailText(temp_data, Nhours, totalhours)
+            body_text = GenEmailText(temps_wstats, Nhours, totalhours)
 
             alarm_body_text = alarm_msg + body_text
             email_caleb(alarm_subject, alarm_body_text)
@@ -331,13 +361,8 @@ while monitoring:
 
         else:
             if EmailTrigger:
-                subject = "periodic cryostat update - " + str('%2.3f' % current_temp4) + "K"            
-
-                temp_data = [(4,current_temp4, temp4_mean, temp4_std, Nsecs_mean4, Nsecs_std4),
-                             (3,current_temp3, temp3_mean, temp3_std, Nsecs_mean3, Nsecs_std2),
-                             (2,current_temp2, temp2_mean, temp2_std, Nsecs_mean2, Nsecs_std2)]
-
-                body_text = GenEmailText(temp_data, Nhours, totalhours)
+                subject = "periodic cryostat update - " + str('%2.3f' % alarm_monitor) + "K"
+                body_text = GenEmailText(temps_wstats, Nhours, totalhours)
                 
                 email_caleb(subject, body_text)
                 Email_time = current_time
