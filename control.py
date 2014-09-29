@@ -4,6 +4,7 @@ import numpy
 import sys
 from LabJack_control import LabJackU3_DAQ0
 
+
 def opentelnet():
     global thzbiascomputer
     thzbiascomputer = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)
@@ -72,30 +73,6 @@ def attempt_meas(sleep_time, channel):
     pot = -999999
 
     out = CommandOutput(sleep_time, channel)
-
-    #if float(channel) < 8:
-    #    parse1 = out.replace('sis ' + channel + ' ', '')
-    #else:
-    #    parse1 = out.replace('mag ' + channel + ' ', '')
-    #parse2 = parse1.replace(' = ', ',')
-
-    #end_position1 = parse2.find('\n', 0)
-    #end_position2 = parse2.find('\n', end_position1+1)
-    #end_position3 = parse2.find('\n', end_position2+1)
-    #end_position4 = parse2.find('\n', end_position3+1)
-
-    #V_string   = parse2[0:end_position1]
-    #A_string   = parse2[end_position1+1:end_position2]
-    #f_string   = parse2[end_position2+1:end_position3]
-    #pot_string = parse2[end_position3+1:end_position4]
-
-    #V_start   = V_string.find( ',',0)
-    #A_start   = A_string.find( ',',0)
-    #pot_start = pot_string.find(',',0)
-
-    #V_temp   = V_string[V_start+1:]
-    #A_temp   = A_string[A_start+1:]
-    #pot_temp = pot_string[pot_start+1:]
 
     V_temp    = out[0]
     A_temp    = out[1]
@@ -690,8 +667,9 @@ def setSIS_only(sispot, feedback, verbose, careful):
 ##############################
 def CommandOutput_TP(sleep_time, sispot, channel):
     out = []
+    sweep_cmd =  "sweep " + channel + " " + sispot + " " + sispot + " 1\n"
     if sleep_time < 30:
-        thzbiascomputer.write("setbias " + channel + " \n")
+        thzbiascomputer.write(sweep_cmd)
         junk = thzbiascomputer.read_until('v = ', float(sleep_time))
         line = thzbiascomputer.read_until('\n', float(sleep_time))
         out.append(line)
@@ -706,7 +684,7 @@ def CommandOutput_TP(sleep_time, sispot, channel):
         out.append(line)
     else:
         restartTelnet(sleep_time)
-        thzbiascomputer.write("setbias " + channel + " \n")
+        thzbiascomputer.write(sweep_cmd)
         junk = thzbiascomputer.read_until('v = ', float(sleep_time))
         line = thzbiascomputer.read_until('\n', float(sleep_time))
         out.append(line)
@@ -733,7 +711,6 @@ def attempt_measTP(sleep_time, sispot, channel):
     
     sispot = str(numpy.round(sispot))
     out = CommandOutput_TP(sleep_time, sispot, channel)
-
     mV_sis_temp  = out[0]
     uA_sis_temp  = out[1]
     tp_sis_temp  = out[2]
@@ -749,17 +726,19 @@ def attempt_measTP(sleep_time, sispot, channel):
     if any(truth_list1):
         redo = True
     else:
-        mV_sis  = float(mV_sis_temp)
-        uA_sis  = float(uA_sis_temp)
-        tp_sis  = float(tp_sis_temp)
-        pot_sis = int(numpy.round(float(pot_sis_temp)))
-            
-        truth_list2 = []
-        truth_list2.append(    20 <= mV_sis )
-        truth_list2.append(   200 <= uA_sis )
-        truth_list2.append(     5 <= tp_sis )
-        truth_list2.append(130000 <= pot_sis)
-        if any(truth_list2):
+        try:
+            mV_sis  = float(mV_sis_temp)
+            uA_sis  = float(uA_sis_temp)
+            tp_sis  = float(tp_sis_temp)
+            pot_sis = int(numpy.round(float(pot_sis_temp)))
+            truth_list2 = []
+            truth_list2.append(    20 <= mV_sis )
+            truth_list2.append(   200 <= uA_sis )
+            truth_list2.append(     5 <= tp_sis )
+            truth_list2.append(130000 <= pot_sis)
+            if any(truth_list2):
+                redo = True
+        except ValueError:
             redo = True
     time_stamp = time.time()
     return redo, mV_sis, uA_sis, tp_sis, pot_sis, time_stamp
@@ -1495,3 +1474,4 @@ def zeropots(verbose=True):
         # print "The Anritsu Signal generator has been sent the command to turn off its RF output."
                 
     return status
+

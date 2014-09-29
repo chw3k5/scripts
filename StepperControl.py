@@ -316,66 +316,76 @@ def QuarterTurn():
     st.close()
     return status
 #
-def initialize():
+def initialize(vel=1, accel=0.5):
     st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1, timeout=2)
     time.sleep(SleepTime)
     if st.isOpen():
+        write_str = ''
         # Disable drive
-        st.write(b'DRIVE0\n')
-        time.sleep(SleepTime)
-        # Erase any existing programs
-        st.write(b'ERASE\n')
-        time.sleep(SleepTime)
-        # Set drive resolution
-        st.write(b'DRES25000\n')
-        time.sleep(SleepTime)
-        # Enable scaling
-        st.write(b'SCALE1\n')
-        time.sleep(SleepTime)
-        # Set scaling
-        st.write(b'SCLD25000\n')
-        time.sleep(SleepTime)
-        st.write(b'SCLV25000\n')
-        time.sleep(SleepTime)
-        st.write(b'SCLA25000\n')
-        time.sleep(SleepTime)
-        # Define axis as st
-        st.write(b'AXDEF0\n')
-        time.sleep(SleepTime)
-        # Disable hardware end-of-travel limits
-        st.write(b'LH0\n')
-        time.sleep(SleepTime)
-        # Pause command execution on stop command
-        st.write(b'COMEXS1\n')
-        time.sleep(SleepTime)
-        # Disable continuous command processing mode
-        st.write(b'COMEXC0\n')
-        time.sleep(SleepTime)
-        # Set preset/continuous mode
-        st.write(b'MC0\n')
-        time.sleep(SleepTime)
-        # Set absolute/incremental mode
-        st.write(b'MA0\n')
-        time.sleep(SleepTime)
-        # Set current position as 0
-        st.write(b'PSET0\n')
-        time.sleep(SleepTime)
+        write_str = write_str + b'DRIVE0\n'
 
-        # Set acceleration
-        st.write(b'A0.3\n')
-        time.sleep(SleepTime)
+        # Erase any existing programs
+        write_str = write_str + 'ERASE\n'
+
+        # Set drive resolution
+        write_str = write_str + 'DRES25000\n'
+
+        # Enable scaling
+        write_str = write_str + 'SCALE1\n'
+
+        # Set scaling
+        write_str = write_str + 'SCLD25000\n'
+        write_str = write_str + 'SCLV25000\n'
+        write_str = write_str + 'SCLA25000\n'
+
+        # Define axis as st
+        write_str = write_str + 'AXDEF0\n'
+
+        # Disable hardware end-of-travel limits
+        write_str = write_str + 'LH0\n'
+
+        # Pause command execution on stop command
+        write_str = write_str + 'COMEXS1\n'
+
+        # Disable continuous command processing mode
+        write_str = write_str + 'COMEXC0\n'
+
+        # Set preset/continuous mode
+        write_str = write_str + 'MC0\n'
+
+        # Set absolute/incremental mode
+        write_str = write_str + 'MA0\n'
+
+        # Set current position as 0
+        write_str = write_str + 'PSET0\n'
+
+        ### Set Accelerations ###
+        accel_str = str(accel)
+        half_accel_str = str(accel/2.0)
+
+        # acceleration
+        write_str = write_str + 'A' + accel_str + '\n'
+
+        # average acceleration (to determine 'S' curve shape)
+        write_str = write_str + 'AA' + half_accel_str + '\n'
+
         # Set deceleration
-        st.write(b'AD0.3\n')
-        time.sleep(SleepTime)
-        # Set velocity
-        st.write(b'V0.5\n')
-        time.sleep(SleepTime)
-        # Set distance
-        st.write(b'D0.25\n')
-        time.sleep(SleepTime)
+        write_str = write_str + 'AD' + accel_str + '\n'
+
+        # set average decoration
+        write_str = write_str + 'ADA' + half_accel_str + '\n'
+
+        ### Set Velocity ###
+        vel_str = str(vel)
+        write_str = write_str + 'V' + vel_str + '\n'
+
         # Enable drive
-        st.write(b'DRIVE1\n')
-        time.sleep(SleepTime)
+        write_str = write_str + 'DRIVE1\n'
+
+        st.write(write_str)
+        time.sleep(SleepTime*5)
+
+
         status = True
     else:
         print "The port is not open, return in status False"
@@ -486,8 +496,8 @@ def test_func():
     return
 
 def test2():
-    initialize()
-    for n in range(200):
+    initialize(vel=0.2, accel=0.2)
+    for n in range(10):
         GoForth()
         time.sleep(2)
         GoBack()
@@ -505,3 +515,4 @@ def reader():
         string = string + char
         print string
     return
+

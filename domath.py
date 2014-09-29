@@ -163,7 +163,7 @@ def conv(data, mesh, min_cdf, sigma, verbose):
         status = True
     return data, status
 
- 
+
 #######################
 ###### derivaive ######
 #######################
@@ -173,7 +173,7 @@ def derivative(data, deriv_int):
     last_index = len(data[:,0])
     lenF       = len(data[0,1:])
     deriv      = numpy.zeros((last_index-deriv_int,len(data[0,:])))
-    
+
     Fdata1     = data[:last_index-deriv_int,1:]
     Fdata2     = data[deriv_int:,1:]
     Xdata1     = data[:last_index-deriv_int,0]
@@ -186,6 +186,19 @@ def derivative(data, deriv_int):
     deriv[:,0] = (Xdata1+Xdata2)/2
     status = True
     return status, deriv
+
+
+###########################
+###### DoDerivatives ######
+###########################
+def DoDerivatives(matrix, der1_int, do_der1_conv, der1_min_cdf, der1_sigma, der2_int, do_der2_conv, der2_min_cdf, der2_sigma, regrid_mesh, verbose):
+    status, der1 = derivative(matrix, der1_int)
+    if do_der1_conv:
+        der1, status  = conv(der1,  regrid_mesh, der1_min_cdf, der1_sigma, verbose)
+    status, der2 = derivative(der1, der2_int)
+    if do_der2_conv:
+        der2, status  = conv(der2,  regrid_mesh, der2_min_cdf, der2_sigma, verbose)
+    return der1, der2
 
 
 ########################
@@ -255,7 +268,7 @@ def linfit(X, Y, linif, der1_int, do_der1_conv, der1_min_cdf, der1_sigma, der2_i
     matrix[:,1] = Y                
     regrid_mesh = abs(X[1]-X[0])
                                                                                  
-    der1, der2 = do_derivative(matrix, der1_int, do_der1_conv, der1_min_cdf, der1_sigma, der2_int, do_der2_conv, der2_min_cdf, der2_sigma, regrid_mesh, verbose)
+    der1, der2 = DoDerivatives(matrix, der1_int, do_der1_conv, der1_min_cdf, der1_sigma, der2_int, do_der2_conv, der2_min_cdf, der2_sigma, regrid_mesh, verbose)
     #status, lin_start_uAmV, lin_end_uAmV = findlinear(der2[:,0], der2[:,1], linif, verbose)
     #slopes, intercepts, bestfits_uA, bestfits_mV = resfitter(uA_unpumpedhot, mV_unpumpedhot, lin_start_uAmV, lin_end_uAmV)
     

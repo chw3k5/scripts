@@ -3,7 +3,7 @@ import numpy
 import os, sys
 import shutil
 from sys import platform
-from domath import regrid, conv, derivative, FindOverlap # Caleb's Programs
+from domath import regrid, conv, FindOverlap # Caleb's Programs
 from operator import itemgetter
 
 def getparams(filename):
@@ -41,15 +41,20 @@ def getparams(filename):
         elif ((params.param[params_index] == 'sisiset') or (params.param[params_index] == 'LOuAset')):
             LOuAset = float(params.value[params_index])
         elif params.param[params_index] == 'UCA_volt':
-            UCA_volt = float(params.value[params_index])
+            if params.value[params_index] != 'biastestmode':
+                UCA_volt = float(params.value[params_index])
         elif ((params.param[params_index] == 'sisi_set_pot') or (params.param[params_index] == 'LOuA_set_pot')):
-            LOuA_set_pot = float(params.value[params_index])
+            if params.value[params_index] != 'biastestmode':
+                LOuA_set_pot = float(params.value[params_index])
         elif ((params.param[params_index] == 'sisi_magpot') or (params.param[params_index] == 'LOuA_magpot')):
-            LOuA_magpot = float(params.value[params_index])
+            if params.value[params_index] != 'biastestmode':
+                LOuA_magpot = float(params.value[params_index])
         elif params.param[params_index] == 'LOfreq':
-            LOfreq = float(params.value[params_index])
+            if params.value[params_index] != 'biastestmode':
+                LOfreq = float(params.value[params_index])
         elif params.param[params_index] == 'IFband':
-            IFband = float(params.value[params_index])
+            if params.value[params_index] != 'biastestmode':
+                IFband = float(params.value[params_index])
     return K_val, magisweep, magiset, magpot, LOuAsearch, LOuAset, UCA_volt, LOuA_set_pot, LOuA_magpot, LOfreq, IFband
     
 def getproparams(filename):
@@ -108,7 +113,8 @@ def getproparams(filename):
         elif params.param[params_index] == 'LOuAset':
             LOuAset = float(params.value[params_index])
         elif params.param[params_index] == 'UCA_volt':
-            UCA_volt = float(params.value[params_index])
+            if params.value[params_index] != 'None':
+                UCA_volt = float(params.value[params_index])
         elif params.param[params_index] == 'LOuA_set_pot':
             LOuA_set_pot = float(params.value[params_index])
         elif params.param[params_index] == 'LOuA_magpot':
@@ -130,9 +136,11 @@ def getproparams(filename):
         elif params.param[params_index] == 'del_time':
             del_time = float(params.value[params_index])
         elif params.param[params_index] == 'LOfreq':
-            LOfreq = float(params.value[params_index])
+            if params.value[params_index] != 'None':
+                LOfreq = float(params.value[params_index])
         elif params.param[params_index] == 'IFband':
-            IFband = float(params.value[params_index])
+            if params.value[params_index] != 'None':
+                IFband = float(params.value[params_index])
         elif params.param[params_index] == 'TP_int_time':
             TP_int_time = float(params.value[params_index])
     return K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, meanmag_mA, stdmag_mA, LOuAsearch, LOuAset, UCA_volt,\
@@ -712,16 +720,4 @@ def ProcessMatrix(raw_matrix, mono_switcher, do_regrid, do_conv, regrid_mesh, mi
         matrix = conv_matrix
         
     return matrix, raw_matrix, mono_matrix, regrid_matrix, conv_matrix
-    
-def do_derivative(matrix, der1_int, do_der1_conv, der1_min_cdf, der1_sigma, der2_int, do_der2_conv, der2_min_cdf, der2_sigma, regrid_mesh, verbose):
-    status, der1 = derivative(matrix, der1_int)
-    
-    if do_der1_conv:
-        der1, status  = conv(der1,  regrid_mesh, der1_min_cdf, der1_sigma, verbose)
-        
-    status, der2 = derivative(der1, der2_int)
-    
-    if do_der2_conv:
-        der2, status  = conv(der2,  regrid_mesh, der2_min_cdf, der2_sigma, verbose)
-    
-    return der1, der2
+
