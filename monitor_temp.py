@@ -320,8 +320,9 @@ while monitoring:
             temp_mean    = numpy.mean(temp_data)
             temp_std     = numpy.std(temp_data)
 
-            Nsecs_mean   = numpy.mean(temp_data[start_last_Nsecs:])
-            Nsecs_std    = numpy.std(temp_data)
+            Nsecs_temp_data = temp_data[start_last_Nsecs:]
+            Nsecs_mean   = numpy.mean(Nsecs_temp_data)
+            Nsecs_std    = numpy.std(Nsecs_temp_data)
 
             temps_wstats.append((channel,current_temp, temp_mean, temp_std, Nsecs_mean, Nsecs_std))
 
@@ -416,7 +417,7 @@ while monitoring:
             channel = temp[0]
             data    = temp[1]
             data    = data[start_last_Nsecs:]
-            ax1.plot(Ttime, data, color=plotcolor, linewidth=3)
+            ax1.plot(Ttime[start_last_Nsecs:], data, color=plotcolor, linewidth=3)
             line = plt.Line2D(range(10), range(10), color=plotcolor)
             lines.append(line)
             if channel == 4:
