@@ -44,9 +44,9 @@ def GenEmailText(temp_data, Nhours, totalhours):
         if monitor_num == 4:
             body_text += "Receiver temp = "
         elif monitor_num == 3:
-            body_text += "Inner shield  = "
-        elif monitor_num == 2:
             body_text += "Outer shield  = "
+        elif monitor_num == 2:
+            body_text += "Inner shield  = "
         else:
             body_text += "Monitor " + str(monitor_num) + " = "
 
@@ -107,27 +107,28 @@ if platform == 'win32':
 elif platform == 'darwin':
     folder ='/Users/chw3k5/Documents/Grad_School/Kappa/temperatureData/'
 #Date File Name
-filename = 'cooldown01.csv'
+filename = 'Warming01.csv'
 
 max_count = 5 # in loops (set to -1 to set to infinity)
 max_time  = 60 # in seconds (set to -1 to set to infinity)
 
-monitor_time  = 3*7*24*60*60 # in seconds (This is the total time that is scrip will monitor temperatures from the Lakeshore monitor)
-monitor_sleep = 5*60   # in seconds
+monitor_time  = 3*7*24*60*60 # in seconds (This is the total time that is script will monitor temperatures from the Lakeshore monitor)
+monitor_sleep = 10*60   # in seconds
 
-Nsecs        =  1*30*60 # in second (look at data and do statistics on the last Nhours of data collection)
+Nsecs        =  1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
 
+start_email   = True
 PeriodicEmail = True
-seconds_per_email = 1*30*60 #12*60*60 # in seconds
+seconds_per_email = 8*60*60 #12*60*60 # in seconds
 
 alarm_channel = 4
 high_alarm_temperature = 300. # in Kelvin
-low_alarm_temperature  = 100. # in Kelvin
+low_alarm_temperature  =   3. # in Kelvin
 
 meas_period      = 7.0 # in seconds
 rest_time        = 0.5 # in seconds
 
-channels = [4,3,2]
+channels = [4,2,3]
 num_of_temp2read = len(channels) #
 sleep_per_meas   = meas_period - 2*rest_time*num_of_temp2read
 if sleep_per_meas <= 0:
@@ -144,7 +145,11 @@ testing = False
 monitoring = True
 start_monitor_time = time.time()
 Email_time = start_monitor_time
-EmailTrigger = True
+if start_email:
+    EmailTrigger = True
+else:
+    EmailTrigger = False
+
 while monitoring:
     current_time = time.time()
     if monitor_time < current_time - start_monitor_time:
@@ -392,9 +397,9 @@ while monitoring:
             if channel == 4:
                 names.append("Receiver")
             elif channel == 3:
-                names.append("Inner Shield")
-            elif channel == 2:
                 names.append("Outer Shield")
+            elif channel == 2:
+                names.append("Inner Shield")
             else:
                 names.append("Channel " + str(channel))
 
@@ -423,9 +428,9 @@ while monitoring:
             if channel == 4:
                 names.append("Receiver")
             elif channel == 3:
-                names.append("Inner Shield")
-            elif channel == 2:
                 names.append("Outer Shield")
+            elif channel == 2:
+                names.append("Inner Shield")
             else:
                 names.append("Channel " + str(channel))
         
