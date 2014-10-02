@@ -81,7 +81,11 @@ def getproparams(filename):
     del_time     = None
     LOfreq       = None
     IFband       = None
+    meas_num     = None
     TP_int_time  = None
+    TP_num       = None
+    TP_freq      = None
+
     params = atpy.Table(filename, type="ascii", delimiter=",")
     for params_index in range(len(params.param)):
         if params.param[params_index] == 'temp':
@@ -141,11 +145,19 @@ def getproparams(filename):
         elif params.param[params_index] == 'IFband':
             if params.value[params_index] != 'None':
                 IFband = float(params.value[params_index])
+        elif params.param[params_index] == 'meas_num':
+            meas_num = float(params.value[params_index])
         elif params.param[params_index] == 'TP_int_time':
             TP_int_time = float(params.value[params_index])
+        elif params.param[params_index] == 'TP_num':
+            TP_num = float(params.value[params_index])
+        elif params.param[params_index] == 'TP_freq':
+            TP_freq = float(params.value[params_index])
+
+
     return K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, meanmag_mA, stdmag_mA, LOuAsearch, LOuAset, UCA_volt,\
            LOuA_set_pot, LOuA_magpot,meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, stdSIS_tp, SIS_pot, \
-           del_time, LOfreq, IFband, TP_int_time
+           del_time, LOfreq, IFband, meas_num, TP_int_time, TP_num, TP_freq
 
 def getmultiParams(ParamsFile_list):
     K_val        = []
@@ -174,15 +186,19 @@ def getmultiParams(ParamsFile_list):
     del_time     = []
     LOfreq       = []
     IFband       = []
-    TP_int_time  = []
+    meas_num     = []
 
+    TP_int_time  = []
+    TP_num       = []
+    TP_freq      = []
 
     for ParamsFile in ParamsFile_list:
 
         K_val_temp, magisweep_temp, magiset_temp, magpot_temp, meanmag_V_temp, stdmag_V_temp, \
         meanmag_mA_temp, stdmag_mA_temp, LOuAsearch_temp, LOuAset_temp, UCA_volt_temp, LOuA_set_pot_temp,\
         LOuA_magpot_temp, meanSIS_mV_temp, stdSIS_mV_temp, meanSIS_uA_temp, stdSIS_uA_temp, meanSIS_tp_temp,\
-        stdSIS_tp_temp, SIS_pot_temp, del_time_temp, LOfreq_temp, IFband_temp, TP_int_time_temp \
+        stdSIS_tp_temp, SIS_pot_temp, del_time_temp, LOfreq_temp, IFband_temp, meas_num_temp, \
+        TP_int_time_temp, TP_num_temp, TP_freq_temp \
             = getproparams(ParamsFile)
 
         K_val.append(K_val_temp)
@@ -211,8 +227,11 @@ def getmultiParams(ParamsFile_list):
         del_time.append(del_time_temp)
         LOfreq.append(LOfreq_temp)
         IFband.append(IFband_temp)
-        TP_int_time.append(TP_int_time_temp)
+        meas_num.append(meas_num_temp)
 
+        TP_int_time.append(TP_int_time_temp)
+        TP_num.append(TP_num_temp)
+        TP_freq.append(TP_freq_temp)
 
     # the test to determine if all the parameters are the same or not
     K_val_sametest        = True
@@ -241,7 +260,11 @@ def getmultiParams(ParamsFile_list):
     del_time_sametest     = True
     LOfreq_sametest       = True
     IFband_sametest       = True
+    meas_num_sametest     = True
+
     TP_int_time_sametest  = True
+    TP_num_sametest       = True
+    TP_freq_sametest      = True
 
     ParamsFile_list_len = len(ParamsFile_list)
     if 1 < ParamsFile_list_len:
@@ -341,8 +364,21 @@ def getmultiParams(ParamsFile_list):
                 IFband_sametest = False
                 break
         for n in range(ParamsFile_list_len - 1):
+            if meas_num[n] != meas_num[n+1]:
+                meas_num_sametest = False
+                break
+
+        for n in range(ParamsFile_list_len - 1):
             if TP_int_time[n] != TP_int_time[n+1]:
                 TP_int_time_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if TP_num[n] != TP_num[n+1]:
+                TP_num_sametest = False
+                break
+        for n in range(ParamsFile_list_len - 1):
+            if TP_freq[n] != TP_freq[n+1]:
+                TP_freq_sametest = False
                 break
 
 
@@ -395,13 +431,21 @@ def getmultiParams(ParamsFile_list):
             LOfreq = LOfreq[0]
         if IFband_sametest:
             IFband = IFband[0]
+        if meas_num_sametest:
+            meas_num = meas_num[0]
+
         if TP_int_time_sametest:
             TP_int_time = TP_int_time[0]
+        if TP_num_sametest:
+            TP_num = TP_num[0]
+        if TP_freq_sametest:
+            TP_freq = TP_freq[0]
 
     return K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, \
            meanmag_mA, stdmag_mA, LOuAsearch, LOuAset, UCA_volt,LOuA_set_pot, \
            LOuA_magpot,meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, \
-           stdSIS_tp, SIS_pot, del_time, LOfreq, IFband, TP_int_time
+           stdSIS_tp, SIS_pot, del_time, LOfreq, IFband, meas_num, \
+           TP_int_time, TP_num, TP_freq
 
 
 
@@ -544,93 +588,121 @@ def getproYdata(datadir):
     colddatafile = datadir + 'colddata.csv'
     Ydatafile    = datadir + 'Ydata.csv'
 
-    temp = atpy.Table(hotdatafile, type="ascii", delimiter=",")    
-    hot_mV_mean   = temp.mV_mean
-    hot_mV_std    = temp.mV_std
-    hot_uA_mean   = temp.uA_mean
-    hot_uA_std    = temp.uA_std
-    hot_TP_mean   = temp.TP_mean
-    hot_TP_std    = temp.TP_std
-    hot_TP_num    = temp.TP_num
-    hot_TP_freq   = temp.TP_freq
-    hot_time_mean = temp.time_mean
-    hot_pot       = temp.pot
-    hot_meas_num  = temp.meas_num
-    
-    temp = atpy.Table(colddatafile, type="ascii", delimiter=",")    
-    cold_mV_mean   = temp.mV_mean
-    cold_mV_std    = temp.mV_std
-    cold_uA_mean   = temp.uA_mean
-    cold_uA_std    = temp.uA_std
-    cold_TP_mean   = temp.TP_mean
-    cold_TP_std    = temp.TP_std
-    cold_TP_num    = temp.TP_num
-    cold_TP_freq   = temp.TP_freq
-    cold_time_mean = temp.time_mean
-    cold_pot       = temp.pot
-    cold_meas_num  = temp.meas_num
-    
-    temp = atpy.Table(Ydatafile, type="ascii", delimiter=",")
-    mV_Yfactor = temp.mV_Yfactor
-    Yfactor    = temp.Yfactor
+
+    if os.path.exists(hotdatafile):
+        temp = atpy.Table(hotdatafile, type="ascii", delimiter=",")
+        hot_mV_mean   = temp.mV_mean
+        hot_mV_std    = temp.mV_std
+        hot_uA_mean   = temp.uA_mean
+        hot_uA_std    = temp.uA_std
+        hot_TP_mean   = temp.TP_mean
+        hot_TP_std    = temp.TP_std
+        hot_time_mean = temp.time_mean
+        hot_pot       = temp.pot
+        hotdatafound  = True
+    else:
+        hot_mV_mean   = None
+        hot_mV_std    = None
+        hot_uA_mean   = None
+        hot_uA_std    = None
+        hot_TP_mean   = None
+        hot_TP_std    = None
+        hot_time_mean = None
+        hot_pot       = None
+        hotdatafound  = False
+
+    if os.path.exists(colddatafile):
+        temp = atpy.Table(colddatafile, type="ascii", delimiter=",")
+        cold_mV_mean   = temp.mV_mean
+        cold_mV_std    = temp.mV_std
+        cold_uA_mean   = temp.uA_mean
+        cold_uA_std    = temp.uA_std
+        cold_TP_mean   = temp.TP_mean
+        cold_TP_std    = temp.TP_std
+        cold_time_mean = temp.time_mean
+        cold_pot       = temp.pot
+        colddatafound  = True
+    else:
+        temp = atpy.Table(colddatafile, type="ascii", delimiter=",")
+        cold_mV_mean   = None
+        cold_mV_std    = None
+        cold_uA_mean   = None
+        cold_uA_std    = None
+        cold_TP_mean   = None
+        cold_TP_std    = None
+        cold_time_mean = None
+        cold_pot       = None
+        colddatafound  = False
+
+    if os.path.exists(Ydatafile):
+        temp = atpy.Table(Ydatafile, type="ascii", delimiter=",")
+        mV_Yfactor = temp.mV_Yfactor
+        Yfactor    = temp.Yfactor
+        Ydatafound = True
+    else:
+        mV_Yfactor = None
+        Yfactor    = None
+        Ydatafound = False
     
     # make sure all the Y mV data overlaps
-    if 1 < len(hot_mV_mean):
-        mesh = (hot_mV_mean[1]-hot_mV_mean[0])
+    if (hotdatafound and colddatafound and Ydatafound):
+        if 1 < len(hot_mV_mean):
+            mesh = (hot_mV_mean[1]-hot_mV_mean[0])
+        else:
+            mesh=0.01
+        status, hot_start, cold_start, list_length = FindOverlap(hot_mV_mean, cold_mV_mean, mesh)
+        if not status:
+            print "The function 'FindOverlap' failed in 'getproYdata' for file:", datadir
+            print "Killing Script"
+            sys.exit()
+        hot_end  = hot_start  + list_length
+
+        mV = hot_mV_mean[hot_start:hot_end]
+        status, mV_start, Yfactor_start, list_length = FindOverlap(mV, mV_Yfactor, mesh)
+        if not status:
+            print "The function 'FindOverlap' (2nd call) failed in 'getproYdata' for file:", datadir
+            print "Killing Script"
+            sys.exit()
+
+        Yfactor_end = Yfactor_start + list_length
+
+        hot_start  += mV_start
+        cold_start += mV_start
+        hot_end     = hot_start  + list_length
+        cold_end    = cold_start + list_length
+
+        mV = mV[mV_start:list_length+mV_start]
+
+        hot_mV_mean   = hot_mV_mean[hot_start:hot_end]
+        hot_mV_std    = hot_mV_std[hot_start:hot_end]
+        hot_uA_mean   = hot_uA_mean[hot_start:hot_end]
+        hot_uA_std    = hot_uA_std[hot_start:hot_end]
+        hot_TP_mean   = hot_TP_mean[hot_start:hot_end]
+        hot_TP_std    = hot_TP_std[hot_start:hot_end]
+        hot_time_mean = hot_time_mean[hot_start:hot_end]
+        hot_pot       = hot_pot[hot_start:hot_end]
+
+        cold_mV_mean   = cold_mV_mean[cold_start:cold_end]
+        cold_mV_std    = cold_mV_std[cold_start:cold_end]
+        cold_uA_mean   = cold_uA_mean[cold_start:cold_end]
+        cold_uA_std    = cold_uA_std[cold_start:cold_end]
+        cold_TP_mean   = cold_TP_mean[cold_start:cold_end]
+        cold_TP_std    = cold_TP_std[cold_start:cold_end]
+        cold_time_mean = cold_time_mean[cold_start:cold_end]
+        cold_pot       = cold_pot[cold_start:cold_end]
+
+        Yfactor    = Yfactor[Yfactor_start:Yfactor_end]
+        mV_Yfactor = mV_Yfactor[Yfactor_start:Yfactor_end]
+
     else:
-        mesh=0.01
-    status, hot_start, cold_start, list_length = FindOverlap(hot_mV_mean, cold_mV_mean, mesh)
-    if not status:
-        print "The function 'FindOverlap' failed in 'getproYdata' for file:", datadir
-        print "Killing Script"
-        sys.exit()
-    hot_end  = hot_start  + list_length
-
-    mV = hot_mV_mean[hot_start:hot_end]
-    status, mV_start, Yfactor_start, list_length = FindOverlap(mV, mV_Yfactor, mesh)
-    if not status:
-        print "The function 'FindOverlap' (2nd call) failed in 'getproYdata' for file:", datadir
-        print "Killing Script"
-        sys.exit()
-
-    Yfactor_end = Yfactor_start + list_length
-
-    hot_start  += mV_start
-    cold_start += mV_start
-    hot_end     = hot_start  + list_length
-    cold_end    = cold_start + list_length
-
-
-    hot_mV_std    = hot_mV_std[hot_start:hot_end]
-    hot_uA_mean   = hot_uA_mean[hot_start:hot_end]
-    hot_uA_std    = hot_uA_std[hot_start:hot_end]
-    hot_TP_mean   = hot_TP_mean[hot_start:hot_end]
-    hot_TP_std    = hot_TP_std[hot_start:hot_end]
-    hot_TP_num    = hot_TP_num[hot_start:hot_end]
-    hot_TP_freq   = hot_TP_freq[hot_start:hot_end]
-    hot_time_mean = hot_time_mean[hot_start:hot_end]
-    hot_pot       = hot_pot[hot_start:hot_end]
-    hot_meas_num  = hot_meas_num[hot_start:hot_end]
-
-    cold_mV_std    = cold_mV_std[cold_start:cold_end]
-    cold_uA_mean   = cold_uA_mean[cold_start:cold_end]
-    cold_uA_std    = cold_uA_std[cold_start:cold_end]
-    cold_TP_mean   = cold_TP_mean[cold_start:cold_end]
-    cold_TP_std    = cold_TP_std[cold_start:cold_end]
-    cold_TP_num    = cold_TP_num[cold_start:cold_end]
-    cold_TP_freq   = cold_TP_freq[cold_start:cold_end]
-    cold_time_mean = cold_time_mean[cold_start:cold_end]
-    cold_pot       = cold_pot[cold_start:cold_end]
-    cold_meas_num  = cold_meas_num[cold_start:cold_end]
-
-    Yfactor = Yfactor[Yfactor_start:Yfactor_end]
+        mV = None
 
         
-    return Yfactor, mV, hot_mV_std, cold_mV_std, hot_uA_mean, cold_uA_mean,    \
-    hot_uA_std, cold_uA_std, hot_TP_mean, cold_TP_mean, hot_TP_std,            \
-    cold_TP_std, hot_TP_num, cold_TP_num, hot_TP_freq, cold_TP_freq,           \
-    hot_time_mean, cold_time_mean, hot_pot, cold_pot,                          \
-    hot_meas_num, cold_meas_num
+    return Yfactor, mV_Yfactor, hot_mV_mean, cold_mV_mean, mV, \
+           hot_mV_std, cold_mV_std, hot_uA_mean, cold_uA_mean, \
+           hot_uA_std, cold_uA_std, hot_TP_mean, cold_TP_mean, hot_TP_std, cold_TP_std,\
+           hot_time_mean, cold_time_mean, hot_pot, cold_pot,\
+           hotdatafound, colddatafound, Ydatafound
     
 def getYnums(datadir, search_str):
     # get the Y numbers from the directory names in the datadir directory

@@ -103,7 +103,7 @@ def ProFastIV(fastIV_filename,  prodataname, mono_switcher, do_regrid, do_conv, 
         n.close()
     return fastIV_found
 
-def AstroDataPro(datadir, prodataname, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose):
+def AstroDataPro(datadir, proparamsfile, prodataname, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose):
     astrosweep_found = False
     if sys.platform == 'win32':
          sweepdir = datadir + 'sweep\\'
@@ -113,15 +113,12 @@ def AstroDataPro(datadir, prodataname, mono_switcher, do_regrid, do_conv, regrid
     if not TP_list == []:
         astrosweep_found = True
         sweep_pot       = []
-        sweep_meas_num  = []
         sweep_mV_mean   = []
         sweep_mV_std    = []
         sweep_uA_mean   = []
         sweep_uA_std    = []
         sweep_TP_mean   = []
         sweep_TP_std    = []
-        sweep_TP_num    = []
-        sweep_TP_freq   = []
         sweep_time_mean = []
         for sweep_index in range(len(TP_list)):
             # read in SIS data for each sweep step
@@ -129,7 +126,6 @@ def AstroDataPro(datadir, prodataname, mono_switcher, do_regrid, do_conv, regrid
             if verbose:
                 print sweepdir + str(sweep_index + 1) + '.csv'
             sweep_pot.append(temp_pot[0])
-            sweep_meas_num.append(len(temp_mV))
             sweep_mV_mean.append(numpy.mean(temp_mV))
             sweep_mV_std.append(numpy.std(temp_mV))
             sweep_uA_mean.append(numpy.mean(temp_uA))
@@ -137,11 +133,21 @@ def AstroDataPro(datadir, prodataname, mono_switcher, do_regrid, do_conv, regrid
             sweep_time_mean.append(numpy.mean(temp_time))
             temp_TP, TP_freq = getLJdata(sweepdir + "TP" + str(sweep_index + 1) + '.csv')
             if sweep_index == 0:
-                TP_int_time = len(temp_TP)/TP_freq
+                TP_int_time    = len(temp_TP)/TP_freq
+                meas_num = len(temp_mV)
+                TP_num   = len(temp_TP)
+                TP_freq  = TP_freq
             sweep_TP_mean.append(numpy.mean(temp_tp))
             sweep_TP_std.append(numpy.std(temp_tp))
-            sweep_TP_num.append(len(temp_TP))
-            sweep_TP_freq.append(TP_freq)
+
+        # Some Parts of the Parameter file are written here
+        n = open(proparamsfile, 'a')
+        n.write('meas_num,'    + str(meas_num)    + '\n')
+        n.write('TP_int_time,' + str(TP_int_time) + '\n')
+        n.write('TP_num,'      + str(TP_num)      + '\n')
+        n.write('TP_freq,'     + str(TP_freq)     + '\n')
+        n.close()
+
         # put the data into a matrix for processing
         matrix  = numpy.zeros((len(sweep_mV_mean), 11))
         matrix[:,0]  = sweep_mV_mean
@@ -150,11 +156,8 @@ def AstroDataPro(datadir, prodataname, mono_switcher, do_regrid, do_conv, regrid
         matrix[:,3]  = sweep_uA_std
         matrix[:,4]  = sweep_TP_mean
         matrix[:,5]  = sweep_TP_std
-        matrix[:,6]  = sweep_TP_num
-        matrix[:,7]  = sweep_TP_freq
-        matrix[:,8]  = sweep_time_mean
-        matrix[:,9]  = sweep_pot
-        matrix[:,10] = sweep_meas_num
+        matrix[:,6]  = sweep_time_mean
+        matrix[:,7]  = sweep_pot
         # process the matrix
         matrix, raw_matrix, mono_matrix, regrid_matrix, conv_matrix \
             = ProcessMatrix(matrix, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose)
@@ -165,15 +168,11 @@ def AstroDataPro(datadir, prodataname, mono_switcher, do_regrid, do_conv, regrid
         sweep_uA_std    = matrix[:,3]
         sweep_TP_mean   = matrix[:,4]
         sweep_TP_std    = matrix[:,5]
-        sweep_TP_num    = matrix[:,6]
-        sweep_TP_freq   = matrix[:,7]
-        sweep_time_mean = matrix[:,8]
-        sweep_pot       = matrix[:,9]
-        sweep_meas_num  = matrix[:,10]
+        sweep_time_mean = matrix[:,6]
+        sweep_pot       = matrix[:,7]
         ### save the results of this calculations
         n = open(prodataname, 'w')
-        n.write('mV_mean,mV_std,uA_mean,uA_std,TP_mean,TP_std,TP_num,TP_freq,\
-time_mean,pot,meas_num\n')
+        n.write('mV_mean,mV_std,uA_mean,uA_std,TP_mean,TP_std,time_mean,pot\n')
         for sweep_index in range(len(sweep_mV_mean)):
             n.write(str(sweep_mV_mean[sweep_index]) + ',' +                    \
             str(sweep_mV_std[sweep_index])    + ',' +                          \
@@ -181,11 +180,8 @@ time_mean,pot,meas_num\n')
             str(sweep_uA_std[sweep_index])    + ',' +                          \
             str(sweep_TP_mean[sweep_index])   + ',' +                          \
             str(sweep_TP_std[sweep_index])    + ',' +                          \
-            str(sweep_TP_num[sweep_index])    + ',' +                          \
-            str(sweep_TP_freq[sweep_index])   + ',' +                          \
             str(sweep_time_mean[sweep_index]) + ',' +                          \
-            str(sweep_pot[sweep_index])       + ',' +                          \
-            str(sweep_meas_num[sweep_index]) +'\n')
+            str(sweep_pot[sweep_index]) +'\n')
         n.close()
     else:
         print "No total Power data was found in ", datadir
@@ -339,7 +335,7 @@ def SweepPro(datadir, proparamsfile, prodataname_fast, prodataname_unpump, proda
 
     ### get the astronomy quality sweep data for this Y sweep
     astrosweep_found, sweep_mV_mean, sweep_TP_mean, TP_int_time \
-        = AstroDataPro(datadir, prodataname_ast, mono_switcher_mV, do_regrid_mV, do_conv_mV, regrid_mesh_mV, min_cdf_mV,
+        = AstroDataPro(datadir, proparamsfile, prodataname_ast, mono_switcher_mV, do_regrid_mV, do_conv_mV, regrid_mesh_mV, min_cdf_mV,
                  sigma_mV, verbose)
     n = open(proparamsfile, 'a')
     n.write('TP_int_time,'  + str(TP_int_time)  + '\n')

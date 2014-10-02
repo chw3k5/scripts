@@ -78,7 +78,7 @@ if do_YdataPro:
 if do_YfactotSweepsPlotter:
     YfactorSweepsPlotter(datadir, search_4Ynums=True, Ynums='', verbose=True, mV_min=0, mV_max=None,
                          show_standdev=True, std_num=3,
-                         display_params=True, show_plot=False, save_plot=True, do_eps=True,
+                         display_params=True, show_plot=True, save_plot=True, do_eps=False,
                          find_lin_mVuA=False, linif=0.3, der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
                          der2_int=1, do_der2_conv=True, der2_min_cdf=0.95, der2_sigma=0.05,
                          plot_astromVuA=True, plot_astromVtp=True, plot_fastmVuA=True, plot_fastmVtp=False,

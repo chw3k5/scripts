@@ -42,48 +42,63 @@ def GetAllTheProFastSweepData(prodatadir):
 
 
 def DataTrimmer(min_trim, max_trim, ordered_set, trim_list):
-    set_max = max(ordered_set)
-    set_min = min(ordered_set)
+    if min_trim is not None:
+        set_max = max(ordered_set)
+    else:
+        set_max = None
+    if max_trim is not None:
+        set_min = min(ordered_set)
+    else:
+        set_min = None
+
+    index_min_trim = 0
     min_trimmed = ordered_set
     min4min_trim = None
     status = True
     trimmed = None
-
-    if max_trim < min_trim:
-        print "max_trim is less than or equal to min_trim, min trim must be strictly less than max_trim"
-        print "min_trim:", min_trim
-        print "max_trim:", max_trim
-        print "returning status=False"
-        status = False
-    else:
-        # Min trim
-        if min_trim < set_max:
-            for index_min_trim in range(len(ordered_set[:])):
-               if min_trim <= ordered_set[index_min_trim]:
-                    min_trimmed = ordered_set[index_min_trim:]
-                    min4min_trim = min(min_trimmed)
-                    break
-
-            # Max trim
-            if min4min_trim < max_trim:
-                for index_max_trim in reversed(range(len(min_trimmed[:]))):
-                    if ordered_set[index_max_trim] <= max_trim:
-                        trimmed = ordered_set[:index_max_trim]
-                        break
-            else:
-                print max_trim, "=max_trim is greater than the minimum of the the ordered set that has been already been trimmed sweep, that is:", min4min_trim
-                print "The min value of the ordered set before trimming was:", set_min
-                print "It is likely that the difference of max_trim and min_trim is greater that the spacing of values in the ordered set"
-                print "min_trim:", min_trim
-                print "max_trim:", max_trim
-                print "ordered_set:", ordered_set
-                print "min_trimmed:", min4min_trim
-                print "returning status=False"
-                status = False
-        else:
-            print min_trim, "=mV_min is greater than the max value of mV for a sweep:", set_max
+    if not ((max_trim is None) and (min_trim is None)):
+        if ((max_trim is not None) and (min_trim is not None) and (max_trim < min_trim)):
+            print "max_trim is less than or equal to min_trim, min trim must be strictly less than max_trim"
+            print "min_trim:", min_trim
+            print "max_trim:", max_trim
             print "returning status=False"
             status = False
+        else:
+            # Min trim
+            if min_trim is not None:
+                if min_trim < set_max:
+                    for index_min_trim in range(len(ordered_set[:])):
+                        if min_trim <= ordered_set[index_min_trim]:
+                            min_trimmed = ordered_set[index_min_trim:]
+                            min4min_trim = min(min_trimmed)
+                            break
+            else:
+                min4min_trim = set_min
+
+            if max_trim is not None:
+                # Max trim
+                if min4min_trim < max_trim:
+                    for index_max_trim in reversed(range(len(min_trimmed[:]))):
+                        if ordered_set[index_max_trim] <= max_trim:
+                            trimmed = ordered_set[:index_max_trim]
+                            break
+                        else:
+                            print max_trim, "=max_trim is greater than the minimum of the the ordered set that has been already been trimmed sweep, that is:", min4min_trim
+                            print "The min value of the ordered set before trimming was:", set_min
+                            print "It is likely that the difference of max_trim and min_trim is greater that the spacing of values in the ordered set"
+                            print "min_trim:", min_trim
+                            print "max_trim:", max_trim
+                            print "ordered_set:", ordered_set
+                            print "min_trimmed:", min4min_trim
+                            print "returning status=False"
+                            status = False
+                else:
+                    print min_trim, "=mV_min is greater than the max value of mV for a sweep:", set_max
+                    print "returning status=False"
+                    status = False
+            else:
+                trimmed = min_trimmed
+
 
     # trim the corresponding values in the list dependent variables
     trimmed_list = []
@@ -459,19 +474,238 @@ def SimpleSweepPlot(datadir, search_4Snums=False, Snums='', verbose=False, show_
 
 
 
+def xyplotgen(x_vector, y_vector, label='', plot_list=[], leglines=[], leglabels=[], color='black', linw=1, ls='-', scale_str='' ):
+    plot_list.append((x_vector, y_vector, color, linw, ls, scale_str))
+    leglines.append((color,ls))
+    leglabels.append(label)
+    return plot_list, leglines, leglabels
+
+def stdaxplotgen(x_vector, y_vector, y_std, std_num=1, label='',
+                 plot_list=[], leglines=[], leglabels=[],
+                 color='black', linw=1, ls='-', scale_str=''):
+    # Positive sigma
+    plot_list.append((x_vector, y_vector+(y_std*std_num), color, linw, ls, scale_str))
+    leglines.append(None)
+    leglabels.append(None)
+    # Negative sigma
+    plot_list.append((x_vector, y_vector-(y_std*std_num), color, linw, ls, scale_str))
+    leglines.append((color, ls))
+
+    leglabels.append(label)
+    return plot_list, leglines, leglabels
+
+def linifxyplotgen(x_vector, y_vector, label='', plot_list=[], leglines=[], leglabels=[],
+                   color='black', linw=1, ls='-', scale_str='', linif=0.3,
+                   der1_int=1, do_der1_conv=False, der1_min_cdf=0.90, der1_sigma=0.05, der2_int=1,
+                   do_der2_conv=False, der2_min_cdf=0.9, der2_sigma=0.1, verbose=False):
+    slopes, intercepts, bestfits_x, bestfits_y \
+                =  linfit(x_vector, y_vector, linif, der1_int, do_der1_conv, der1_min_cdf, der1_sigma, der2_int,
+                          do_der2_conv, der2_min_cdf, der2_sigma, verbose)
+    for n in range(len(bestfits_x[0,:])):
+        plot_list.append((bestfits_x[:,n], bestfits_y[:, n], color, linw, ls, scale_str))
+        leglines.append((color, ls))
+        resist = 1000*(1.0/slopes[n])
+        if label is None:
+            leglabels.append(None)
+        else:
+            leglabels.append(str('%3.1f' % resist)+label)
+    return plot_list, leglines, leglabels
 
 
 
 
+def allstarplotgen(x_vector, y_vector, y_std=None, std_num=1, plot_list=[], leglines=[], leglabels=[],
+                   show_std=False, find_lin=False,
+                   label='', std_label='', lin_label='',
+                   color='red', lin_color='black',
+                   linw=1, std_linw=1, lin_linw=1,
+                   ls='-', std_ls='dotted', lin_ls='-',
+                   scale_str='', linif=0.3,
+                   der1_int=1, do_der1_conv=False, der1_min_cdf=0.9, der1_sigma=0.05,
+                   der2_int=1, do_der2_conv=False, der2_min_cdf=0.9, der2_sigma=0.1, verbose=False):
+    plot_list, leglines, leglabels = xyplotgen(x_vector=x_vector, y_vector=y_vector, label=label,
+                                               plot_list=plot_list, leglines=leglines, leglabels=leglabels,
+                                               color=color, linw=linw, ls=ls, scale_str=scale_str )
+    if (show_std and (y_std is not None)):
+        std_label = str(std_num)+" sigma"
+        plot_list, leglines, leglabels \
+        = stdaxplotgen(x_vector, y_vector, y_std, std_num=std_num, label=std_label,
+                       plot_list=plot_list, leglines=leglines, leglabels=leglabels,
+                       color=color, linw=std_linw, ls=std_ls, scale_str=scale_str)
+    if find_lin:
+        plot_list, leglines, leglabels \
+            = linifxyplotgen(x_vector, y_vector, label=lin_label, plot_list=plot_list, leglines=leglines, leglabels=leglabels,
+               color=lin_color, linw=lin_linw, ls=lin_ls, scale_str=scale_str, linif=linif,
+               der1_int=der1_int, do_der1_conv=do_der1_conv, der1_min_cdf=der1_min_cdf, der1_sigma=der1_sigma,
+               der2_int=der2_int, do_der2_conv=do_der2_conv, der2_min_cdf=der2_min_cdf, der2_sigma=der2_sigma,
+               verbose=verbose)
+    return plot_list, leglines, leglabels
+
+def astroplodatagen(mV, mV_std, uA, uA_std, TP, TP_std, time_apx, pot_apx,
+                     mV_min, mV_max,
+                     plot_list=[], leglines=[], leglabels=[],
+                     yscale_info=[],
+                     plot_mVuA=False, plot_mVtp=False,
+                     show_standdev=False, std_num=1,
+                     find_lin_mVuA=False, find_lin_mVtp=False, find_lin_uAtp=False,
+                     mVuA_color='blue', mVtp_color='red', uAtp_color='purple', lin_color='black',
+                     mVuA_linw=1, mVtp_linw=1, uAtp_linw=1, std_linw=1, lin_linw=1,
+                     mVuA_ls = '-', mVtp_ls='-', uAtp_ls='-', std_ls='dotted', lin_ls='-',
+                     labelPrefix='',
+                     linif=0.3, der1_int=1, do_der1_conv=False, der1_min_cdf=0.9, der1_sigma=0.05,
+                     der2_int=1,do_der2_conv=False, der2_min_cdf=0.9, der2_sigma=0.1, verbose=False):
+
+    trim_list = [mV_std, uA, uA_std, TP, TP_std, time_apx, pot_apx]
+    # The trimming part of the script for mV values on the X-axis
+    if ((mV_min is None) and (mV_max is None)):
+        if verbose:
+            print "Data trimming is not selected"
+            print "the plot X-axis min and max will depend on the lines being plotted"
+    else:
+        status, mV, trimmed_list = DataTrimmer(mV_min, mV_max, mV, trim_list)
+        if not status:
+            print "The program failed the Data trimming"
+            print "killing the script"
+            sys.exit()
+
+        [mV_std, uA, uA_std, TP, TP_std, time_apx, pot_apx] = trimmed_list
 
 
+    # (Xdata, Y_data, color, linewidth, linestyle, scales-like-'TP'or'uA'or'')
+    if plot_mVuA:
+        label       = labelPrefix+'Astro IV'
+        std_label   = ' sigma'
+        lin_label   = ' Ohms'
+        x_vector    = mV
+        y_vector    = uA
+        y_std       = uA_std
+        scale_str   = 'uA'
+        find_lin    = find_lin_mVuA
+        color       = mVuA_color
+        linw        = mVuA_linw
+        ls          = mVuA_ls
+        yscale_info.append((scale_str, min(y_vector), max(y_vector)))
+        plot_list, leglines, leglabels \
+            = allstarplotgen(x_vector, y_vector, y_std=y_std, std_num=std_num,
+                             plot_list=plot_list, leglines=leglines, leglabels=leglabels,
+                             show_std=show_standdev, find_lin=find_lin,
+                             label=label, std_label=std_label, lin_label=lin_label,
+                             color=color, lin_color=lin_color,
+                             linw=linw, std_linw=std_linw, lin_linw=lin_linw,
+                             ls=ls, std_ls=std_ls, lin_ls=lin_ls,
+                             scale_str=scale_str, linif=linif,
+                             der1_int=der1_int, do_der1_conv=do_der1_conv, der1_min_cdf=der1_min_cdf, der1_sigma=der1_sigma,
+                             der2_int=der2_int, do_der2_conv=do_der2_conv, der2_min_cdf=der2_min_cdf, der2_sigma=der2_sigma,
+                             verbose=verbose)
+
+    if plot_mVtp:
+        label     = labelPrefix+'Astro TP'
+        std_label = ' sigma'
+        lin_label = ''
+        x_vector  = mV
+        y_vector  = TP
+        y_std     = TP_std
+        scale_str = 'tp'
+        find_lin  = find_lin_mVtp
+        color     = mVtp_color
+        linw      = mVtp_linw
+        ls        = mVtp_ls
+        yscale_info.append((scale_str, min(y_vector), max(y_vector)))
+        plot_list, leglines, leglabels \
+            = allstarplotgen(x_vector, y_vector, y_std=y_std, std_num=std_num,
+                             plot_list=plot_list, leglines=leglines, leglabels=leglabels,
+                             show_std=show_standdev, find_lin=find_lin,
+                             label=label, std_label=std_label, lin_label=lin_label,
+                             color=color, lin_color=lin_color,
+                             linw=linw, std_linw=std_linw, lin_linw=lin_linw,
+                             ls=ls, std_ls=std_ls, lin_ls=lin_ls,
+                             scale_str=scale_str, linif=linif,
+                             der1_int=der1_int, do_der1_conv=do_der1_conv, der1_min_cdf=der1_min_cdf, der1_sigma=der1_sigma,
+                             der2_int=der2_int, do_der2_conv=do_der2_conv, der2_min_cdf=der2_min_cdf, der2_sigma=der2_sigma,
+                             verbose=verbose)
+
+    return plot_list, leglines, leglabels, yscale_info
 
 
+def finddatalims(scale_info):
+    min_val =  999999
+    max_val = -999999
+    overall_scale = []
+    scale_types   = []
+    for scale in scale_info:
+        test1_scale_str = scale[0]
+        test1_min_val   = scale[1]
+        test1_max_val   = scale[2]
+        try:
+            # test to see if the reference exists
+            scale_types_index = scale_types.index(test1_scale_str)
+            # if it it exists, then we figure out whos maxes and mins are bigger
+            oscale = overall_scale[scale_types_index]
+            test2_scale_str = oscale[0]
+            test2_min_val   = oscale[1]
+            test2_max_val   = oscale[2]
+            min_val = min(test1_min_val, test2_min_val)
+            max_val = max(test1_max_val, test2_max_val)
+            # get rid of the old reference
+            scale_types.pop(scale_types_index)
+            overall_scale.pop(scale_types_index)
+            # append the new reference
+            overall_scale.append((test1_scale_str,min_val,max_val))
+            scale_types.append(test1_scale_str)
+        except ValueError:
+            # append the new reference
+            overall_scale.append((test1_scale_str,test1_min_val,test1_max_val))
+            scale_types.append(test1_scale_str)
+
+    return overall_scale
+
+def determine_scales(scale_str, scale_maxmins):
+    scales = []
+    for scale_maxmin in scale_maxmins:
+        test_scale_str = scale_maxmin[0]
+        if test_scale_str == scale_str:
+            prime_scale_min = scale_maxmin[1]
+            prime_scale_max = scale_maxmin[2]
+            scales.append((scale_str, 1))
+    for scale_maxmin in scale_maxmins:
+        test_scale_str = scale_maxmin[0]
+        if test_scale_str == scale_str:
+            None
+        else:
+            divisor_scale_min = scale_maxmin[1]
+            divisor_scale_max = scale_maxmin[2]
+
+            scale_factor = min(float(prime_scale_min)/float(divisor_scale_min),float(prime_scale_max)/float(divisor_scale_max))
+            scales.append((test_scale_str, scale_factor))
+    return scales
+
+def findscaling(scale_str,scales):
+    scale_factor = None
+    for scale in scales:
+        test_str = scale[0]
+        if test_str == scale_str:
+            scale_factor = scale[1]
+            break
+    return scale_factor
+
+def findscalemaxmin(scale_str,scales):
+    scale_min = None
+    scale_max = None
+    for scale in scales:
+        test_str = scale[0]
+        if test_str == scale_str:
+            scale_min = scale[1]
+            scale_max = scale[2]
+            break
+    return scale_min, scale_max
 
 def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, mV_min=None, mV_max=None,
                          show_standdev=True, std_num=1, display_params=True,
                          show_plot=False, save_plot=True, do_eps=True,
-                         find_lin_mVuA=False, linif=0.3, der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
+                         plot_mVuA=True, plot_mVtp=True,
+                         find_lin_mVuA=False, find_lin_mVtp=False,
+                         do_receivertemp=True, linif=0.3,
+                         der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
                          der2_int=1, do_der2_conv=True, der2_min_cdf=0.95, der2_sigma=0.05,
                          plot_astromVuA=True, plot_astromVtp=True, plot_fastmVuA=False, plot_fastmVtp=False,
                          plot_unpumpmVuA=False, plot_unpumpmVtp=False, plot_Yfactor=True,
@@ -481,39 +715,78 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
     ###### Options ######
     #####################
 
+    ax1_scaling = ('mV','uA')
+    ax2_scaling = ('mV','Yf')
+
+    hot_labelPrefix  = '300K'
+    cold_labelPrefix = ' 77K'
+
     ### Plot Options ###
     hotmVuA_color = 'blue'
+    hotmVuA_linw  = 2
+    hotmVuA_ls    = '-'
+
     hotmVtp_color = 'red'
+    hotmVtp_linw  = 2
+    hotmVtp_ls    = '-'
+
+    coldmVuA_color = 'blue'
+    coldmVuA_linw  = 2
+    coldmVuA_ls    = '-'
+
+    coldmVtp_color = 'firebrick'
+    coldmVtp_linw  = 2
+    coldmVtp_ls    = '-'
+
+
+
     hotfast_uA_color = 'green'
+
     hotfast_tp_color = 'yellow'
     hotunpump_uA_color = 'purple'
     hotunpump_tp_color = 'orange'
-    coldmVuA_color = 'blue'
-    coldmVtp_color = 'red'
+
     coldfast_uA_color = 'green'
     coldfast_tp_color = 'yellow'
     coldunpump_uA_color = 'purple'
     coldunpump_tp_color = 'orange'
 
-    Yfactor_color      = 'green'
+    Yfactor_color = 'green'
+    Yfactor_linw  = 3
+    Yfactor_ls    = '-'
 
-    astrolinewidth = 2
-    fastlinewidth  = 1
-    Yfactorlinewidth = 3
+    std_ls    = 'dotted'
+    std_linw  = 1
+
+    lin_color = 'black'
+    lin_linw  = 1
+    lin_ls    = '-'
+
+    ### Labels ###
+    hot_labelPrefix  = '300K'
+    cold_labelPrefix = ' 77K'
+    ax1_xlabel = 'Voltage (' + str(ax1_scaling[0]) + ')'
+    ax1_ylabel = 'Current (' + str(ax1_scaling[1]) + ')'
+    ax2_ylabel = 'Y-Factor'
 
     ### Legend ###
-    legendsize = 10.0
+    legendsize = 20
     legendloc  = 2
 
     ### Axis Limits ###
     # X-axis
     if mV_min is not None:
         xlimL = mV_min
+    else:
+        xlimL = 999999.
     if mV_max is not None:
         xlimR = mV_max
+    else:
+        xlimR = -999999.
+
 
     # Y-axis
-    ylimL1 = -10
+    ylimL1 =   0
     ylimR1 = 100
     ylimL2 =   0
     ylimR2 =  10
@@ -545,345 +818,208 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
         elif platform == 'darwin':
             proYdatadir  = prodatadir + Ynum + '/'
 
+        ######################################
+        ###### Astronomy Bias Mode Data ######
+        ######################################
+
         ### Get The Astronomy Quality Processed Sweep Data
-        Yfactor, mV, hot_mV_std, cold_mV_std, hot_uA_mean, cold_uA_mean,    \
-        hot_uA_std, cold_uA_std, hot_TP_mean, cold_TP_mean, hot_TP_std,            \
-        cold_TP_std, hot_TP_num, cold_TP_num, hot_TP_freq, cold_TP_freq,           \
-        hot_time_mean, cold_time_mean, hot_pot, cold_pot,                          \
-        hot_meas_num, cold_meas_num \
+        Yfactor, mV_Yfactor, hot_mV_mean, cold_mV_mean, mV, \
+        hot_mV_std, cold_mV_std, hot_uA_mean, cold_uA_mean, \
+        hot_uA_std, cold_uA_std, hot_TP_mean, cold_TP_mean,\
+        hot_TP_std, cold_TP_std,\
+        hot_time_mean, cold_time_mean, hot_pot, cold_pot,\
+        hotdatafound, colddatafound, Ydatafound\
             = getproYdata(proYdatadir)
 
-        ### Get the Fast Processed Sweep Data
-        hotfastprodata_found, hotunpumpedprodata_found, \
-        hotmV_fast, hotuA_fast, hottp_fast, hotpot_fast, \
-        hotmV_unpumped, hotuA_unpumped, hottp_unpumped, hotpot_unpumped \
-            = GetAllTheProFastSweepData(proYdatadir + "hot")
-        coldfastprodata_found, coldunpumpedprodata_found, \
-        coldmV_fast, colduA_fast, coldtp_fast, coldpot_fast, \
-        coldmV_unpumped, colduA_unpumped, coldtp_unpumped, coldpot_unpumped \
-            = GetAllTheProFastSweepData(proYdatadir + "cold")
+
+        ax1_plot_list   = []
+        ax2_plot_list   = []
+        leglines        = []
+        leglabels       = []
+        xscale_info     = []
+        ax1_yscale_info = []
+        ax2_yscale_info = []
+        if hotdatafound:
+            labelPrefix = hot_labelPrefix
+            mV       = hot_mV_mean
+            mV_std   = hot_mV_std
+            uA       = hot_uA_mean
+            uA_std   = hot_uA_std
+            TP       = hot_TP_mean
+            TP_std   = hot_TP_std
+            time_apx = hot_time_mean
+            pot_apx  = hot_pot
+            xscale_str = 'mV'
+            mVuA_color = hotmVuA_color
+            mVtp_color = hotmVtp_color
+            mVuA_linw  = hotmVuA_linw
+            mVtp_linw  = hotmVtp_linw
+            mVuA_ls    = hotmVuA_ls
+            mVtp_ls    = hotmVtp_ls
+
+            xscale_info.append((xscale_str,min(mV),max(mV)))
+            ax1_plot_list, leglines, leglabels, yax1_scale_info \
+                = astroplodatagen(mV, mV_std, uA, uA_std, TP, TP_std, time_apx, pot_apx,
+                                  mV_min, mV_max,
+                                  plot_list=ax1_plot_list, leglines=leglines, leglabels=leglabels,
+                                  yscale_info=ax1_yscale_info,
+                                  plot_mVuA=plot_mVuA, plot_mVtp=plot_mVtp,
+                                  show_standdev=show_standdev, std_num=std_num,
+                                  find_lin_mVuA=find_lin_mVuA, find_lin_mVtp=find_lin_mVtp,
+                                  mVuA_color=mVuA_color, mVtp_color=mVtp_color, lin_color=lin_color,
+                                  mVuA_linw=mVuA_linw, mVtp_linw=mVtp_linw, std_linw=std_linw, lin_linw=lin_linw,
+                                  mVuA_ls=mVuA_ls, mVtp_ls=mVtp_ls, std_ls=std_ls, lin_ls=lin_ls,
+                                  labelPrefix=labelPrefix,
+                                  linif=linif,
+                                  der1_int=der1_int, do_der1_conv=do_der1_conv, der1_min_cdf=der1_min_cdf, der1_sigma=der1_sigma,
+                                  der2_int=der2_int, do_der2_conv=do_der2_conv, der2_min_cdf=der2_min_cdf, der2_sigma=der2_sigma,
+                                  verbose=verbose)
+
+
+        if colddatafound:
+            labelPrefix = cold_labelPrefix
+            mV       = cold_mV_mean
+            mV_std   = cold_mV_std
+            uA       = cold_uA_mean
+            uA_std   = cold_uA_std
+            TP       = cold_TP_mean
+            TP_std   = cold_TP_std
+            time_apx = cold_time_mean
+            pot_apx  = cold_pot
+            xscale_str = 'mV'
+            mVuA_color = coldmVuA_color
+            mVtp_color = coldmVtp_color
+            mVuA_linw  = coldmVuA_linw
+            mVtp_linw  = coldmVtp_linw
+            mVuA_ls    = coldmVuA_ls
+            mVtp_ls    = coldmVtp_ls
+
+            xscale_info.append((xscale_str,min(mV),max(mV)))
+            ax1_plot_list, leglines, leglabels, ax1_yscale_info \
+                = astroplodatagen(mV, mV_std, uA, uA_std, TP, TP_std, time_apx, pot_apx,
+                                  mV_min, mV_max,
+                                  plot_list=ax1_plot_list, leglines=leglines, leglabels=leglabels,
+                                  yscale_info=ax1_yscale_info,
+                                  plot_mVuA=plot_mVuA, plot_mVtp=plot_mVtp,
+                                  show_standdev=show_standdev, std_num=std_num,
+                                  find_lin_mVuA=find_lin_mVuA, find_lin_mVtp=find_lin_mVtp,
+                                  mVuA_color=mVuA_color, mVtp_color=mVtp_color, lin_color=lin_color,
+                                  mVuA_linw=mVuA_linw, mVtp_linw=mVtp_linw, std_linw=std_linw, lin_linw=lin_linw,
+                                  mVuA_ls=mVuA_ls, mVtp_ls=mVtp_ls, std_ls=std_ls, lin_ls=lin_ls,
+                                  labelPrefix=labelPrefix,
+                                  linif=linif,
+                                  der1_int=der1_int, do_der1_conv=do_der1_conv, der1_min_cdf=der1_min_cdf, der1_sigma=der1_sigma,
+                                  der2_int=der2_int, do_der2_conv=do_der2_conv, der2_min_cdf=der2_min_cdf, der2_sigma=der2_sigma,
+                                  verbose=verbose)
+
+
+        ############################
+        ###### Parameter Data ######
+        ############################
 
         ### Get the Processed Parameters of the Sweep
         paramsfile_list = []
         paramsfile_list.append(proYdatadir + 'hotproparams.csv')
         paramsfile_list.append(proYdatadir + 'coldproparams.csv')
-        K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, meanmag_mA, stdmag_mA, LOuAsweep, LOuAset, UCA_volt,  \
-        LOuA_set_pot, LOuA_magpot, meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, stdSIS_tp, SIS_pot, \
-        del_time, LOfreq, IFband, TP_int_time \
+        K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, meanmag_mA, stdmag_mA, LOuAsearch, LOuAset, UCA_volt,\
+        LOuA_set_pot, LOuA_magpot,meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, stdSIS_tp, SIS_pot, \
+        del_time, LOfreq, IFband, meas_num, TP_int_time, TP_num, TP_freq \
             = getmultiParams(paramsfile_list)
 
-        ##########################################
-        ### Find X axis mins and maxs and trim ###
-        ##########################################
+
+        #############################################
+        ###### Analyze the scaling information ######
+        #############################################
+
+        # Unify xscale string lis then compress mins and maxes to a list that size.
+
+
+        # Axis X scaling
+        xscale_str = ax1_scaling[0]
+        xscale_maxmin = finddatalims(xscale_info)
+
         if mV_min is None:
-            xlimL = min(mV)
-            if hotfastprodata_found:
-                xlimL = min(min(hotmV_fast),xlimL)
-            if coldfastprodata_found:
-                xlimL = min(min(coldmV_fast),xlimL)
-            if hotunpumpedprodata_found:
-                xlimL = min(min(hotmV_unpumped),xlimL)
-            if coldunpumpedprodata_found:
-                xlimL = min(min(coldmV_unpumped),xlimL)
-        if mV_max is None:
-            xlimR = max(mV)
-            if hotfastprodata_found:
-                xlimR = max(max(hotmV_fast),xlimR)
-            if coldfastprodata_found:
-                xlimR = max(max(coldmV_fast),xlimR)
-            if hotunpumpedprodata_found:
-                xlimR = max(max(hotmV_unpumped),xlimR)
-            if coldunpumpedprodata_found:
-                xlimR = max(max(coldmV_unpumped),xlimR)
-
-        # set the X scale here
-        xscale = abs(xlimR  - xlimL)
-
-        # The trimming part of the script for mV values on the X-axis
-        if ((mV_min is None) and (mV_max is None)):
-            if verbose:
-                print "Data trimming is not selected"
-                print "the plot X-axis min and max will depend on the lines being plotted"
+            for xscale_type in xscale_maxmin:
+                type_str = xscale_type[0]
+                if xscale_str == type_str:
+                    xlimL = xscale_type[1]
         else:
-            if verbose:
-                print "Beginning data trimming in mV"
-            if mV_min is None:
-                mV_min = xlimL
-            if mV_max is None:
-                mV_max = xlimR
+            xlimL = mV_min
+        if mV_max is None:
+            for xscale_type in xscale_maxmin:
+                type_str = xscale_type[0]
+                if xscale_str == type_str:
+                    xlimR = xscale_type[2]
+        else:
+            xlimR = mV_max
 
-            # Astro Sweep mV trim
-            astro_trim_list = [Yfactor, hot_mV_std, cold_mV_std, hot_uA_mean, cold_uA_mean, hot_uA_std,
-                               cold_uA_std, hot_TP_mean, cold_TP_mean, hot_TP_std, cold_TP_std, hot_TP_num,
-                               cold_TP_num, hot_TP_freq, cold_TP_freq, hot_time_mean, cold_time_mean, hot_pot,
-                               cold_pot, hot_meas_num, cold_meas_num]
+        xscales = determine_scales(xscale_str, xscale_maxmin)
 
+        # Y Axis 1 scaling
+        ax1_yscale_str    = ax1_scaling[1]
+        ax1_yscale_maxmin = finddatalims(ax1_yscale_info)
+        ax1_yscales       = determine_scales(ax1_yscale_str, ax1_yscale_maxmin)
+        ylimL1, ylimR1    = findscalemaxmin(ax1_yscale_str,ax1_yscale_maxmin)
 
-            status, mV, astro_trimmed_list = DataTrimmer(mV_min, mV_max, mV, astro_trim_list)
-            if not status:
-                print "The program failed the the ASTRO Sweep trimming"
-                print "killing the script"
-                sys.exit()
-            [Yfactor, hot_mV_std, cold_mV_std, hot_uA_mean, cold_uA_mean, hot_uA_std,
-             cold_uA_std, hot_TP_mean, cold_TP_mean, hot_TP_std, cold_TP_std, hot_TP_num,
-             cold_TP_num, hot_TP_freq, cold_TP_freq, hot_time_mean, cold_time_mean, hot_pot,
-             cold_pot, hot_meas_num, cold_meas_num] = astro_trimmed_list
+        # Y Axis 2 scaling
+        ax2_yscale_str    = ax2_scaling[1]
+        ax2_yscale_maxmin = finddatalims(ax2_yscale_info)
+        ax2_yscales       = determine_scales(ax2_yscale_str, ax2_yscale_maxmin)
+        ylimL2, ylimR2    = findscalemaxmin(ax2_yscale_str,ax2_yscale_maxmin)
 
-
-
-            # fast hot sweep mV trim
-            if hotfastprodata_found:
-                hotfast_trim_list = [hotuA_fast, hottp_fast, hotpot_fast]
-
-                status, hotmV_fast, hotfast_trimmed_list = DataTrimmer(mV_min, mV_max, hotmV_fast, hotfast_trim_list)
-                if not status:
-                    print "The program failed the the fast hot Sweep trimming"
-                    print "killing the script"
-                    sys.exit()
-                [hotuA_fast, hottp_fast, hotpot_fast] = hotfast_trimmed_list
-
-            # fast cold sweep mV trim
-            if coldfastprodata_found:
-                coldfast_trim_list = [colduA_fast, coldtp_fast, coldpot_fast]
-                status, coldmV_fast, coldfast_trimmed_list = DataTrimmer(mV_min, mV_max, coldmV_fast, coldfast_trim_list)
-                if not status:
-                    print "The program failed the the fast cold Sweep trimming"
-                    print "killing the script"
-                    sys.exit()
-                [colduA_fast, coldtp_fast, coldpot_fast] = coldfast_trimmed_list
-
-            # unpumped hot sweep mV trim
-            if hotunpumpedprodata_found:
-                hotunpumped_trim_list = [hotuA_unpumped, hottp_unpumped, hotpot_unpumped]
-                status, hotmV_unpumped, hotunpumped_trimmed_list = DataTrimmer(mV_min, mV_max, hotmV_unpumped, hotunpumped_trim_list)
-                if not status:
-                    print "The program failed the the unpumped hot Sweep trimming"
-                    print "killing the script"
-                    sys.exit()
-                [hotuA_unpumped, hottp_unpumped, hotpot_unpumped] = hotunpumped_trimmed_list
-
-            # unpumped cold sweep mV trim
-            if coldunpumpedprodata_found:
-                coldunpumped_trim_list = [colduA_unpumped, coldtp_unpumped, coldpot_unpumped]
-                status, coldmV_unpumped, coldunpumped_trimmed_list = DataTrimmer(mV_min, mV_max, coldmV_unpumped, coldunpumped_trim_list)
-                if not status:
-                    print "The program failed the the unpumped cold Sweep trimming"
-                    print "killing the script"
-                    sys.exit()
-                [colduA_unpumped, coldtp_unpumped, coldpot_unpumped] = coldunpumped_trimmed_list
-
-
-        ############################
-        ###### Start plotting ######
-        ############################
+        #####################################
+        ###### Plot the Collected Data ######
+        #####################################
         plt.clf()
-        leglines  = []
-        leglabels = []
-        uA_max = 0
-        tp_max = 0
-        Y_max  = 0
 
         ##############
         ### AXIS 1 ###
         ##############
-        fig, ax1 = plt.subplots()
-
-        ### Hot ###
-        # AXIS 1 Hot mV versus uA
-        if (plot_astromVuA):
-            ax1.plot(mV, hot_uA_mean, color=hotmVuA_color, linewidth=astrolinewidth)
-            leglines.append(plt.Line2D(range(10), range(10), color = hotmVuA_color))
-            leglabels.append("300K Astro IV")
-            uA_max = max(uA_max,max(hot_uA_mean))
-            if show_standdev:
-               # Positive sigma
-                ax1.plot(mV, hot_uA_mean+(hot_uA_std*std_num), color=hotmVuA_color, linewidth=1, ls='dotted')
-                # Negative sigma
-                ax1.plot(mV, hot_uA_mean-(hot_uA_std*std_num), color=hotmVuA_color, linewidth=1, ls='dotted')
-                leglines.append(plt.Line2D(range(10), range(10), color=hotmVuA_color, ls='dotted'))
-                if platform == 'darwin':
-                    leglabels.append(str(std_num)+"sigma")
-                elif platform == 'win32':
-                    leglabels.append(str(std_num)+"sigma")
-            if find_lin_mVuA:
-                slopes_mVuA, intercepts_mVuA, bestfits_mV, bestfits_uA \
-                    =  linfit(mV, hot_uA_mean, linif, der1_int, do_der1_conv, der1_min_cdf, der1_sigma, der2_int,
-                              do_der2_conv, der2_min_cdf, der2_sigma, verbose)
-                for n in range(len(bestfits_mV[0,:])):
-                    ax1.plot(bestfits_mV[:,n], bestfits_uA[:, n], color="black", linewidth=2)
-                    leglines.append(plt.Line2D(range(10), range(10), color="black"))
-                    resist = 1000*(1.0/slopes_mVuA[n])
-                    leglabels.append(str('%3.1f' % resist))
-
-        # Axis 1 Hot mV versus uA Fast sweep
-        if (hotfastprodata_found and plot_fastmVuA):
-            ax1.plot(hotmV_fast, hotuA_fast, color=hotfast_uA_color, linewidth=fastlinewidth)
-            leglines.append(plt.Line2D(range(10), range(10), color = hotfast_uA_color))
-            leglabels.append("300K Fast IV")
-            uA_max = max(uA_max,max(hotuA_fast))
-
-
-        # Axis 1 Hot mV versus uA Fast Unpumped Sweep
-        if (hotunpumpedprodata_found and plot_unpumpmVuA):
-            ax1.plot(hotmV_unpumped, hotuA_unpumped, color=hotunpump_uA_color, linewidth=fastlinewidth)
-            leglines.append(plt.Line2D(range(10), range(10), color = hotunpump_uA_color))
-            leglabels.append("300K Unpump IV")
-            uA_max = max(uA_max,max(hotuA_unpumped))
-
-        ### COLD ###
-        # AXIS 1 Cold mV versus uA
-        if plot_astromVuA:
-            ax1.plot(mV, cold_uA_mean, color=coldmVuA_color, linewidth=astrolinewidth)
-            leglines.append(plt.Line2D(range(10), range(10), color = coldmVuA_color))
-            leglabels.append(" 77K Astro IV")
-            uA_max = max(uA_max,max(cold_uA_mean))
-            if show_standdev:
-               # Positive sigma
-                ax1.plot(mV, cold_uA_mean+(cold_uA_std*std_num), color=coldmVuA_color, linewidth=1, ls='dotted')
-                # Negative sigma
-                ax1.plot(mV, cold_uA_mean-(cold_uA_std*std_num), color=coldmVuA_color, linewidth=1, ls='dotted')
-                leglines.append(plt.Line2D(range(10), range(10), color=coldmVuA_color, ls='dotted'))
-                if platform == 'darwin':
-                    leglabels.append(str(std_num)+"sigma")
-                elif platform == 'win32':
-                    leglabels.append(str(std_num)+"sigma")
-            if find_lin_mVuA:
-                slopes_mVuA, intercepts_mVuA, bestfits_mV, bestfits_uA \
-                    =  linfit(mV, cold_uA_mean, linif, der1_int, do_der1_conv, der1_min_cdf, der1_sigma, der2_int,
-                              do_der2_conv, der2_min_cdf, der2_sigma, verbose)
-                for n in range(len(bestfits_mV[0,:])):
-                    ax1.plot(bestfits_mV[:,n], bestfits_uA[:, n], color="black", linewidth=2)
-                    leglines.append(plt.Line2D(range(10), range(10), color="black"))
-                    resist = 1000*(1.0/slopes_mVuA[n])
-                    leglabels.append(str('%3.1f' % resist))
-
-        # Axis 1 Cold mV versus uA Fast sweep
-        if (coldfastprodata_found and plot_fastmVuA):
-            ax1.plot(coldmV_fast, colduA_fast, color=coldfast_uA_color, linewidth=fastlinewidth)
-            leglines.append(plt.Line2D(range(10), range(10), color = coldfast_uA_color))
-            leglabels.append(" 77K Fast IV")
-            uA_max = max(uA_max,max(colduA_fast))
-
-
-        # Axis 1 Cold mV versus uA Fast Unpumped Sweep
-        if (coldunpumpedprodata_found and plot_unpumpmVuA):
-            ax1.plot(coldmV_unpumped, colduA_unpumped, color=coldunpump_uA_color, linewidth=fastlinewidth)
-            leglines.append(plt.Line2D(range(10), range(10), color = coldunpump_uA_color))
-            leglabels.append(" 77K Unpump IV")
-            uA_max = max(uA_max,max(colduA_unpumped))
-
-
-        # Calculations for Total Power (tp) Scaling
-        if plot_astromVtp:
-            tp_max = max(tp_max,max(hot_TP_mean))
-            tp_max = max(tp_max,max(cold_TP_mean))
-        if (hotfastprodata_found and plot_fastmVtp):
-            tp_max = max(tp_max,max(hottp_fast))
-        if (coldfastprodata_found and plot_fastmVtp):
-            tp_max = max(tp_max,max(coldtp_fast))
-        if (hotunpumpedprodata_found and plot_unpumpmVtp):
-            tp_max = max(tp_max,max(hottp_unpumped))
-        if (coldunpumpedprodata_found and plot_unpumpmVtp):
-            tp_max = max(tp_max,max(coldtp_unpumped))
-        if not tp_max == 0:
-            tp_scale=uA_max/tp_max
-
-        ### Hot ###
-        # AXIS 1 Hot mV versus tp Astro Data
-        if plot_astromVtp:
-            ax1.plot(mV, hot_TP_mean*tp_scale, color=hotmVtp_color, linewidth=astrolinewidth)
-            leglines.append(plt.Line2D(range(10), range(10), color = hotmVtp_color))
-            leglabels.append("300K Astro TP")
-            if show_standdev:
-                # Positive sigma
-                ax1.plot(mV, (hot_TP_mean+(hot_TP_std*std_num))*tp_scale, color=hotmVtp_color, linewidth=1, ls='dotted')
-                # Negative sigma
-                ax1.plot(mV, (hot_TP_mean-(hot_TP_std*std_num))*tp_scale, color=hotmVtp_color, linewidth=1, ls='dotted')
-                leglines.append(plt.Line2D(range(10), range(10), color=hotmVtp_color, ls='dotted'))
-                if platform == 'darwin':
-                    leglabels.append(str(std_num)+"sigma")
-                elif platform == 'win32':
-                    leglabels.append(str(std_num)+"sigma")
-
-        # AXIS 1 Hot mV versus tp Fast data
-        if (hotfastprodata_found and plot_fastmVtp):
-            ax1.plot(hotmV_fast, hottp_fast*tp_scale, color=hotfast_tp_color, linewidth=fastlinewidth)
-            leglines.append(plt.Line2D(range(10), range(10), color = hotfast_tp_color))
-            leglabels.append("300K Fast TP")
-
-        # AXIS 1 Hot mV versus to Unpumped Data
-        if (hotunpumpedprodata_found and plot_unpumpmVtp):
-            ax1.plot(hotmV_unpumped, hottp_unpumped*tp_scale, color=hotunpump_tp_color, linewidth=fastlinewidth)
-            leglines.append(plt.Line2D(range(10), range(10), color = hotunpump_tp_color))
-            leglabels.append("300K Unpump TP")
-
-        ### Cold ###
-        # AXIS 1 Cold mV versus tp Astro Data
-        if plot_astromVtp:
-            ax1.plot(mV, cold_TP_mean*tp_scale, color=coldmVtp_color, linewidth=astrolinewidth)
-            leglines.append(plt.Line2D(range(10), range(10), color = coldmVtp_color))
-            leglabels.append(" 77K Astro TP")
-            if show_standdev:
-                # Positive sigma
-                ax1.plot(mV, (cold_TP_mean+(cold_TP_std*std_num))*tp_scale, color=coldmVtp_color, linewidth=1, ls='dotted')
-                # Negative sigma
-                ax1.plot(mV, (cold_TP_mean-(cold_TP_std*std_num))*tp_scale, color=coldmVtp_color, linewidth=1, ls='dotted')
-                leglines.append(plt.Line2D(range(10), range(10), color=coldmVtp_color, ls='dotted'))
-                if platform == 'darwin':
-                    leglabels.append(str(std_num)+"sigma")
-                elif platform == 'win32':
-                    leglabels.append(str(std_num)+"sigma")
-
-        # AXIS 1 Cold mV versus tp Fast data
-        if (coldfastprodata_found and plot_fastmVtp):
-            ax1.plot(coldmV_fast, coldtp_fast*tp_scale, color=coldfast_tp_color, linewidth=fastlinewidth)
-            leglines.append(plt.Line2D(range(10), range(10), color = coldfast_tp_color))
-            leglabels.append(" 77K Fast TP")
-
-        # AXIS 1 Cold mV versus to Unpumped Data
-        if (coldunpumpedprodata_found and plot_unpumpmVtp):
-            ax1.plot(coldmV_unpumped, coldtp_unpumped*tp_scale, color=coldunpump_tp_color, linewidth=fastlinewidth)
-            leglines.append(plt.Line2D(range(10), range(10), color = coldunpump_tp_color))
-            leglabels.append(" 77K Unpump TP")
-
-
+        if (ax1_plot_list != []):
+            fig, ax1 = plt.subplots()
+            for plot_obj in ax1_plot_list:
+                (x_vector, y_vector, color, linw, ls, scale_str) = plot_obj
+                scale_factor = findscaling(scale_str,ax1_yscales)
+                ax1.plot(x_vector, y_vector*scale_factor, color=color, linewidth=linw, ls=ls)
+            ### Axis Labels ###
+            ax1.set_xlabel(ax1_xlabel)
+            ax1.set_ylabel(ax1_ylabel)
+            ### Axis Limits
+            ax1.set_xlim([xlimL , xlimR ])
+            ax1.set_ylim([ylimL1, ylimR1])
         ##############
         ### AXIS 2 ###
         ##############
-
-        ax2 = ax1.twinx()
-        if plot_Yfactor:
-            Y_max = max(Y_max, max(Yfactor))
-            Y_scale = uA_max/Y_max
-            ax1.plot(mV, Yfactor*Y_scale, color=Yfactor_color, linewidth=Yfactorlinewidth)
-            if do_Ycut:
-                ycut_low = numpy.where(mV < start_Yplot)
-                ycut_low_ind = ycut_low[0][-1]
-                ycut_high = numpy.where(mV > end_Yplot)
-                ycut_high_ind = ycut_high[0][0]
-                ax1.plot(mV[:ycut_low_ind], Yfactor[:ycut_low_ind], color="white", linewidth=Yfactorlinewidth+1)
-                ax1.plot(mV[ycut_high_ind:], Yfactor[ycut_high_ind:], color="white", linewidth=Yfactorlinewidth+1)
-            for tl in ax2.get_yticklabels():
-                tl.set_color(Yfactor_color)
-
-
+        if (ax2_plot_list != []):
+            ax2 = ax1.twinx()
+            for plot_obj in ax2_plot_list:
+                (x_vector, y_vector, color, linw, ls, scale_str) = plot_obj
+                scale_factor = findscaling(scale_str,ax2_yscales)
+                ax2.plot(x_vector, y_vector*scale_factor, color=color, linewidth=linw, ls=ls)
+            #for tl in ax2.get_yticklabels():
+            #    tl.set_color(Yfactor_color)
+            ### Axis Labels ###
+            ax2.set_ylabel(ax2_ylabel, color=Yfactor_color)
+            ### Axis Limits
+            ax2.set_ylim([ylimL2, ylimR2])
         ###############################################
         ###### Things to Make the Plot Look Good ######
         ###############################################
 
         ### Legend ###
+        final_leglines  = []
+        final_leglabels = []
+        for indexer in range(len(leglines)):
+            if ((leglines[indexer] != None) and (leglabels[indexer] != None)):
+                final_leglabels.append(leglabels[indexer])
+                legline_data = leglabels[indexer]
+                color = legline_data[0]
+                ls    = legline_data[1]
+                final_leglines.append(plt.Line2D(range(10), range(10), color=color, ls=ls))
         matplotlib.rcParams['legend.fontsize'] = legendsize
-        plt.legend(tuple(leglines),tuple(leglabels), numpoints=1, loc=legendloc)
+        plt.legend(tuple(final_leglines),tuple(final_leglabels), numpoints=1, loc=legendloc)
 
-        ### Axis Labels ###
-        ax1.set_xlabel('Voltage (mV)')
-        ax1.set_ylabel('Current (uA)')
-        ax2.set_ylabel('Y-Factor', color=Yfactor_color)
-
-        ### Axis Limits ###
-        ax1.set_xlim([xlimL , xlimR ])
-        ax1.set_ylim([ylimL1, ylimR1])
-        ax2.set_ylim([ylimL2, ylimR2])
+        xsize = abs(xlimL-xlimR)
 
 
         ######################################################
@@ -893,10 +1029,12 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
             ################
             ### Column 1 ###
             ################
-            xpos = xlimL + (5.0/18.0)*xscale
+            xpos = xlimL + (5.0/18.0)*xsize
             yincrement = yscale/25.0
-            ypos = ylimR2 - yincrement
-
+            if ax2_plot_list != []:
+                ypos = ylimR2 - yincrement
+            else:
+                ypos = ylimR1 - yincrement
             if LOuAset is not None:
                 LOuAset_str = Params_2_str(LOuAset, '%2.3f')
                 plt.text(xpos, ypos, LOuAset_str + " uA LO", color = LOpwr_color)
@@ -934,8 +1072,11 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
             ################
             ### Column 2 ###
             ################
-            xpos = xlimL + (12.0/18.0)*xscale
-            ypos = ylimR2 - yincrement
+            xpos = xlimL + (12.0/18.0)*xsize
+            if ax2_plot_list != []:
+                ypos = ylimR2 - yincrement
+            else:
+                ypos = ylimR1 - yincrement
 
             if magiset is not None:
                 plt.text(xpos, ypos,"magnet set value", color = mag_color)
@@ -996,6 +1137,10 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
             print " "
     plt.close("all")
     return
+
+
+
+
 
 
 
