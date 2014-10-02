@@ -19,6 +19,12 @@
 ###############################################################################
 # Monitor Temperatures
 #Clear All variables
+###############################################################################
+import serial, signal, time, os, sys, atpy, numpy, matplotlib
+from matplotlib import pyplot as plt
+from email_sender   import email_caleb, email_groppi, text_caleb
+
+
 def clearall():
     all = [var for var in globals() if var[0] != "_"]
     for var in all:
@@ -63,10 +69,7 @@ def GenEmailText(temp_data, Nhours, totalhours):
 
     return body_text
 
-###############################################################################
-import serial, signal, time, os, sys, atpy, numpy, matplotlib
-from matplotlib import pyplot as plt
-from email_sender   import email_caleb, email_groppi, text_caleb
+
 
 ###############################################################################
 # User  settings
