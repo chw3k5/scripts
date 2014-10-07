@@ -108,30 +108,117 @@ verbose = True
 if platform == 'win32':
     folder = 'C:\\Users\\MtDewar\\Documents\\Kappa\\temperatureData\\'
 elif platform == 'darwin':
-    folder ='/Users/chw3k5/Documents/Grad_School/Kappa/temperatureData/'
-#Date File Name
-filename = 'Warming01.csv'
+    folder ='/Users/chw3k5/Documents/Grad_School/Kappa/temperatureData/Sep06_2014'
 
-max_count = 5 # in loops (set to -1 to set to infinity)
-max_time  = 60 # in seconds (set to -1 to set to infinity)
 
-monitor_time  = 3*7*24*60*60 # in seconds (This is the total time that is script will monitor temperatures from the Lakeshore monitor)
-monitor_sleep = 10*60   # in seconds
-
-Nsecs        =  1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
-
-start_email   = True
-PeriodicEmail = True
-seconds_per_email = 8*60*60 #12*60*60 # in seconds
-
-alarm_channel = 4
-high_alarm_temperature = 300. # in Kelvin
-low_alarm_temperature  =   3. # in Kelvin
-
+monitor_type = 'cooldown' # options: 'cooldown', 'LN2fill', 'LHefill', 'almostcold', 'cold', 'fastwarm', 'slowwarm'
 meas_period      = 7.0 # in seconds
 rest_time        = 0.5 # in seconds
-
 channels = [4,2,3]
+
+
+if monitor_type=='cooldown':
+    filename      = 'cooldown.csv'
+    make_plots    = True
+    max_count     = 5 # in loops (set to -1 to set to infinity)
+    max_time      = 60 # in seconds (set to -1 to set to infinity)
+    monitor_time  = 2*24*60*60 # in seconds (This is the total time that is script will monitor temperatures from the Lakeshore monitor)
+    monitor_sleep = 5*60   # in seconds
+    Nsecs        =  1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
+    start_email   = True
+    PeriodicEmail = True
+    seconds_per_email = 20*60 #12*60*60 # in seconds
+    alarm_channel = 2
+    high_alarm_temperature = 300. # in Kelvin
+    low_alarm_temperature  = 100. # in Kelvin
+elif monitor_type == 'LN2fill':
+    filename      = 'LN2fill.csv'
+    make_plots    = True
+    max_count     = 5 # in loops (set to -1 to set to infinity)
+    max_time      = 60 # in seconds (set to -1 to set to infinity)
+    monitor_time  = 6*60*60 # in seconds (This is the total time that is script will monitor temperatures from the Lakeshore monitor)
+    monitor_sleep = 2*60   # in seconds
+    Nsecs         =  1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
+    start_email   = False
+    PeriodicEmail = False
+    seconds_per_email      = 20*60 #12*60*60 # in seconds
+    alarm_channel          = 4
+    high_alarm_temperature = 110. # in Kelvin
+    low_alarm_temperature  =  80. # in Kelvin
+elif monitor_type == 'LHefill':
+    filename      = 'LHefill.csv'
+    make_plots    = True
+    max_count     = 5 # in loops (set to -1 to set to infinity)
+    max_time      = 60 # in seconds (set to -1 to set to infinity)
+    monitor_time  = 6*60*60 # in seconds (This is the total time that is script will monitor temperatures from the Lakeshore monitor)
+    monitor_sleep = 2*60   # in seconds
+    Nsecs         =  1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
+    start_email   = False
+    PeriodicEmail = False
+    seconds_per_email      = 20*60 #12*60*60 # in seconds
+    alarm_channel          = 4
+    high_alarm_temperature = 110. # in Kelvin
+    low_alarm_temperature  =   3. # in Kelvin
+elif monitor_type == 'almostcold':
+    filename      = 'almostcold.csv'
+    make_plots    = True
+    max_count     = 5 # in loops (set to -1 to set to infinity)
+    max_time      = 60 # in seconds (set to -1 to set to infinity)
+    monitor_time  = 7*24*60*60 # in seconds (This is the total time that is script will monitor temperatures from the Lakeshore monitor)
+    monitor_sleep = 10*60   # in seconds
+    Nsecs         =  1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
+    start_email   = True
+    PeriodicEmail = True
+    seconds_per_email      = 1*60*60 #12*60*60 # in seconds
+    alarm_channel          = 4
+    high_alarm_temperature = 4.800 # in Kelvin
+    low_alarm_temperature  = 3. # in Kelvin
+elif monitor_type == 'cold':
+    filename      = 'cold.csv'
+    make_plots    = False
+    max_count     = 5 # in loops (set to -1 to set to infinity)
+    max_time      = 60 # in seconds (set to -1 to set to infinity)
+    monitor_time  = 4*24*60*60 # in seconds (This is the total time that is script will monitor temperatures from the Lakeshore monitor)
+    monitor_sleep = 10*60   # in seconds
+    Nsecs         =  1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
+    start_email   = True
+    PeriodicEmail = True
+    seconds_per_email      = 8*60*60 #12*60*60 # in seconds
+    alarm_channel          = 4
+    high_alarm_temperature = 4.300 # in Kelvin
+    low_alarm_temperature  = 3. # in Kelvin
+    low_alarm_temperature  =  80. # in Kelvin
+elif monitor_type == 'fastwarm':
+    filename      = 'fastwarm.csv'
+    make_plots    = True
+    max_count     = 5 # in loops (set to -1 to set to infinity)
+    max_time      = 60 # in seconds (set to -1 to set to infinity)
+    monitor_time  = 1*25*60*60 # in seconds (This is the total time that is script will monitor temperatures from the Lakeshore monitor)
+    monitor_sleep = 5*60   # in seconds
+    Nsecs         = 1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
+    start_email   = True
+    PeriodicEmail = True
+    seconds_per_email      = 8*60*60 #12*60*60 # in seconds
+    alarm_channel          = 4
+    high_alarm_temperature = 300. # in Kelvin
+    low_alarm_temperature  =  80. # in Kelvin
+elif monitor_type == 'slowwarm':
+    filename      = 'slowwarm.csv'
+    make_plots    = True
+    max_count     = 5 # in loops (set to -1 to set to infinity)
+    max_time      = 60 # in seconds (set to -1 to set to infinity)
+    monitor_time  = 4*24*60*60 # in seconds (This is the total time that is script will monitor temperatures from the Lakeshore monitor)
+    monitor_sleep = 10*60   # in seconds
+    Nsecs         = 1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
+    start_email   = True
+    PeriodicEmail = True
+    seconds_per_email      = 8*60*60 #12*60*60 # in seconds
+    alarm_channel          = 4
+    high_alarm_temperature = 300. # in Kelvin
+    low_alarm_temperature  =  80. # in Kelvin
+
+
+
 num_of_temp2read = len(channels) #
 sleep_per_meas   = meas_period - 2*rest_time*num_of_temp2read
 if sleep_per_meas <= 0:
@@ -145,6 +232,11 @@ testing = False
 ###############################################################################
 ###### Start the giant while loop that periodically measures temperature ######
 ###############################################################################
+
+# make the directory for the temperature data
+if not os.path.isdir(folder):
+    os.makedirs(folder)
+
 monitoring = True
 start_monitor_time = time.time()
 Email_time = start_monitor_time
@@ -382,99 +474,100 @@ while monitoring:
         ### make some plots ###
         #######################
         # Caleb's data, all the data
-        plt.clf()
-        matplotlib.rcParams['legend.fontsize'] = 10.0
-        fig, ax1 = plt.subplots()
-        
-        plotcolors = ["blue", "green", "red", "coral", "dodgerblue", "gold", "forest", "purple"]
-        lines = []
-        names = []
-        for temp_index in range(len(temps)):
-            temp = temps[temp_index]
-            plotcolor = plotcolors[temp_index]
-            channel = temp[0]
-            data    = temp[1]
-            ax1.plot(Ttime, data, color=plotcolor, linewidth=3)
-            line = plt.Line2D(range(10), range(10), color=plotcolor)
-            lines.append(line)
-            if channel == 4:
-                names.append("Receiver")
-            elif channel == 3:
-                names.append("Outer Shield")
-            elif channel == 2:
-                names.append("Inner Shield")
-            else:
-                names.append("Channel " + str(channel))
+        if make_plots:
+            plt.clf()
+            matplotlib.rcParams['legend.fontsize'] = 10.0
+            fig, ax1 = plt.subplots()
 
-        ax1.set_xlabel('hours since start')
-        ax1.set_ylabel('Temperature (K)')
-        plt.legend(tuple(lines),tuple(names),numpoints=1, loc=2)
-        plt.savefig(folder + "Alltempdata_Caleb.png")
-        
-        
-        # Caleb's data, last Nsecs
-        plt.clf()
-        matplotlib.rcParams['legend.fontsize'] = 10.0
-        fig, ax1 = plt.subplots()
-
-        lines = []
-        names = []
-        for temp_index in range(len(temps)):
-            temp = temps[temp_index]
-            plotcolor = plotcolors[temp_index]
-            channel = temp[0]
-            data    = temp[1]
-            data    = data[start_last_Nsecs:]
-            ax1.plot(Ttime[start_last_Nsecs:], data, color=plotcolor, linewidth=3)
-            line = plt.Line2D(range(10), range(10), color=plotcolor)
-            lines.append(line)
-            if channel == 4:
-                names.append("Receiver")
-            elif channel == 3:
-                names.append("Outer Shield")
-            elif channel == 2:
-                names.append("Inner Shield")
-            else:
-                names.append("Channel " + str(channel))
-        
-        ax1.set_xlabel('The last ' + str('%2.2f' % Nhours) + ' hours')
-        ax1.set_ylabel('Temperature (K)')
-        plt.legend(tuple(lines),tuple(names),numpoints=1, loc=2)
-        plt.savefig(folder + str(Nsecs) +"secs_Caleb.png")
-        
-        # Caleb's receiver data, all the data
-        plt.clf()
-        matplotlib.rcParams['legend.fontsize'] = 10.0
-        fig, ax1 = plt.subplots()
-
-        for temp_index in range(len(temps)):
-            temp = temps[temp_index]
-            channel = temp[0]
-            data    = temp[1]
-            plotcolor = plotcolors[temp_index]
-            if channel == alarm_monitor:
+            plotcolors = ["blue", "green", "red", "coral", "dodgerblue", "gold", "forest", "purple"]
+            lines = []
+            names = []
+            for temp_index in range(len(temps)):
+                temp = temps[temp_index]
+                plotcolor = plotcolors[temp_index]
+                channel = temp[0]
+                data    = temp[1]
                 ax1.plot(Ttime, data, color=plotcolor, linewidth=3)
-                ax1.set_xlabel('hours since start')
-                ax1.set_ylabel('Temperature (K)')
-                plt.savefig(folder + "receiverdata_Caleb.png")
+                line = plt.Line2D(range(10), range(10), color=plotcolor)
+                lines.append(line)
+                if channel == 4:
+                    names.append("Receiver")
+                elif channel == 3:
+                    names.append("Outer Shield")
+                elif channel == 2:
+                    names.append("Inner Shield")
+                else:
+                    names.append("Channel " + str(channel))
 
-        
-        # Caleb's receiver data, last Nsecs
-        plt.clf()
-        matplotlib.rcParams['legend.fontsize'] = 10.0
-        fig, ax1 = plt.subplots()
-        for temp_index in range(len(temps)):
-            temp = temps[temp_index]
-            channel = temp[0]
-            data    = temp[1]
-            plotcolor = plotcolors[temp_index]
-            if channel == alarm_monitor:
-                ax1.set_xlabel('The last ' + str('%2.2f' % Nhours) + ' hours')
-                ax1.set_ylabel('Temperature (K)')
-                ax1.plot(Time_Nsecs, data[start_last_Nsecs:], color=plotcolor, linewidth=3)
-                plt.savefig(folder + str(Nsecs) +"secs_receiver.png")
-        
-        plt.close("all")
+            ax1.set_xlabel('hours since start')
+            ax1.set_ylabel('Temperature (K)')
+            plt.legend(tuple(lines),tuple(names),numpoints=1, loc=2)
+            plt.savefig(folder + "Alltempdata_Caleb.png")
+
+
+            # Caleb's data, last Nsecs
+            plt.clf()
+            matplotlib.rcParams['legend.fontsize'] = 10.0
+            fig, ax1 = plt.subplots()
+
+            lines = []
+            names = []
+            for temp_index in range(len(temps)):
+                temp = temps[temp_index]
+                plotcolor = plotcolors[temp_index]
+                channel = temp[0]
+                data    = temp[1]
+                data    = data[start_last_Nsecs:]
+                ax1.plot(Ttime[start_last_Nsecs:], data, color=plotcolor, linewidth=3)
+                line = plt.Line2D(range(10), range(10), color=plotcolor)
+                lines.append(line)
+                if channel == 4:
+                    names.append("Receiver")
+                elif channel == 3:
+                    names.append("Outer Shield")
+                elif channel == 2:
+                    names.append("Inner Shield")
+                else:
+                    names.append("Channel " + str(channel))
+
+            ax1.set_xlabel('The last ' + str('%2.2f' % Nhours) + ' hours')
+            ax1.set_ylabel('Temperature (K)')
+            plt.legend(tuple(lines),tuple(names),numpoints=1, loc=2)
+            plt.savefig(folder + str(Nsecs) +"secs_Caleb.png")
+
+            # Caleb's receiver data, all the data
+            plt.clf()
+            matplotlib.rcParams['legend.fontsize'] = 10.0
+            fig, ax1 = plt.subplots()
+
+            for temp_index in range(len(temps)):
+                temp = temps[temp_index]
+                channel = temp[0]
+                data    = temp[1]
+                plotcolor = plotcolors[temp_index]
+                if channel == alarm_monitor:
+                    ax1.plot(Ttime, data, color=plotcolor, linewidth=3)
+                    ax1.set_xlabel('hours since start')
+                    ax1.set_ylabel('Temperature (K)')
+                    plt.savefig(folder + "receiverdata_Caleb.png")
+
+
+            # Caleb's receiver data, last Nsecs
+            plt.clf()
+            matplotlib.rcParams['legend.fontsize'] = 10.0
+            fig, ax1 = plt.subplots()
+            for temp_index in range(len(temps)):
+                temp = temps[temp_index]
+                channel = temp[0]
+                data    = temp[1]
+                plotcolor = plotcolors[temp_index]
+                if channel == alarm_monitor:
+                    ax1.set_xlabel('The last ' + str('%2.2f' % Nhours) + ' hours')
+                    ax1.set_ylabel('Temperature (K)')
+                    ax1.plot(Time_Nsecs, data[start_last_Nsecs:], color=plotcolor, linewidth=3)
+                    plt.savefig(folder + str(Nsecs) +"secs_receiver.png")
+
+            plt.close("all")
         ### end plotting
         
         time.sleep(monitor_sleep)
