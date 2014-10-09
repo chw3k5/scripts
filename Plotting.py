@@ -52,7 +52,6 @@ def DataTrimmer(min_trim, max_trim, ordered_set, trim_list):
         set_min = None
 
     index_min_trim = 0
-    min_trimmed = ordered_set
     min4min_trim = None
     status = True
     trimmed = None
@@ -70,36 +69,38 @@ def DataTrimmer(min_trim, max_trim, ordered_set, trim_list):
                     for index_min_trim in range(len(ordered_set[:])):
                         if min_trim <= ordered_set[index_min_trim]:
                             min_trimmed = ordered_set[index_min_trim:]
+                            #print ordered_set[index_min_trim]
                             min4min_trim = min(min_trimmed)
                             break
             else:
                 min4min_trim = set_min
+                min_trimmed = ordered_set
 
             if max_trim is not None:
                 # Max trim
                 if min4min_trim < max_trim:
                     for index_max_trim in reversed(range(len(min_trimmed[:]))):
                         if ordered_set[index_max_trim] <= max_trim:
-                            trimmed = ordered_set[:index_max_trim]
+                            trimmed = min_trimmed[:index_max_trim]
                             break
-                        else:
-                            print max_trim, "=max_trim is greater than the minimum of the the ordered set that has been already been trimmed sweep, that is:", min4min_trim
-                            print "The min value of the ordered set before trimming was:", set_min
-                            print "It is likely that the difference of max_trim and min_trim is greater that the spacing of values in the ordered set"
-                            print "min_trim:", min_trim
-                            print "max_trim:", max_trim
-                            print "ordered_set:", ordered_set
-                            print "min_trimmed:", min4min_trim
-                            print "returning status=False"
-                            status = False
                 else:
-                    print min_trim, "=mV_min is greater than the max value of mV for a sweep:", set_max
+                    print max_trim, "=max_trim is greater than the minimum of the the ordered set that has been already been trimmed sweep, that is:", min4min_trim
+                    print "The min value of the ordered set before trimming was:", set_min
+                    print "It is likely that the difference of max_trim and min_trim is greater that the spacing of values in the ordered set"
+                    print "min_trim:", min_trim
+                    print "max_trim:", max_trim
+                    print "ordered_set:", ordered_set
+                    print "min_trimmed:", min4min_trim
                     print "returning status=False"
                     status = False
             else:
-                trimmed = min_trimmed
+                print min_trim, "=mV_min is greater than the max value of mV for a sweep:", set_max
+                print "returning status=False"
+                status = False
+    else:
+        trimmed = ordered_set
 
-
+    #print trimmed[0],trimmed[-1]
     # trim the corresponding values in the list dependent variables
     trimmed_list = []
     if ((trim_list != []) and (status)):
@@ -476,7 +477,7 @@ def SimpleSweepPlot(datadir, search_4Snums=False, Snums='', verbose=False, show_
 
 def xyplotgen(x_vector, y_vector, label='', plot_list=[], leglines=[], leglabels=[], color='black', linw=1, ls='-', scale_str='' ):
     plot_list.append((x_vector, y_vector, color, linw, ls, scale_str))
-    leglines.append((color,ls))
+    leglines.append((color,ls,linw))
     leglabels.append(label)
     return plot_list, leglines, leglabels
 
@@ -489,7 +490,7 @@ def stdaxplotgen(x_vector, y_vector, y_std, std_num=1, label='',
     leglabels.append(None)
     # Negative sigma
     plot_list.append((x_vector, y_vector-(y_std*std_num), color, linw, ls, scale_str))
-    leglines.append((color, ls))
+    leglines.append((color, ls, linw))
 
     leglabels.append(label)
     return plot_list, leglines, leglabels
@@ -503,7 +504,7 @@ def linifxyplotgen(x_vector, y_vector, label='', plot_list=[], leglines=[], legl
                           do_der2_conv, der2_min_cdf, der2_sigma, verbose)
     for n in range(len(bestfits_x[0,:])):
         plot_list.append((bestfits_x[:,n], bestfits_y[:, n], color, linw, ls, scale_str))
-        leglines.append((color, ls))
+        leglines.append((color, ls, linw))
         resist = 1000*(1.0/slopes[n])
         if label is None:
             leglabels.append(None)
@@ -528,7 +529,6 @@ def listplotgen(x_vector, y_vector_list, plot_list=[], leglines=[], leglabels=[]
         linw      = extractval(linw_list,      y_index, '1'    )
         ls        = extractval(ls_list,        y_index, '-'    )
         scale_str = extractval(scale_str_list, y_index, ''     )
-
         plot_list, leglines, leglabels = xyplotgen(x_vector, y_vector, label=label,
                                                    plot_list=plot_list, leglines=leglines, leglabels=leglabels,
                                                    color=color, linw=linw, ls=ls, scale_str=scale_str )
@@ -647,6 +647,82 @@ def astroplodatagen(mV, mV_std, uA, uA_std, TP, TP_std, time_apx, pot_apx,
 
     return plot_list, leglines, leglabels, yscale_info
 
+def fastplotgen(mV,uA,tp,pot,
+                mV_min=None,mV_max=None,
+                plot_list=[], leglines=[], leglabels=[],
+                xscale_info=[],yscale_info=[],
+                labelPrefix='',type_label='',
+                plot_mVuA=False, plot_mVtp=False, plot_mVpot=False,
+                mVuA_color='blue', mVtp_color='red',mVpot_color='black',
+                mVuA_ls='solid', mVtp_ls='solid', mVpot_ls='solid',
+                mVuA_linw=1, mVtp_linw=1, mVpot_linw=1,
+                verbose=False):
+    # The trimming part of the script for mV values on the X-axis
+    if ((mV_min is None) and (mV_max is None)):
+        if verbose:
+            print "Data trimming is not selected"
+            print "the plot X-axis min and max will depend on the lines being plotted"
+    else:
+
+        trim_list = [uA,tp,pot]
+        status, mV, trimmed_list = DataTrimmer(mV_min, mV_max, mV, trim_list)
+        if not status:
+            print "The program failed the Data trimming"
+            print "killing the script"
+            sys.exit()
+
+        [uA,tp,pot] = trimmed_list
+
+
+    xscale_str = 'mV'
+    x_vector = mV
+    xscale_info.append((xscale_str,min(x_vector),max(x_vector)))
+
+    y_vector_list  = []
+    label_list     = []
+    color_list     = []
+    linw_list      = []
+    ls_list        = []
+    scale_str_list = []
+    if plot_mVuA:
+        scale_str = 'uA'
+        y_vector  = uA
+        yscale_info.append((scale_str, min(y_vector), max(y_vector)))
+
+        y_vector_list.append(list(y_vector))
+        label_list.append(labelPrefix+' '+type_label+' '+scale_str)
+        color_list.append(mVuA_color)
+        linw_list.append(mVuA_linw)
+        ls_list.append(mVuA_ls)
+        scale_str_list.append(scale_str)
+    if plot_mVtp:
+        scale_str = 'tp'
+        y_vector  = tp
+        yscale_info.append((scale_str, min(y_vector), max(y_vector)))
+
+        y_vector_list.append(list(y_vector))
+        label_list.append(labelPrefix+' '+type_label+' '+scale_str)
+        color_list.append(mVtp_color)
+        linw_list.append(mVtp_linw)
+        ls_list.append(mVtp_ls)
+        scale_str_list.append(scale_str)
+    if plot_mVpot:
+        scale_str = 'pot'
+        y_vector  = pot
+        yscale_info.append((scale_str, min(y_vector), max(y_vector)))
+
+        y_vector_list.append(list(y_vector))
+        label_list.append(labelPrefix+' '+type_label+' '+scale_str)
+        color_list.append(mVpot_color)
+        linw_list.append(mVpot_linw)
+        ls_list.append(mVpot_ls)
+        scale_str_list.append(scale_str)
+
+    plot_list, leglines, leglabels\
+        = listplotgen(x_vector, y_vector_list, plot_list=plot_list, leglines=leglines, leglabels=leglabels,
+                      label_list=label_list, color_list=color_list,
+                      linw_list=linw_list, ls_list=ls_list, scale_str_list=scale_str_list)
+    return plot_list, leglines, leglabels, xscale_info, yscale_info
 
 def finddatalims(scale_info):
     min_val =  999999
@@ -687,6 +763,7 @@ def determine_scales(scale_str, scale_maxmins):
         if test_scale_str == scale_str:
             prime_scale_min = scale_maxmin[1]
             prime_scale_max = scale_maxmin[2]
+            abs_prime_scale_max = max(abs(prime_scale_max),abs(prime_scale_min))
             scales.append((scale_str, 1))
     for scale_maxmin in scale_maxmins:
         test_scale_str = scale_maxmin[0]
@@ -695,8 +772,8 @@ def determine_scales(scale_str, scale_maxmins):
         else:
             divisor_scale_min = scale_maxmin[1]
             divisor_scale_max = scale_maxmin[2]
-
-            scale_factor = min(float(prime_scale_min)/float(divisor_scale_min),float(prime_scale_max)/float(divisor_scale_max))
+            abs_divisor_scale_max = max(abs(divisor_scale_max), abs(divisor_scale_min))
+            scale_factor = abs_prime_scale_max/abs_divisor_scale_max
             scales.append((test_scale_str, scale_factor))
     return scales
 
@@ -705,7 +782,7 @@ def findscaling(scale_str,scales):
     for scale in scales:
         test_str = scale[0]
         if test_str == scale_str:
-            scale_factor = scale[1]
+            scale_factor = float(scale[1])
             break
     return scale_factor
 
@@ -760,11 +837,11 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
     ### Plot Options ###
     # Astro Data
     hotmVuA_color = 'red'
-    hotmVuA_linw  = 2
+    hotmVuA_linw  = 3
     hotmVuA_ls    = 'solid'
 
     hotmVtp_color = 'blue'
-    hotmVtp_linw  = 2
+    hotmVtp_linw  = 3
     hotmVtp_ls    = 'solid'
 
     coldmVuA_color = 'coral'
@@ -777,18 +854,18 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
 
     # Fast Data
     hotfast_mVuA_color = 'green'
-    hotfast_mVuA_linw  = 1
+    hotfast_mVuA_linw  = 2
     hotfast_mVuA_ls    = 'solid'
 
-    hotfast_mVtp_color = 'yellow'
-    hotfast_mVtp_linw  = 1
+    hotfast_mVtp_color = 'gold'
+    hotfast_mVtp_linw  = 2
     hotfast_mVtp_ls    = 'solid'
 
     hotfast_mVpot_color = 'black'
-    hotfast_mVpot_linw  = 1
+    hotfast_mVpot_linw  = 2
     hotfast_mVpot_ls    = 'solid'
 
-    coldfast_mVuA_color = 'green'
+    coldfast_mVuA_color = 'forestgreen'
     coldfast_mVuA_linw  = 1
     coldfast_mVuA_ls    = 'solid'
 
@@ -803,28 +880,28 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
 
     # Unpumped Data
     hotunpump_mVuA_color = 'purple'
-    hotunpump_mVuA_linw  = 1
+    hotunpump_mVuA_linw  = 2
     hotunpump_mVuA_ls    = 'solid'
 
     hotunpump_mVtp_color = 'orange'
-    hotunpump_mVtp_linw  = 1
+    hotunpump_mVtp_linw  = 2
     hotunpump_mVtp_ls    = 'solid'
 
-    hotnpump_mVpot_color = 'black'
-    hotnpump_mVpot_linw  = 1
-    hotnpump_mVpot_ls    = 'solid'
+    hotunpump_mVpot_color = 'black'
+    hotunpump_mVpot_linw  = 1
+    hotunpump_mVpot_ls    = 'solid'
 
-    coldunpump_mVuA_color = 'purple'
+    coldunpump_mVuA_color = 'magenta'
     coldunpump_mVuA_linw  = 1
     coldunpump_mVuA_ls    = 'solid'
 
-    coldunpump_mVtp_color = 'orange'
+    coldunpump_mVtp_color = 'darkorange'
     coldunpump_mVtp_linw  = 1
     coldunpump_mVtp_ls    = 'solid'
 
-    coldnpump_mVpot_color = 'black'
-    coldnpump_mVpot_linw  = 1
-    coldnpump_mVpot_ls    = 'solid'
+    coldunpump_mVpot_color = 'black'
+    coldunpump_mVpot_linw  = 1
+    coldunpump_mVpot_ls    = 'solid'
 
     # Calculate noise temperature instead
 
@@ -852,7 +929,7 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
 
     ### Legend ###
     legendsize = 10
-    legendloc  = 2
+    legendloc  = 4
 
     ### Axis Limits ###
     # X-axis
@@ -1007,11 +1084,11 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
             xscale_info.append((xscale_str,min(mV_Yfactor),max(mV_Yfactor)))
             plot_list, leglines, leglabels \
                 = allstarplotgen(mV_Yfactor, Yfactor, y_std=y_std, std_num=std_num,
-                                 plot_list=ax2_plot_list, leglines=leglines, leglabels=leglabels,
+                                 plot_list=plot_list, leglines=leglines, leglabels=leglabels,
                                  show_std=show_standdev, find_lin=find_lin_Yf,
                                  label=Yfactor_label, std_label=' sigma', lin_label='',
                                  color=Yfactor_color, lin_color=lin_color,
-                                 linw=Yfactor_linw, std_linw=Yfactor_ls, lin_linw=lin_linw,
+                                 linw=Yfactor_linw, std_linw=Yfactor_linw, lin_linw=lin_linw,
                                  ls=Yfactor_ls, std_ls=std_ls, lin_ls=lin_ls,
                                  scale_str='Yf', linif=linif,
                                  der1_int=der1_int, do_der1_conv=do_der1_conv, der1_min_cdf=der1_min_cdf, der1_sigma=der1_sigma,
@@ -1038,57 +1115,69 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
         cold_mV_unpumped, cold_uA_unpumped, cold_tp_unpumped, cold_pot_unpumped \
             = GetAllTheProFastSweepData(proYdatadir+'cold')
 
-
+        if hot_fastprodata_found:
+            type_label = 'fast'
+            ax1_plot_list, leglines, leglabels, xscale_info, ax1_yscale_info \
+                = fastplotgen(hot_mV_fast,hot_uA_fast,hot_tp_fast,hot_pot_fast,
+                              mV_min=mV_min,mV_max=mV_max,
+                              plot_list=ax1_plot_list, leglines=leglines, leglabels=leglabels,
+                              xscale_info=xscale_info, yscale_info=ax1_yscale_info,
+                              labelPrefix=hot_labelPrefix,type_label=type_label,
+                              plot_mVuA=plot_fastmVuA, plot_mVtp=plot_fastmVtp, plot_mVpot=plot_fastmVpot,
+                              mVuA_color=hotfast_mVuA_color, mVtp_color=hotfast_mVtp_color,mVpot_color=hotfast_mVpot_color,
+                              mVuA_ls=hotfast_mVuA_ls, mVtp_ls=hotfast_mVtp_ls, mVpot_ls=hotfast_mVpot_ls,
+                              mVuA_linw=hotfast_mVuA_linw, mVtp_linw=hotfast_mVtp_linw, mVpot_linw=hotfast_mVpot_linw,
+                              verbose=verbose)
 
         if cold_fastprodata_found:
-            xscale_str = 'mV'
-            x_vector = list(cold_mV_fast)
-            xscale_info.append((xscale_str,min(x_vector),max(x_vector)))
+            type_label = 'fast'
+            ax1_plot_list, leglines, leglabels, xscale_info, ax1_yscale_info \
+                = fastplotgen(cold_mV_fast,cold_uA_fast,cold_tp_fast,cold_pot_fast,
+                              mV_min=mV_min,mV_max=mV_max,
+                              plot_list=ax1_plot_list, leglines=leglines, leglabels=leglabels,
+                              xscale_info=xscale_info, yscale_info=ax1_yscale_info,
+                              labelPrefix=cold_labelPrefix,type_label=type_label,
+                              plot_mVuA=plot_fastmVuA, plot_mVtp=plot_fastmVtp, plot_mVpot=plot_fastmVpot,
+                              mVuA_color=coldfast_mVuA_color, mVtp_color=coldfast_mVtp_color,mVpot_color=coldfast_mVpot_color,
+                              mVuA_ls=coldfast_mVuA_ls, mVtp_ls=coldfast_mVtp_ls, mVpot_ls=coldfast_mVpot_ls,
+                              mVuA_linw=coldfast_mVuA_linw, mVtp_linw=coldfast_mVtp_linw, mVpot_linw=coldfast_mVpot_linw,
+                              verbose=verbose)
 
-            y_vector_list  = []
-            label_list     = []
-            color_list     = []
-            linw_list      = []
-            ls_list        = []
-            scale_str_list = []
-            if plot_fastmVuA:
-                scale_str = 'uA'
-                y_vector  = cold_uA_fast
-                ax1_yscale_info.append((scale_str, min(y_vector), max(y_vector)))
+        if hot_unpumpedprodata_found:
+            type_label = 'unpumped'
+            ax1_plot_list, leglines, leglabels, xscale_info, ax1_yscale_info \
+                = fastplotgen(hot_mV_unpumped,hot_uA_unpumped,hot_tp_unpumped,hot_pot_unpumped,
+                              mV_min=mV_min,mV_max=mV_max,
+                              plot_list=ax1_plot_list, leglines=leglines, leglabels=leglabels,
+                              xscale_info=xscale_info, yscale_info=ax1_yscale_info,
+                              labelPrefix=hot_labelPrefix,type_label=type_label,
+                              plot_mVuA=plot_unpumpmVuA, plot_mVtp=plot_unpumpmVtp, plot_mVpot=plot_unpumpmVpot,
+                              mVuA_color=hotunpump_mVuA_color, mVtp_color=hotunpump_mVtp_color,mVpot_color=hotunpump_mVpot_color,
+                              mVuA_ls=hotunpump_mVuA_ls, mVtp_ls=hotunpump_mVtp_ls, mVpot_ls=hotunpump_mVpot_ls,
+                              mVuA_linw=hotunpump_mVuA_linw, mVtp_linw=hotunpump_mVtp_linw, mVpot_linw=hotunpump_mVpot_linw,
+                              verbose=verbose)
 
-                y_vector_list.append(list(y_vector))
-                label_list.append(cold_labelPrefix+fast_label+scale_str)
-                color_list.append(coldfast_mVuA_color)
-                linw_list.append(coldfast_mVuA_linw)
-                ls_list.append(coldfast_mVuA_ls)
-                scale_str_list.append(scale_str)
-            if plot_fastmVtp:
-                scale_str = 'tp'
-                y_vector  = cold_tp_fast
-                ax1_yscale_info.append((scale_str, min(y_vector), max(y_vector)))
+        if cold_unpumpedprodata_found:
+            type_label = 'unpumped'
+            ax1_plot_list, leglines, leglabels, xscale_info, ax1_yscale_info \
+                = fastplotgen(cold_mV_unpumped,cold_uA_unpumped,cold_tp_unpumped,cold_pot_unpumped,
+                              mV_min=mV_min,mV_max=mV_max,
+                              plot_list=ax1_plot_list, leglines=leglines, leglabels=leglabels,
+                              xscale_info=xscale_info, yscale_info=ax1_yscale_info,
+                              labelPrefix=cold_labelPrefix,type_label=type_label,
+                              plot_mVuA=plot_unpumpmVuA, plot_mVtp=plot_unpumpmVtp, plot_mVpot=plot_unpumpmVpot,
+                              mVuA_color=coldunpump_mVuA_color, mVtp_color=coldunpump_mVtp_color,mVpot_color=coldunpump_mVpot_color,
+                              mVuA_ls=coldunpump_mVuA_ls, mVtp_ls=coldunpump_mVtp_ls, mVpot_ls=coldunpump_mVpot_ls,
+                              mVuA_linw=coldunpump_mVuA_linw, mVtp_linw=coldunpump_mVtp_linw, mVpot_linw=coldunpump_mVpot_linw,
+                              verbose=verbose)
 
-                y_vector_list.append(list(y_vector))
-                label_list.append(cold_labelPrefix+fast_label+scale_str)
-                color_list.append(coldfast_mVtp_color)
-                linw_list.append(coldfast_mVtp_linw)
-                ls_list.append(coldfast_mVtp_ls)
-                scale_str_list.append(scale_str)
-            if plot_fastmVpot:
-                scale_str = 'pot'
-                y_vector  = cold_pot_fast
-                ax1_yscale_info.append((scale_str, min(y_vector), max(y_vector)))
 
-                y_vector_list.append(list(y_vector))
-                label_list.append(cold_labelPrefix+fast_label+scale_str)
-                color_list.append(coldfast_mVpot_color)
-                linw_list.append(coldfast_mVpot_linw)
-                ls_list.append(coldfast_mVpot_ls)
-                scale_str_list.append(scale_str)
 
-            ax1_plot_list, leglines, leglabels,\
-                = listplotgen(x_vector, y_vector_list, plot_list=ax1_plot_list, leglines=leglines, leglabels=leglabels,
-                              label_list=label_list, color_list=color_list,
-                              linw_list=linw_list, ls_list=ls_list, scale_str_list=scale_str_list)
+
+
+
+
+
 
 
 
@@ -1139,7 +1228,6 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
             xlimR = mV_max
 
         xscales = determine_scales(xscale_str, xscale_maxmin)
-
         # Y Axis 1 scaling
         ax1_yscale_str    = ax1_scaling[1]
         ax1_yscale_maxmin = finddatalims(ax1_yscale_info)
@@ -1165,7 +1253,13 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
             for plot_obj in ax1_plot_list:
                 (x_vector, y_vector, color, linw, ls, scale_str) = plot_obj
                 scale_factor = findscaling(scale_str,ax1_yscales)
-                ax1.plot(x_vector, y_vector*scale_factor, color=color, linewidth=linw, ls=ls)
+                scale_x_vector = numpy.array(x_vector)
+                scale_y_vector = numpy.array(y_vector)*scale_factor
+                if verbose:
+                    print 'ax1', scale_str, scale_factor, color, linw, ls, numpy.shape(scale_x_vector), numpy.shape(scale_y_vector)
+                scale_x_vector = numpy.array(x_vector)
+                scale_y_vector = numpy.array(y_vector)*scale_factor
+                ax1.plot(scale_x_vector, scale_y_vector, color=color, linewidth=linw, ls=ls)
             ### Axis Labels ###
             ax1.set_xlabel(ax1_xlabel)
             ax1.set_ylabel(ax1_ylabel)
@@ -1183,7 +1277,12 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
             for plot_obj in ax2_plot_list:
                 (x_vector, y_vector, color, linw, ls, scale_str) = plot_obj
                 scale_factor = findscaling(scale_str,ax2_yscales)
-                ax2.plot(x_vector, y_vector*scale_factor, color=color, linewidth=linw, ls=ls)
+                scale_x_vector = numpy.array(x_vector)
+                scale_y_vector = numpy.array(y_vector)*scale_factor
+                if verbose:
+                    print 'ax2', scale_str, scale_factor, color, linw, ls, numpy.shape(x_vector), numpy.shape(y_vector)
+
+                ax2.plot(scale_x_vector, scale_y_vector, color=color, linewidth=linw, ls=ls)
             #for tl in ax2.get_yticklabels():
             #    tl.set_color(Yfactor_color)
 
@@ -1217,7 +1316,8 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                 legline_data = leglines[indexer]
                 color = legline_data[0]
                 ls    = legline_data[1]
-                final_leglines.append(plt.Line2D(range(10), range(10), color=color, ls=ls))
+                linw  = legline_data[2]
+                final_leglines.append(plt.Line2D(range(10), range(10), color=color, ls=ls, linewidth=linw))
         matplotlib.rcParams['legend.fontsize'] = legendsize
         plt.legend(tuple(final_leglines),tuple(final_leglabels), numpoints=1, loc=legendloc)
 

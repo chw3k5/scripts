@@ -76,11 +76,11 @@ if do_YdataPro:
              sigma_GHz=0.10)
 
 if do_YfactotSweepsPlotter:
-    YfactorSweepsPlotter(datadir, search_4Ynums=True, Ynums='', verbose=True, mV_min=0, mV_max=6,
+    YfactorSweepsPlotter(datadir, search_4Ynums=True, Ynums='', verbose=True, mV_min=-1, mV_max=9,
                          show_standdev=False, std_num=1,
                          display_params=True, show_plot=False, save_plot=True, do_eps=False,
                          plot_mVuA=True, plot_mVtp=True, plot_Yfactor=False, plot_Ntemp=False,
-                         plot_fastmVuA=False, plot_fastmVtp=False, plot_fastmVpot=False,
+                         plot_fastmVuA=True, plot_fastmVtp=True, plot_fastmVpot=True,
                          plot_unpumpmVuA=True, plot_unpumpmVtp=False, plot_unpumpmVpot=False,
                          find_lin_mVuA=False, find_lin_mVtp=False, find_lin_Yf=False,
                          linif=0.3, der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
