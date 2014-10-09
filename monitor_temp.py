@@ -20,9 +20,7 @@
 # Monitor Temperatures
 #Clear All variables
 ###############################################################################
-import serial, signal, time, os, sys, atpy, numpy, matplotlib
-from matplotlib import pyplot as plt
-from email_sender   import email_caleb, email_groppi, text_caleb
+
 
 
 def clearall():
@@ -74,8 +72,10 @@ def GenEmailText(temp_data, Nhours, totalhours):
 ###############################################################################
 # User  settings
 ###############################################################################
-platform = sys.platform
-
+from sys import platform
+import serial, signal, time, os, sys, atpy, numpy, matplotlib
+from matplotlib import pyplot as plt
+from email_sender   import email_caleb, email_groppi, text_caleb
 serial_port = ''
 
 if platform == 'win32':
@@ -106,23 +106,23 @@ if serial_port == '':
 verbose = True
 # Data Folder
 if platform == 'win32':
-    folder = 'C:\\Users\\MtDewar\\Documents\\Kappa\\temperatureData\\'
+    folder = 'C:\\Users\\MtDewar\\Documents\\Kappa\\temperatureData\\Sep06_2014\\'
 elif platform == 'darwin':
-    folder ='/Users/chw3k5/Documents/Grad_School/Kappa/temperatureData/Sep06_2014'
+    folder ='/Users/chw3k5/Documents/Grad_School/Kappa/temperatureData/Sep06_2014\\'
 
 
-monitor_type = 'cooldown' # options: 'cooldown', 'LN2fill', 'LHefill', 'almostcold', 'cold', 'fastwarm', 'slowwarm'
+monitor_type = 'cold' # options: 'coolpumpon', 'coolpumpoff', 'LN2fill', 'LHefill', 'almostcold', 'cold', 'fastwarm', 'slowwarm'
 meas_period      = 7.0 # in seconds
 rest_time        = 0.5 # in seconds
 channels = [4,2,3]
 
 
-if monitor_type=='cooldown':
-    filename      = 'cooldown.csv'
+if monitor_type=='coolpumpon':
+    filename      = monitor_type+'.csv'
     make_plots    = True
     max_count     = 5 # in loops (set to -1 to set to infinity)
     max_time      = 60 # in seconds (set to -1 to set to infinity)
-    monitor_time  = 2*24*60*60 # in seconds (This is the total time that is script will monitor temperatures from the Lakeshore monitor)
+    monitor_time  = 1*24*60*60 # in seconds (This is the total time that is script will monitor temperatures from the Lakeshore monitor)
     monitor_sleep = 5*60   # in seconds
     Nsecs        =  1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
     start_email   = True
@@ -130,9 +130,23 @@ if monitor_type=='cooldown':
     seconds_per_email = 20*60 #12*60*60 # in seconds
     alarm_channel = 2
     high_alarm_temperature = 300. # in Kelvin
-    low_alarm_temperature  = 100. # in Kelvin
+    low_alarm_temperature  = 80. # in Kelvin
+elif monitor_type=='coolpumpoff':
+    filename      = monitor_type+'.csv'
+    make_plots    = True
+    max_count     = 5 # in loops (set to -1 to set to infinity)
+    max_time      = 60 # in seconds (set to -1 to set to infinity)
+    monitor_time  = 1*24*60*60 # in seconds (This is the total time that is script will monitor temperatures from the Lakeshore monitor)
+    monitor_sleep = 5*60   # in seconds
+    Nsecs        =  1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
+    start_email   = True
+    PeriodicEmail = True
+    seconds_per_email = 60*60 #12*60*60 # in seconds
+    alarm_channel = 4
+    high_alarm_temperature = 300. # in Kelvin
+    low_alarm_temperature  =  80. # in Kelvin
 elif monitor_type == 'LN2fill':
-    filename      = 'LN2fill.csv'
+    filename      = monitor_type+'.csv'
     make_plots    = True
     max_count     = 5 # in loops (set to -1 to set to infinity)
     max_time      = 60 # in seconds (set to -1 to set to infinity)
@@ -143,10 +157,10 @@ elif monitor_type == 'LN2fill':
     PeriodicEmail = False
     seconds_per_email      = 20*60 #12*60*60 # in seconds
     alarm_channel          = 4
-    high_alarm_temperature = 110. # in Kelvin
+    high_alarm_temperature = 300. # in Kelvin
     low_alarm_temperature  =  80. # in Kelvin
 elif monitor_type == 'LHefill':
-    filename      = 'LHefill.csv'
+    filename      = monitor_type+'.csv'
     make_plots    = True
     max_count     = 5 # in loops (set to -1 to set to infinity)
     max_time      = 60 # in seconds (set to -1 to set to infinity)
@@ -160,7 +174,7 @@ elif monitor_type == 'LHefill':
     high_alarm_temperature = 110. # in Kelvin
     low_alarm_temperature  =   3. # in Kelvin
 elif monitor_type == 'almostcold':
-    filename      = 'almostcold.csv'
+    filename      = monitor_type+'.csv'
     make_plots    = True
     max_count     = 5 # in loops (set to -1 to set to infinity)
     max_time      = 60 # in seconds (set to -1 to set to infinity)
@@ -171,10 +185,10 @@ elif monitor_type == 'almostcold':
     PeriodicEmail = True
     seconds_per_email      = 1*60*60 #12*60*60 # in seconds
     alarm_channel          = 4
-    high_alarm_temperature = 4.800 # in Kelvin
+    high_alarm_temperature = 4.500 # in Kelvin
     low_alarm_temperature  = 3. # in Kelvin
 elif monitor_type == 'cold':
-    filename      = 'cold.csv'
+    filename      = monitor_type+'.csv'
     make_plots    = False
     max_count     = 5 # in loops (set to -1 to set to infinity)
     max_time      = 60 # in seconds (set to -1 to set to infinity)
@@ -183,13 +197,12 @@ elif monitor_type == 'cold':
     Nsecs         =  1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
     start_email   = True
     PeriodicEmail = True
-    seconds_per_email      = 8*60*60 #12*60*60 # in seconds
+    seconds_per_email      = 4*60*60 #12*60*60 # in seconds
     alarm_channel          = 4
     high_alarm_temperature = 4.300 # in Kelvin
     low_alarm_temperature  = 3. # in Kelvin
-    low_alarm_temperature  =  80. # in Kelvin
 elif monitor_type == 'fastwarm':
-    filename      = 'fastwarm.csv'
+    filename      = monitor_type+'.csv'
     make_plots    = True
     max_count     = 5 # in loops (set to -1 to set to infinity)
     max_time      = 60 # in seconds (set to -1 to set to infinity)
@@ -203,7 +216,7 @@ elif monitor_type == 'fastwarm':
     high_alarm_temperature = 300. # in Kelvin
     low_alarm_temperature  =  80. # in Kelvin
 elif monitor_type == 'slowwarm':
-    filename      = 'slowwarm.csv'
+    filename      = monitor_type+'.csv'
     make_plots    = True
     max_count     = 5 # in loops (set to -1 to set to infinity)
     max_time      = 60 # in seconds (set to -1 to set to infinity)
@@ -502,7 +515,7 @@ while monitoring:
             ax1.set_xlabel('hours since start')
             ax1.set_ylabel('Temperature (K)')
             plt.legend(tuple(lines),tuple(names),numpoints=1, loc=2)
-            plt.savefig(folder + "Alltempdata_Caleb.png")
+            plt.savefig(folder +  monitor_type+"_Allchannels.png")
 
 
             # Caleb's data, last Nsecs
@@ -533,7 +546,7 @@ while monitoring:
             ax1.set_xlabel('The last ' + str('%2.2f' % Nhours) + ' hours')
             ax1.set_ylabel('Temperature (K)')
             plt.legend(tuple(lines),tuple(names),numpoints=1, loc=2)
-            plt.savefig(folder + str(Nsecs) +"secs_Caleb.png")
+            plt.savefig(folder +  monitor_type+'_'+str(Nsecs) +"_secs_Allchannels.png")
 
             # Caleb's receiver data, all the data
             plt.clf()
@@ -545,11 +558,11 @@ while monitoring:
                 channel = temp[0]
                 data    = temp[1]
                 plotcolor = plotcolors[temp_index]
-                if channel == alarm_monitor:
+                if channel == alarm_channel:
                     ax1.plot(Ttime, data, color=plotcolor, linewidth=3)
                     ax1.set_xlabel('hours since start')
                     ax1.set_ylabel('Temperature (K)')
-                    plt.savefig(folder + "receiverdata_Caleb.png")
+                    plt.savefig(folder +  monitor_type+"_channel" + str(channel) + ".png")
 
 
             # Caleb's receiver data, last Nsecs
@@ -561,11 +574,11 @@ while monitoring:
                 channel = temp[0]
                 data    = temp[1]
                 plotcolor = plotcolors[temp_index]
-                if channel == alarm_monitor:
+                if channel == alarm_channel:
                     ax1.set_xlabel('The last ' + str('%2.2f' % Nhours) + ' hours')
                     ax1.set_ylabel('Temperature (K)')
                     ax1.plot(Time_Nsecs, data[start_last_Nsecs:], color=plotcolor, linewidth=3)
-                    plt.savefig(folder + str(Nsecs) +"secs_receiver.png")
+                    plt.savefig(folder + monitor_type+'_'+str(Nsecs) +"_secs_channel" + str(channel) + ".png")
 
             plt.close("all")
         ### end plotting

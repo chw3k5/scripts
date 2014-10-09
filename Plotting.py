@@ -512,7 +512,28 @@ def linifxyplotgen(x_vector, y_vector, label='', plot_list=[], leglines=[], legl
     return plot_list, leglines, leglabels
 
 
+def extractval(val_list, val_index, defualt_val):
+    try:
+        val = val_list[val_index]
+    except:
+        val = defualt_val
+    return val
 
+def listplotgen(x_vector, y_vector_list, plot_list=[], leglines=[], leglabels=[],
+                label_list=[], color_list=[], linw_list=[], ls_list=[], scale_str_list=[]):
+    for y_index in range(len(y_vector_list)):
+        y_vector  = y_vector_list[y_index]
+        label     = extractval(label_list,     y_index, ''     )
+        color     = extractval(color_list,     y_index, 'black')
+        linw      = extractval(linw_list,      y_index, '1'    )
+        ls        = extractval(ls_list,        y_index, '-'    )
+        scale_str = extractval(scale_str_list, y_index, ''     )
+
+        plot_list, leglines, leglabels = xyplotgen(x_vector, y_vector, label=label,
+                                                   plot_list=plot_list, leglines=leglines, leglabels=leglabels,
+                                                   color=color, linw=linw, ls=ls, scale_str=scale_str )
+
+    return plot_list, leglines, leglabels
 
 def allstarplotgen(x_vector, y_vector, y_std=None, std_num=1, plot_list=[], leglines=[], leglabels=[],
                    show_std=False, find_lin=False,
@@ -715,12 +736,12 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                          show_standdev=True, std_num=1, display_params=True,
                          show_plot=False, save_plot=True, do_eps=True,
                          plot_mVuA=True, plot_mVtp=True, plot_Yfactor=False, plot_Ntemp=False,
-                         plot_unpumpmVuA=False, plot_unpumpmVtp=False,
+                         plot_fastmVuA=False, plot_fastmVtp=False, plot_fastmVpot=False,
+                         plot_unpumpmVuA=False, plot_unpumpmVtp=False, plot_unpumpmVpot=False,
                          find_lin_mVuA=False, find_lin_mVtp=False, find_lin_Yf=False,
                          linif=0.3,
                          der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
                          der2_int=1, do_der2_conv=True, der2_min_cdf=0.95, der2_sigma=0.05,
-                         plot_fastmVuA=False, plot_fastmVtp=False,
                          do_Ycut=False, start_Yplot=0, end_Yplot=3
                          ):
     #####################
@@ -737,6 +758,7 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
     ax2_scaling = ('mV','Yf')
 
     ### Plot Options ###
+    # Astro Data
     hotmVuA_color = 'red'
     hotmVuA_linw  = 2
     hotmVuA_ls    = 'solid'
@@ -753,18 +775,56 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
     coldmVtp_linw  = 2
     coldmVtp_ls    = 'solid'
 
+    # Fast Data
+    hotfast_mVuA_color = 'green'
+    hotfast_mVuA_linw  = 1
+    hotfast_mVuA_ls    = 'solid'
+
+    hotfast_mVtp_color = 'yellow'
+    hotfast_mVtp_linw  = 1
+    hotfast_mVtp_ls    = 'solid'
+
+    hotfast_mVpot_color = 'black'
+    hotfast_mVpot_linw  = 1
+    hotfast_mVpot_ls    = 'solid'
+
+    coldfast_mVuA_color = 'green'
+    coldfast_mVuA_linw  = 1
+    coldfast_mVuA_ls    = 'solid'
+
+    coldfast_mVtp_color = 'yellow'
+    coldfast_mVtp_linw  = 1
+    coldfast_mVtp_ls    = 'solid'
+
+    coldfast_mVpot_color = 'black'
+    coldfast_mVpot_linw  = 1
+    coldfast_mVpot_ls    = 'solid'
 
 
-    hotfast_uA_color = 'green'
+    # Unpumped Data
+    hotunpump_mVuA_color = 'purple'
+    hotunpump_mVuA_linw  = 1
+    hotunpump_mVuA_ls    = 'solid'
 
-    hotfast_tp_color = 'yellow'
-    hotunpump_uA_color = 'purple'
-    hotunpump_tp_color = 'orange'
+    hotunpump_mVtp_color = 'orange'
+    hotunpump_mVtp_linw  = 1
+    hotunpump_mVtp_ls    = 'solid'
 
-    coldfast_uA_color = 'green'
-    coldfast_tp_color = 'yellow'
-    coldunpump_uA_color = 'purple'
-    coldunpump_tp_color = 'orange'
+    hotnpump_mVpot_color = 'black'
+    hotnpump_mVpot_linw  = 1
+    hotnpump_mVpot_ls    = 'solid'
+
+    coldunpump_mVuA_color = 'purple'
+    coldunpump_mVuA_linw  = 1
+    coldunpump_mVuA_ls    = 'solid'
+
+    coldunpump_mVtp_color = 'orange'
+    coldunpump_mVtp_linw  = 1
+    coldunpump_mVtp_ls    = 'solid'
+
+    coldnpump_mVpot_color = 'black'
+    coldnpump_mVpot_linw  = 1
+    coldnpump_mVpot_ls    = 'solid'
 
     # Calculate noise temperature instead
 
@@ -783,6 +843,9 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
     ### Labels ###
     hot_labelPrefix  = '300K '
     cold_labelPrefix = ' 77K '
+    fast_label       = 'fast '
+    unpump_label     = 'LOoff '
+
     ax1_xlabel = 'Voltage (' + str(ax1_scaling[0]) + ')'
     ax1_ylabel = 'Current (' + str(ax1_scaling[1]) + ')'
     ax2_ylabel = 'Y-Factor'
@@ -958,6 +1021,82 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                 ax2_plot_list = plot_list
             else:
                 ax1_plot_list =  plot_list
+
+        ##################################
+        ###### Fast Bias Sweep Data ######
+        ##################################
+
+        ### Get the Hot Fast Processed Sweep Data
+        hot_fastprodata_found, hot_unpumpedprodata_found, \
+        hot_mV_fast, hot_uA_fast, hot_tp_fast, hot_pot_fast, \
+        hot_mV_unpumped, hot_uA_unpumped, hot_tp_unpumped, hot_pot_unpumped \
+            = GetAllTheProFastSweepData(proYdatadir+'hot')
+
+        ### Get the Cold Fast Processed Sweep Data
+        cold_fastprodata_found, cold_unpumpedprodata_found, \
+        cold_mV_fast, cold_uA_fast, cold_tp_fast, cold_pot_fast, \
+        cold_mV_unpumped, cold_uA_unpumped, cold_tp_unpumped, cold_pot_unpumped \
+            = GetAllTheProFastSweepData(proYdatadir+'cold')
+
+
+
+        if cold_fastprodata_found:
+            xscale_str = 'mV'
+            x_vector = list(cold_mV_fast)
+            xscale_info.append((xscale_str,min(x_vector),max(x_vector)))
+
+            y_vector_list  = []
+            label_list     = []
+            color_list     = []
+            linw_list      = []
+            ls_list        = []
+            scale_str_list = []
+            if plot_fastmVuA:
+                scale_str = 'uA'
+                y_vector  = cold_uA_fast
+                ax1_yscale_info.append((scale_str, min(y_vector), max(y_vector)))
+
+                y_vector_list.append(list(y_vector))
+                label_list.append(cold_labelPrefix+fast_label+scale_str)
+                color_list.append(coldfast_mVuA_color)
+                linw_list.append(coldfast_mVuA_linw)
+                ls_list.append(coldfast_mVuA_ls)
+                scale_str_list.append(scale_str)
+            if plot_fastmVtp:
+                scale_str = 'tp'
+                y_vector  = cold_tp_fast
+                ax1_yscale_info.append((scale_str, min(y_vector), max(y_vector)))
+
+                y_vector_list.append(list(y_vector))
+                label_list.append(cold_labelPrefix+fast_label+scale_str)
+                color_list.append(coldfast_mVtp_color)
+                linw_list.append(coldfast_mVtp_linw)
+                ls_list.append(coldfast_mVtp_ls)
+                scale_str_list.append(scale_str)
+            if plot_fastmVpot:
+                scale_str = 'pot'
+                y_vector  = cold_pot_fast
+                ax1_yscale_info.append((scale_str, min(y_vector), max(y_vector)))
+
+                y_vector_list.append(list(y_vector))
+                label_list.append(cold_labelPrefix+fast_label+scale_str)
+                color_list.append(coldfast_mVpot_color)
+                linw_list.append(coldfast_mVpot_linw)
+                ls_list.append(coldfast_mVpot_ls)
+                scale_str_list.append(scale_str)
+
+            ax1_plot_list, leglines, leglabels,\
+                = listplotgen(x_vector, y_vector_list, plot_list=ax1_plot_list, leglines=leglines, leglabels=leglabels,
+                              label_list=label_list, color_list=color_list,
+                              linw_list=linw_list, ls_list=ls_list, scale_str_list=scale_str_list)
+
+
+
+
+
+
+
+
 
         ############################
         ###### Parameter Data ######
