@@ -623,7 +623,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
                     str_val = str('3.3f' % LOfreq_actual)
                 except TypeError:
                     str_val = LOfreq_actual
-                "Setting to LO frequency to " + str_val + " GHz"
+                print "Setting to LO frequency to", str_val, "GHz"
 
             if not doing_UCA_list:
                 magpot_actual, sisPot_actual \

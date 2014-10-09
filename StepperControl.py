@@ -316,7 +316,7 @@ def QuarterTurn():
     st.close()
     return status
 #
-def initialize(vel=1, accel=0.5):
+def initialize(vel=1, accel=0.8):
     st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1, timeout=2)
     time.sleep(SleepTime)
     if st.isOpen():

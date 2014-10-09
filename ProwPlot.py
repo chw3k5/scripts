@@ -17,7 +17,8 @@ do_SimpleSweepPlot     = False
 do_SingeSpectraPlotter = False
 
 ### For Y-factor data and Sweeps ###
-do_YdataPro             = False
+do_sweeps               = True
+do_YdataPro             = True
 do_YfactotSweepsPlotter = True
 do_YSpectra_Plotter     = False
 
@@ -63,11 +64,44 @@ if all_Ydata:
     do_YfactotSweepsPlotter = True
     do_YSpectra_Plotter     = True
 
+folder_name = 'magsweep'
+
 # The directory what the data is kept
 if platform == 'win32':
-    datadir = 'C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\sweep\\LOfreq\\'
+    datadir = 'C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\sweep\\Oct06_14\\'+folder_name+'\\'
 elif platform == 'darwin':
-    datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/LOfreq/'
+    datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Oct06_14/'+folder_name+'/'
+
+from BiasSweep2 import BiasSweep
+if do_sweeps:
+    BiasSweep(datadir, verbose=False, verboseTop=True, verboseSet=True, careful=False,
+              sweepNstart=1, Ynum=1, testmode=False, warmmode=False,
+              do_fastsweep=True, do_unpumpedsweep=True, fastsweep_feedback=False,
+              SweepStart_feedTrue=65000, SweepStop_feedTrue=52000, SweepStep_feedTrue=500,
+              SweepStart_feedFalse=65100, SweepStop_feedFalse=57000, SweepStep_feedFalse=100,
+              sisV_feedback=True, do_sisVsweep=False, high_res_meas=5,
+              TPSampleFrequency=100, TPSampleTime=2,
+              sisVsweep_start=-0.1, sisVsweep_stop=2.5, sisVsweep_step=0.1,
+              sisPot_feedFalse_start=65100, sisPot_feedFalse_stop=57000, sisPot_feedFalse_step=100,
+              sisPot_feedTrue_start=60000, sisPot_feedTrue_stop=54110, sisPot_feedTrue_step=200,
+              getspecs=False, spec_linear_sc=True, spec_freq_start=0, spec_freq_stop=6,
+              spec_sweep_time='AUTO', spec_video_band=100, spec_resol_band=100,
+              spec_attenu=0, lin_ref_lev=500, aveNum=8,
+              Kaxis=0, sisVaxis=1, magaxis=2, LOpowaxis=3, LOfreqaxis=4, IFbandaxis=5,
+              K_list=[296, 77],
+              LOfreq_start=672, LOfreq_stop=672, LOfreq_step=0.25,
+              IFband_start=1.42, IFband_stop=1.42, IFband_step=0.10,
+              do_magisweep=False, mag_meas=10,
+              magisweep_start=40, magisweep_stop=29, magisweep_step=1,
+              magpotsweep_start=40000, magpotsweep_stop=0, magpotsweep_step=-4000,
+              do_LOuAsearch=True, UCA_meas=10,
+              LOuAsearch_start=12, LOuAsearch_stop=12, LOuAsearch_step=1,
+              LOuA_magpot=1000, LOuA_set_pot=56800,
+              UCAsweep_min=0.00, UCAsweep_max=0.00, UCAsweep_step=0.05,
+              sweepShape="rectangular",
+              FinishedEmail=False, FiveMinEmail=False, PeriodicEmail=False,
+              seconds_per_email=1800, chopper_off=False, do_LOuApresearch=False, biastestmode=False)
+
 
 if do_YdataPro:
     YdataPro(datadir, verbose=True, search_4Ynums=True, search_str='Y', Ynums=[], useOFFdata=False, Off_datadir='',
