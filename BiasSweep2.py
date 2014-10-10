@@ -1,3 +1,5 @@
+import numpy
+
 def MakeSetDirs(datadir):
     # does the datadir exist? If not, we will make it!
     import os
@@ -112,6 +114,31 @@ def makeparamslist_Rec(lists):
                 temp_list = temp_list*listn_len
                 new_listnplusone.extend(temp_list)
             master_lists.append(new_listnplusone)
+    return master_lists
+
+def order_lists_around_center(the_list):
+
+    reordered_list = []
+    the_array = numpy.array(the_list)
+    array_len = len(the_array)
+    array_center = abs(the_array[0]+the_array[-1])/2.0
+    diff_from_center = the_list-array_center
+
+    for the_index in range(array_len):
+        None
+
+
+    return reordered_list
+
+def makeparamslist_center(lists):
+    master_lists = []
+    listn = lists[0]
+    listn_len = len(listn)
+    listn_center = abs(listn[0]+listn[-1])/2.0
+
+
+
+
     return master_lists
 
 def fbmsg(feedback):
@@ -231,7 +258,6 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
               FinishedEmail=False, FiveMinEmail=False, PeriodicEmail=False,
               seconds_per_email=1200, chopper_off=False, do_LOuApresearch=True, biastestmode=False):
     import time
-    import numpy
     import sys
     from sys import platform
     import os

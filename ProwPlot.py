@@ -64,7 +64,7 @@ if all_Ydata:
     do_YfactotSweepsPlotter = True
     do_YSpectra_Plotter     = True
 
-folder_name = 'magsweep'
+folder_name = 'LOfreqsweep'
 
 # The directory what the data is kept
 if platform == 'win32':
@@ -75,7 +75,7 @@ elif platform == 'darwin':
 from BiasSweep2 import BiasSweep
 if do_sweeps:
     BiasSweep(datadir, verbose=False, verboseTop=True, verboseSet=True, careful=False,
-              sweepNstart=1, Ynum=1, testmode=False, warmmode=False,
+              sweepNstart=0, Ynum=0, testmode=False, warmmode=False,
               do_fastsweep=True, do_unpumpedsweep=True, fastsweep_feedback=False,
               SweepStart_feedTrue=65000, SweepStop_feedTrue=52000, SweepStep_feedTrue=500,
               SweepStart_feedFalse=65100, SweepStop_feedFalse=57000, SweepStep_feedFalse=100,
@@ -89,17 +89,17 @@ if do_sweeps:
               spec_attenu=0, lin_ref_lev=500, aveNum=8,
               Kaxis=0, sisVaxis=1, magaxis=2, LOpowaxis=3, LOfreqaxis=4, IFbandaxis=5,
               K_list=[296, 77],
-              LOfreq_start=672, LOfreq_stop=672, LOfreq_step=0.25,
+              LOfreq_start=650, LOfreq_stop=692, LOfreq_step=0.25,
               IFband_start=1.42, IFband_stop=1.42, IFband_step=0.10,
               do_magisweep=False, mag_meas=10,
               magisweep_start=40, magisweep_stop=29, magisweep_step=1,
-              magpotsweep_start=40000, magpotsweep_stop=0, magpotsweep_step=-4000,
+              magpotsweep_start=1000, magpotsweep_stop=1000, magpotsweep_step=-4000,
               do_LOuAsearch=True, UCA_meas=10,
-              LOuAsearch_start=12, LOuAsearch_stop=12, LOuAsearch_step=1,
+              LOuAsearch_start=12, LOuAsearch_stop=12, LOuAsearch_step=-1,
               LOuA_magpot=1000, LOuA_set_pot=56800,
               UCAsweep_min=0.00, UCAsweep_max=0.00, UCAsweep_step=0.05,
               sweepShape="rectangular",
-              FinishedEmail=False, FiveMinEmail=False, PeriodicEmail=False,
+              FinishedEmail=True, FiveMinEmail=True, PeriodicEmail=True,
               seconds_per_email=1800, chopper_off=False, do_LOuApresearch=False, biastestmode=False)
 
 
