@@ -17,8 +17,8 @@ do_SimpleSweepPlot     = False
 do_SingeSpectraPlotter = False
 
 ### For Y-factor data and Sweeps ###
-do_sweeps               = True
-do_YdataPro             = True
+do_sweeps               = False
+do_YdataPro             = False
 do_YfactotSweepsPlotter = True
 do_YSpectra_Plotter     = False
 
@@ -64,13 +64,15 @@ if all_Ydata:
     do_YfactotSweepsPlotter = True
     do_YSpectra_Plotter     = True
 
-folder_name = 'LOfreqsweep'
+
+folder_name = 'Oct06_14/test'
+#folder_name = 'set4'
 
 # The directory what the data is kept
 if platform == 'win32':
-    datadir = 'C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\sweep\\Oct06_14\\'+folder_name+'\\'
+    datadir = 'C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\sweep\\'+folder_name+'\\'
 elif platform == 'darwin':
-    datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Oct06_14/'+folder_name+'/'
+    datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/'+folder_name+'/'
 
 from BiasSweep2 import BiasSweep
 if do_sweeps:
@@ -110,14 +112,16 @@ if do_YdataPro:
              sigma_GHz=0.10)
 
 if do_YfactotSweepsPlotter:
-    YfactorSweepsPlotter(datadir, search_4Ynums=True, Ynums='', verbose=True, mV_min=-1, mV_max=9,
+    YfactorSweepsPlotter(datadir, search_4Ynums=True, Ynums='', verbose=True, mV_min=-0, mV_max=None,
                          show_standdev=False, std_num=1,
                          display_params=True, show_plot=False, save_plot=True, do_eps=False,
-                         plot_mVuA=True, plot_mVtp=True, plot_Yfactor=False, plot_Ntemp=False,
-                         plot_fastmVuA=True, plot_fastmVtp=True, plot_fastmVpot=True,
-                         plot_unpumpmVuA=True, plot_unpumpmVtp=False, plot_unpumpmVpot=False,
+                         plot_mVuA=True, plot_mVtp=True, plot_Yfactor=True, plot_Ntemp=False,
                          find_lin_mVuA=False, find_lin_mVtp=False, find_lin_Yf=False,
-                         linif=0.3, der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
+                         plot_fastmVuA=True, plot_fastmVtp=False, plot_fastmVpot=False,
+                         hotfast_find_lin_mVuA=False, coldfast_find_lin_mVuA=False,
+                         plot_unpumpmVuA=True, plot_unpumpmVtp=False, plot_unpumpmVpot=False,
+                         hotunpumped_find_lin_mVuA=True, coldunpumped_find_lin_mVuA=False,
+                         linif=0.4, der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
                          der2_int=1, do_der2_conv=True, der2_min_cdf=0.95, der2_sigma=0.05,
                          do_Ycut=False, start_Yplot=1, end_Yplot=2)
 

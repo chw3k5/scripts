@@ -94,9 +94,7 @@ def DataTrimmer(min_trim, max_trim, ordered_set, trim_list):
                     print "returning status=False"
                     status = False
             else:
-                print min_trim, "=mV_min is greater than the max value of mV for a sweep:", set_max
-                print "returning status=False"
-                status = False
+                trimmed = min_trimmed
     else:
         trimmed = ordered_set
 
@@ -653,9 +651,13 @@ def fastplotgen(mV,uA,tp,pot,
                 xscale_info=[],yscale_info=[],
                 labelPrefix='',type_label='',
                 plot_mVuA=False, plot_mVtp=False, plot_mVpot=False,
-                mVuA_color='blue', mVtp_color='red',mVpot_color='black',
-                mVuA_ls='solid', mVtp_ls='solid', mVpot_ls='solid',
-                mVuA_linw=1, mVtp_linw=1, mVpot_linw=1,
+                find_lin_mVuA=False,
+                mVuA_color='blue', mVtp_color='red',mVpot_color='black', find_lin_color='black',
+                mVuA_ls='solid', mVtp_ls='solid', mVpot_ls='solid', find_lin_ls='solid',
+                mVuA_linw=1, mVtp_linw=1, mVpot_linw=1, find_lin_linw=1,
+                linif=0.3,
+                der1_int=1, do_der1_conv=False, der1_min_cdf=0.9, der1_sigma=0.05,
+                der2_int=1, do_der2_conv=False, der2_min_cdf=0.9, der2_sigma=0.1,
                 verbose=False):
     # The trimming part of the script for mV values on the X-axis
     if ((mV_min is None) and (mV_max is None)):
@@ -689,12 +691,28 @@ def fastplotgen(mV,uA,tp,pot,
         y_vector  = uA
         yscale_info.append((scale_str, min(y_vector), max(y_vector)))
 
-        y_vector_list.append(list(y_vector))
-        label_list.append(labelPrefix+' '+type_label+' '+scale_str)
-        color_list.append(mVuA_color)
-        linw_list.append(mVuA_linw)
-        ls_list.append(mVuA_ls)
-        scale_str_list.append(scale_str)
+        #y_vector_list.append(list(y_vector))
+        #label_list.append(labelPrefix+' '+type_label+' '+scale_str)
+        #color_list.append(mVuA_color)
+        #linw_list.append(mVuA_linw)
+        #ls_list.append(mVuA_ls)
+        #scale_str_list.append(scale_str)
+
+
+        plot_list, leglines, leglabels \
+            = allstarplotgen(x_vector, y_vector, y_std=None, std_num=1,
+                             plot_list=plot_list, leglines=leglines, leglabels=leglabels,
+                             show_std=False, find_lin=find_lin_mVuA,
+                             label=labelPrefix+' '+type_label+' '+scale_str, std_label='', lin_label=' Ohms',
+                             color=mVuA_color, lin_color=find_lin_color,
+                             linw=mVuA_linw, std_linw=1, lin_linw=find_lin_linw,
+                             ls=mVuA_ls, std_ls='dotted', lin_ls=find_lin_ls,
+                             scale_str=scale_str, linif=linif,
+                             der1_int=der1_int, do_der1_conv=do_der1_conv, der1_min_cdf=der1_min_cdf, der1_sigma=der1_sigma,
+                             der2_int=der2_int, do_der2_conv=do_der2_conv, der2_min_cdf=der2_min_cdf, der2_sigma=der2_sigma,
+                             verbose=verbose)
+
+
     if plot_mVtp:
         scale_str = 'tp'
         y_vector  = tp
@@ -814,7 +832,9 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                          show_plot=False, save_plot=True, do_eps=True,
                          plot_mVuA=True, plot_mVtp=True, plot_Yfactor=False, plot_Ntemp=False,
                          plot_fastmVuA=False, plot_fastmVtp=False, plot_fastmVpot=False,
+                         hotfast_find_lin_mVuA=False, coldfast_find_lin_mVuA=False,
                          plot_unpumpmVuA=False, plot_unpumpmVtp=False, plot_unpumpmVpot=False,
+                         hotunpumped_find_lin_mVuA=False, coldunpumped_find_lin_mVuA=False,
                          find_lin_mVuA=False, find_lin_mVtp=False, find_lin_Yf=False,
                          linif=0.3,
                          der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
@@ -837,7 +857,7 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
     ### Plot Options ###
     # Astro Data
     hotmVuA_color = 'red'
-    hotmVuA_linw  = 3
+    hotmVuA_linw  = 5
     hotmVuA_ls    = 'solid'
 
     hotmVtp_color = 'blue'
@@ -845,7 +865,7 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
     hotmVtp_ls    = 'solid'
 
     coldmVuA_color = 'coral'
-    coldmVuA_linw  = 2
+    coldmVuA_linw  = 4
     coldmVuA_ls    = 'solid'
 
     coldmVtp_color = 'dodgerblue'
@@ -914,7 +934,7 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
     std_linw  = 1
 
     lin_color = 'black'
-    lin_linw  = 1
+    lin_linw  = 6
     lin_ls    = '-'
 
     ### Labels ###
@@ -928,7 +948,7 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
     ax2_ylabel = 'Y-Factor'
 
     ### Legend ###
-    legendsize = 10
+    legendsize = 8
     legendloc  = 4
 
     ### Axis Limits ###
@@ -1069,7 +1089,7 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                                   verbose=verbose)
 
 
-        if Ydatafound:
+        if ((Ydatafound) and (plot_Yfactor)):
             if show_standdev:
                 y_std = properrors(cold_TP_mean,cold_TP_std,hot_TP_mean,hot_TP_std,Yfactor)
             else:
@@ -1124,9 +1144,13 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                               xscale_info=xscale_info, yscale_info=ax1_yscale_info,
                               labelPrefix=hot_labelPrefix,type_label=type_label,
                               plot_mVuA=plot_fastmVuA, plot_mVtp=plot_fastmVtp, plot_mVpot=plot_fastmVpot,
-                              mVuA_color=hotfast_mVuA_color, mVtp_color=hotfast_mVtp_color,mVpot_color=hotfast_mVpot_color,
-                              mVuA_ls=hotfast_mVuA_ls, mVtp_ls=hotfast_mVtp_ls, mVpot_ls=hotfast_mVpot_ls,
-                              mVuA_linw=hotfast_mVuA_linw, mVtp_linw=hotfast_mVtp_linw, mVpot_linw=hotfast_mVpot_linw,
+                              find_lin_mVuA=hotfast_find_lin_mVuA,
+                              mVuA_color=hotfast_mVuA_color, mVtp_color=hotfast_mVtp_color,mVpot_color=hotfast_mVpot_color, find_lin_color=lin_color,
+                              mVuA_ls=hotfast_mVuA_ls, mVtp_ls=hotfast_mVtp_ls, mVpot_ls=hotfast_mVpot_ls, find_lin_ls=lin_ls,
+                              mVuA_linw=hotfast_mVuA_linw, mVtp_linw=hotfast_mVtp_linw, mVpot_linw=hotfast_mVpot_linw, find_lin_linw=lin_linw,
+                              linif=linif,
+                              der1_int=der1_int, do_der1_conv=do_der1_conv, der1_min_cdf=der1_min_cdf, der1_sigma=der1_sigma,
+                              der2_int=der2_int, do_der2_conv=do_der2_conv, der2_min_cdf=der2_min_cdf, der2_sigma=der2_sigma,
                               verbose=verbose)
 
         if cold_fastprodata_found:
@@ -1138,9 +1162,13 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                               xscale_info=xscale_info, yscale_info=ax1_yscale_info,
                               labelPrefix=cold_labelPrefix,type_label=type_label,
                               plot_mVuA=plot_fastmVuA, plot_mVtp=plot_fastmVtp, plot_mVpot=plot_fastmVpot,
-                              mVuA_color=coldfast_mVuA_color, mVtp_color=coldfast_mVtp_color,mVpot_color=coldfast_mVpot_color,
-                              mVuA_ls=coldfast_mVuA_ls, mVtp_ls=coldfast_mVtp_ls, mVpot_ls=coldfast_mVpot_ls,
-                              mVuA_linw=coldfast_mVuA_linw, mVtp_linw=coldfast_mVtp_linw, mVpot_linw=coldfast_mVpot_linw,
+                              find_lin_mVuA=coldfast_find_lin_mVuA,
+                              mVuA_color=coldfast_mVuA_color, mVtp_color=coldfast_mVtp_color,mVpot_color=coldfast_mVpot_color, find_lin_color=lin_color,
+                              mVuA_ls=coldfast_mVuA_ls, mVtp_ls=coldfast_mVtp_ls, mVpot_ls=coldfast_mVpot_ls, find_lin_ls=lin_ls,
+                              mVuA_linw=coldfast_mVuA_linw, mVtp_linw=coldfast_mVtp_linw, mVpot_linw=coldfast_mVpot_linw, find_lin_linw=lin_linw,
+                              linif=linif,
+                              der1_int=der1_int, do_der1_conv=do_der1_conv, der1_min_cdf=der1_min_cdf, der1_sigma=der1_sigma,
+                              der2_int=der2_int, do_der2_conv=do_der2_conv, der2_min_cdf=der2_min_cdf, der2_sigma=der2_sigma,
                               verbose=verbose)
 
         if hot_unpumpedprodata_found:
@@ -1152,9 +1180,13 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                               xscale_info=xscale_info, yscale_info=ax1_yscale_info,
                               labelPrefix=hot_labelPrefix,type_label=type_label,
                               plot_mVuA=plot_unpumpmVuA, plot_mVtp=plot_unpumpmVtp, plot_mVpot=plot_unpumpmVpot,
-                              mVuA_color=hotunpump_mVuA_color, mVtp_color=hotunpump_mVtp_color,mVpot_color=hotunpump_mVpot_color,
-                              mVuA_ls=hotunpump_mVuA_ls, mVtp_ls=hotunpump_mVtp_ls, mVpot_ls=hotunpump_mVpot_ls,
-                              mVuA_linw=hotunpump_mVuA_linw, mVtp_linw=hotunpump_mVtp_linw, mVpot_linw=hotunpump_mVpot_linw,
+                              find_lin_mVuA=hotunpumped_find_lin_mVuA,
+                              mVuA_color=hotunpump_mVuA_color, mVtp_color=hotunpump_mVtp_color,mVpot_color=hotunpump_mVpot_color, find_lin_color=lin_color,
+                              mVuA_ls=hotunpump_mVuA_ls, mVtp_ls=hotunpump_mVtp_ls, mVpot_ls=hotunpump_mVpot_ls, find_lin_ls=lin_ls,
+                              mVuA_linw=hotunpump_mVuA_linw, mVtp_linw=hotunpump_mVtp_linw, mVpot_linw=hotunpump_mVpot_linw, find_lin_linw=lin_linw,
+                              linif=linif,
+                              der1_int=der1_int, do_der1_conv=do_der1_conv, der1_min_cdf=der1_min_cdf, der1_sigma=der1_sigma,
+                              der2_int=der2_int, do_der2_conv=do_der2_conv, der2_min_cdf=der2_min_cdf, der2_sigma=der2_sigma,
                               verbose=verbose)
 
         if cold_unpumpedprodata_found:
@@ -1166,9 +1198,13 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                               xscale_info=xscale_info, yscale_info=ax1_yscale_info,
                               labelPrefix=cold_labelPrefix,type_label=type_label,
                               plot_mVuA=plot_unpumpmVuA, plot_mVtp=plot_unpumpmVtp, plot_mVpot=plot_unpumpmVpot,
-                              mVuA_color=coldunpump_mVuA_color, mVtp_color=coldunpump_mVtp_color,mVpot_color=coldunpump_mVpot_color,
-                              mVuA_ls=coldunpump_mVuA_ls, mVtp_ls=coldunpump_mVtp_ls, mVpot_ls=coldunpump_mVpot_ls,
-                              mVuA_linw=coldunpump_mVuA_linw, mVtp_linw=coldunpump_mVtp_linw, mVpot_linw=coldunpump_mVpot_linw,
+                              find_lin_mVuA=coldunpumped_find_lin_mVuA,
+                              mVuA_color=coldunpump_mVuA_color, mVtp_color=coldunpump_mVtp_color,mVpot_color=coldunpump_mVpot_color, find_lin_color=lin_color,
+                              mVuA_ls=coldunpump_mVuA_ls, mVtp_ls=coldunpump_mVtp_ls, mVpot_ls=coldunpump_mVpot_ls, find_lin_ls=lin_ls,
+                              mVuA_linw=coldunpump_mVuA_linw, mVtp_linw=coldunpump_mVtp_linw, mVpot_linw=coldunpump_mVpot_linw, find_lin_linw=lin_linw,
+                              linif=linif,
+                              der1_int=der1_int, do_der1_conv=do_der1_conv, der1_min_cdf=der1_min_cdf, der1_sigma=der1_sigma,
+                              der2_int=der2_int, do_der2_conv=do_der2_conv, der2_min_cdf=der2_min_cdf, der2_sigma=der2_sigma,
                               verbose=verbose)
 
 
