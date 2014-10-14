@@ -65,8 +65,10 @@ if all_Ydata:
     do_YSpectra_Plotter     = True
 
 
-folder_name = 'Oct06_14/test'
-#folder_name = 'set4'
+#folder_name = 'Oct06_14/test'
+folder_names = 'LOfreq'
+
+
 
 # The directory what the data is kept
 if platform == 'win32':

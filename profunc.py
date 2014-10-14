@@ -560,11 +560,8 @@ def getproSweep(datadir):
         uA_std    = temp.uA_std
         TP_mean   = temp.TP_mean
         TP_std    = temp.TP_std
-        TP_num    = temp.TP_num
-        TP_freq   = temp.TP_freq
         time_mean = temp.time_mean
         pot       = temp.pot
-        meas_num  = temp.meas_num
         astroprodata_found = True
     else:
         mV_mean   = None
@@ -573,15 +570,12 @@ def getproSweep(datadir):
         uA_std    = None
         TP_mean   = None
         TP_std    = None
-        TP_num    = None
-        TP_freq   = None
         time_mean = None
         pot       = None
-        meas_num  = None
         astroprodata_found = False
     
-    return mV_mean, mV_std,  uA_mean, uA_std,TP_mean, TP_std, TP_num, TP_freq, \
-    time_mean, pot, meas_num, astroprodata_found
+    return mV_mean, mV_std,  uA_mean, uA_std,TP_mean, TP_std, \
+    time_mean, pot, astroprodata_found
      
 def getproYdata(datadir):
     hotdatafile  = datadir + 'hotdata.csv'
