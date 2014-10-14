@@ -192,7 +192,7 @@ elif monitor_type == 'cold':
     make_plots    = False
     max_count     = 5 # in loops (set to -1 to set to infinity)
     max_time      = 60 # in seconds (set to -1 to set to infinity)
-    monitor_time  = 4*24*60*60 # in seconds (This is the total time that is script will monitor temperatures from the Lakeshore monitor)
+    monitor_time  = 21*24*60*60 # in seconds (This is the total time that is script will monitor temperatures from the Lakeshore monitor)
     monitor_sleep = 10*60   # in seconds
     Nsecs         =  1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
     start_email   = True

@@ -119,22 +119,21 @@ def makeparamslist_Rec(lists):
 def order_lists_around_center(the_list):
 
     reordered_list = []
-    the_array = numpy.array(the_list)
-    array_len = len(the_array)
-    array_center = abs(the_array[0]+the_array[-1])/2.0
-    diff_from_center = the_list-array_center
-
-    for the_index in range(array_len):
-        None
-
-
+    #the_array = numpy.array(the_list)
+    list_center = abs(the_list[0]+the_list[-1])/2.0
+    diff_from_center = the_list-list_center
+    for diff_val in sorted(diff_from_center):
+        val_index = diff_from_center.index(diff_val)
+        reordered_list.append(the_list[val_index])
     return reordered_list
 
 def makeparamslist_center(lists):
     master_lists = []
     listn = lists[0]
     listn_len = len(listn)
-    listn_center = abs(listn[0]+listn[-1])/2.0
+    for a_list in lists:
+        ordered_list = order_lists_around_center(a_list)
+        ordered_lists.ordered
 
 
 
@@ -276,6 +275,9 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
     ##############################################
     if not testmode:
         opentelnet()
+    if biastestmode==True:
+        do_LOuAsearch    = False
+        do_LOuApresearch = False
 
 
     #try:
