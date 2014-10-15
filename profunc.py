@@ -6,7 +6,15 @@ from sys import platform
 from domath import regrid, conv, FindOverlap # Caleb's Programs
 from operator import itemgetter
 
+def windir(filepath):
+    tempfilepath = filepath.replace('/Users/chw3k5/Documents/Grad_School/', 'C:\\Users\\MtDewar\\Documents\\')
+    tempfilepath = tempfilepath.replace('IVsweep','sweep')
+    winfilepath  = tempfilepath.replace('/','\\')
+    return winfilepath
+
 def getparams(filename):
+    if platform == 'win32':
+        filename = windir(filename)
     K_val        = None
     magisweep    = None
     magiset      = None
@@ -58,6 +66,8 @@ def getparams(filename):
     return K_val, magisweep, magiset, magpot, LOuAsearch, LOuAset, UCA_volt, LOuA_set_pot, LOuA_magpot, LOfreq, IFband
     
 def getproparams(filename):
+    if platform == 'win32':
+        filename = windir(filename)
     K_val        = None
     magisweep    = None
     magiset      = None
@@ -160,6 +170,9 @@ def getproparams(filename):
            del_time, LOfreq, IFband, meas_num, TP_int_time, TP_num, TP_freq
 
 def getmultiParams(ParamsFile_list):
+    if platform == 'win32':
+        ParamsFile_list = [windir(ParamsFile) for ParamsFile in ParamsFile_list[:]]
+
     K_val        = []
     magisweep    = []
     magiset      = []
@@ -450,6 +463,8 @@ def getmultiParams(ParamsFile_list):
 
 
 def get_fastIV(filename):
+    if platform == 'win32':
+        filename = windir(filename)
     mV   = []
     uA   = []
     tp   = []
@@ -466,6 +481,8 @@ def get_fastIV(filename):
     return mV, uA, tp, pot
   
 def getSISdata(filename):
+    if platform == 'win32':
+        filename = windir(filename)
     mV   = []
     uA   = []
     tp   = []
@@ -484,6 +501,8 @@ def getSISdata(filename):
     return mV, uA, tp, pot, time
     
 def getmagdata(filename):
+    if platform == 'win32':
+        filename = windir(filename)
     V   = []
     mA  = []
     pot = []
@@ -498,6 +517,8 @@ def getmagdata(filename):
     return V, mA, pot
     
 def getLJdata(filename):
+    if platform == 'win32':
+        filename = windir(filename)
     if platform == 'win32':
         tempfilename = 'C:\\Users\\MtDewar\\Documents\\deleteME.csv'
     elif platform == 'darwin':
@@ -526,6 +547,8 @@ def getLJdata(filename):
     return TP, TP_freq
 
 def renamespec(filename):
+    if platform == 'win32':
+        filename = windir(filename)
     old = open(filename, 'r')
     t = open('temp.csv', 'w')
     first = True
@@ -544,6 +567,8 @@ def renamespec(filename):
 
 
 def readspec(filename):
+    if platform == 'win32':
+        filename = windir(filename)
     data = atpy.Table(filename, type="ascii", delimiter=",")
     freqs = data.GHz
     pwr  = data.pwr
@@ -552,6 +577,8 @@ def readspec(filename):
 
 def getproSweep(datadir):
     datafile  = datadir + 'data.csv'
+    if platform == 'win32':
+        datafile = windir(datafile)
     if os.path.exists(datafile):
         temp = atpy.Table(datafile, type="ascii", delimiter=",")
         mV_mean   = temp.mV_mean
@@ -578,6 +605,8 @@ def getproSweep(datadir):
     time_mean, pot, astroprodata_found
      
 def getproYdata(datadir):
+    if platform == 'win32':
+        datadir = windir(datadir)
     hotdatafile  = datadir + 'hotdata.csv'
     colddatafile = datadir + 'colddata.csv'
     Ydatafile    = datadir + 'Ydata.csv'
@@ -699,6 +728,8 @@ def getproYdata(datadir):
            hotdatafound, colddatafound, Ydatafound
     
 def getYnums(datadir, search_str):
+    if platform == 'win32':
+        datadir = windir(datadir)
     # get the Y numbers from the directory names in the datadir directory
     alldirs = []
     for root, dirs, files in os.walk(datadir):
@@ -720,6 +751,8 @@ def getYnums(datadir, search_str):
     return Ynums
     
 def getSnums(datadir):
+    if platform == 'win32':
+        datadir = windir(datadir)
     search_str = 'Y'
     # get the Y numbers from the directory names in the datadir directory
     alldirs = []
@@ -742,12 +775,12 @@ def getSnums(datadir):
     return Snums
 
 def GetProDirsNames(datadir, search_4nums, nums):
+    prodatadir = datadir + 'prodata/'
+    plotdir    = datadir + 'plots/'
     if platform == 'win32':
-        prodatadir = datadir + 'prodata\\'
-        plotdir    = datadir + 'plots\\'
-    elif platform == 'darwin':
-        prodatadir = datadir + 'prodata/'
-        plotdir    = datadir + 'plots/'
+        prodatadir = windir(prodatadir)
+        plotdir    = windir(plotdir)
+
     if os.path.isdir(plotdir):
         None
         # remove old processed data
@@ -762,7 +795,18 @@ def GetProDirsNames(datadir, search_4nums, nums):
         alldirs = []
         for root, dirs, files in os.walk(prodatadir):
             alldirs.append(dirs)
-        nums = alldirs[0]
+        try:
+            nums = alldirs[0]
+        except IndexError:
+            print "The variable alldir[0] causes an IndexError, the value of alldir is :"
+            print alldirs
+            print "Check the directories prodatadir:"
+            print prodatadir
+            print "and plotdir:"
+            print plotdir
+            print "to see if they have the directories you are searching for"
+            print "Killing script"
+            sys.exit()
     return nums, prodatadir, plotdir
 
 

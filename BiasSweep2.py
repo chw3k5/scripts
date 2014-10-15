@@ -1,45 +1,46 @@
-import numpy
+import os, sys, numpy, time
+from sys import platform
+# Caleb's Programs
+from profunc import windir
+from LabJack_control import LabJackU3_DAQ0, LJ_streamTP
+from control import  opentelnet, closetelnet, measmag, setmagI, setmag_highlow, setfeedback, \
+    setSIS_only, setSIS_Volt, setLOI, measSIS_TP, zeropots
+from LOinput import RFon, RFoff, setfreq
+from email_sender   import email_caleb
+from fastSISsweep   import getfastSISsweep
+from getspec import getspecPlusTP
 
 def MakeSetDirs(datadir):
     # does the datadir exist? If not, we will make it!
-    import os
-    from sys import platform
+    rawdatadir = datadir+'rawdata/'
     if platform == 'win32':
-        if not os.path.isdir(datadir):
-            os.makedirs(datadir)
-        if not os.path.isdir(datadir+'rawdata/'):
-            os.makedirs(datadir+'rawdata/')
-    elif platform == 'darwin':
-        if not os.path.isdir(datadir):
-            os.makedirs(datadir)
-        if not os.path.isdir(datadir+'rawdata\\'):
-            os.makedirs(datadir+'rawdata\\')
-    #LOrefdir = datadir + "rawdata/LOpowerSettings/"
-    #if not os.path.isdir(LOrefdir):
-    #    os.makedirs(LOrefdir)
+        datadir    = windir(datadir)
+        rawdatadir = windir(rawdatadir)
+    if not os.path.isdir(datadir):
+        os.makedirs(datadir)
+    if not os.path.isdir(rawdatadir):
+        os.makedirs(rawdatadir)
     return
 
 def makeLists(start, stop, step):
-    from numpy import arange
     step = abs(step)
     newlist = []
     if start < stop:
         if (isinstance(start, int) and isinstance(stop, int) and isinstance(step, int)):
             newlist = range(start, stop, step)
         else:
-            newlist = arange(start, stop, step)
+            newlist = numpy.arange(start, stop, step)
     elif stop < start:
         step = step*-1
         if (isinstance(start, int) and isinstance(stop, int) and isinstance(step, int)):
             newlist = range(start, stop, step)
         else:
-            newlist = arange(start, stop, step)
+            newlist = numpy.arange(start, stop, step)
     elif start == stop:
         newlist = [start]
     return newlist
 
 def orderLists(master_list_input):
-    import sys
     axis_list = []
     unordered_lists = []
     num_of_lists = len(master_list_input)
@@ -133,7 +134,7 @@ def makeparamslist_center(lists):
     listn_len = len(listn)
     for a_list in lists:
         ordered_list = order_lists_around_center(a_list)
-        ordered_lists.ordered
+        #ordered_lists.ordered
 
 
 
@@ -256,31 +257,21 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
               sweepShape="rectangular",
               FinishedEmail=False, FiveMinEmail=False, PeriodicEmail=False,
               seconds_per_email=1200, chopper_off=False, do_LOuApresearch=True, biastestmode=False):
-    import time
-    import sys
-    from sys import platform
-    import os
-    from LabJack_control import LabJackU3_DAQ0, LJ_streamTP
-    from control import  opentelnet, closetelnet, measmag, setmagI, setmag_highlow, setfeedback, \
-        setSIS_only, setSIS_Volt, setLOI, measSIS_TP, zeropots
-    from LOinput import RFon, RFoff, setfreq
+
     if ((not testmode) and (not chopper_off)):
         from StepperControl import initialize, GoForth, GoBack, DisableDrive
-    from email_sender   import email_caleb
-    from fastSISsweep   import getfastSISsweep
-    from getspec import getspecPlusTP
-    import telnetlib
     ##############################################
     ###### Connect to the THz bias Computer ######
     ##############################################
+
     if not testmode:
         opentelnet()
+
+    #try:
+
     if biastestmode==True:
         do_LOuAsearch    = False
         do_LOuApresearch = False
-
-
-    #try:
 
 
     # initialize some variables
@@ -311,10 +302,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
     ##########################
     #### does the datadir exist? If not, we will make it!
     MakeSetDirs(datadir)
-    if platform == 'win32':
-        rawdir = datadir + "rawdata\\"
-    elif platform == 'darwin':
-        rawdir = datadir + "rawdata/"
+    rawdir = datadir + "rawdata/"
 
     #### make the parameter lists from user specified parameters
     # SIS bias
@@ -723,31 +711,24 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
                     Ynum     = Ynum + 1
                     Ynum_str = 'Y' + str('%04.f' % Ynum)
                 # make a new directory for the Y data
+                Ypath = rawdir + Ynum_str + '/'
                 if platform == 'win32':
-                    Ypath = rawdir + Ynum_str + '\\'
-                elif platform == 'darwin':
-                    Ypath = rawdir + Ynum_str + '/'
+                    Ypath = windir(Ypath)
                 if not os.path.isdir(Ypath):
                     os.makedirs(Ypath)
             # determine if this is a hot of cold measurement
             if 250 < K_thisloop:
-                if platform == 'win32':
-                    filepath = Ypath + 'hot\\'
-                elif platform == 'darwin':
-                    filepath = Ypath + 'hot/'
+                filepath = Ypath + 'hot/'
             elif K_thisloop <= 250:
-                if platform == 'win32':
-                    filepath = Ypath + 'cold\\'
-                elif platform == 'darwin':
-                    filepath = Ypath + 'cold/'
+                filepath = Ypath + 'cold/'
         else:
             # each sweep gets it own folder if there is no Y factors to consider
             if sisVsweep_trigger == sisPot_thisloop:
                 sweepN = sweepN + 1
-            if platform == 'win32':
-                filepath = rawdir + str('%05.f' % sweepN) + '\\'
-            elif platform == 'darwin':
-                filepath = rawdir + str('%05.f' % sweepN) + '/'
+            filepath = rawdir + str('%05.f' % sweepN) + '/'
+        # Convert to window file path is using windows
+        if platform == 'win32':
+            filepath = windir(filepath)
 
         if sisVsweep_trigger == sisPot_thisloop:
             # make the sweep directory to store the data
@@ -759,17 +740,14 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
             sisdata_filename  = filepath + "sisdata.csv"
             fast_filename     = filepath + "fastsweep.csv"
             unpumped_filename = filepath + "unpumpedsweep.csv"
-
+        SweepPath = filepath + 'sweep/'
         if platform == 'win32':
-            SweepPath   = filepath + 'sweep\\'
-        elif platform == 'darwin':
-            SweepPath     = filepath + 'sweep/'
+            SweepPath = windir(SweepPath)
         # TP_filename is determined below in the take data section
         # SIS_bias_filename is determined in the take data section below TP_filename
         # make the folder where sweep data is to be stored
         if not os.path.isdir(SweepPath):
             os.makedirs(SweepPath)
-
 
         #######################
         ###### Take Data ######
@@ -1068,17 +1046,17 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
                     EmailTrigger = True
 
             if EmailTrigger:
-                e_hours = numpy.floor(ElapsedTime/3600)
-                e_secs  = numpy.mod(ElapsedTime, 3600)
-                e_mins  = numpy.floor(e_secs/60)
-                e_secs  = numpy.mod(ElapsedTime, 60)
+                e_hours = numpy.floor(ElapsedTime/3600.)
+                e_secs  = numpy.mod(ElapsedTime, 3600.)
+                e_mins  = numpy.floor(e_secs/60.)
+                e_secs  = numpy.mod(ElapsedTime, 60.)
                 e_str   = str('%02.f' % e_hours)+' hrs  '+str('%02.f' % e_mins)\
                 +' mins  '+str('%02.f' % e_secs)+' secs  is the elapsed time \n'
 
-                r_hours = numpy.floor(RemainingTime/3600)
-                r_secs  = numpy.mod(RemainingTime, 3600)
-                r_mins  = numpy.floor(r_secs/60)
-                r_secs  = numpy.mod(RemainingTime, 60)
+                r_hours = numpy.floor(RemainingTime/3600.)
+                r_secs  = numpy.mod(RemainingTime, 3600.)
+                r_mins  = numpy.floor(r_secs/60.)
+                r_secs  = numpy.mod(RemainingTime, 60.)
                 r_str   = str('%02.f' % r_hours)+' hrs  '+str('%02.f' % r_mins)\
                 +' mins  '+str('%02.f' % r_secs)+' secs  is the estimated \
                 remaining time \n '
@@ -1100,10 +1078,10 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
     if FinishedEmail:
         NowTime       = time.time()
         ElapsedTime   = NowTime - StartTime
-        e_hours = numpy.floor(ElapsedTime/3600)
-        e_secs  = numpy.mod(ElapsedTime,3600)
-        e_mins  = numpy.floor(e_secs/60)
-        e_secs  = numpy.mod(ElapsedTime,60)
+        e_hours = numpy.floor(ElapsedTime/3600.)
+        e_secs  = numpy.mod(ElapsedTime,3600.)
+        e_mins  = numpy.floor(e_secs/60.)
+        e_secs  = numpy.mod(ElapsedTime,60.)
         e_str   = str('%02.f' % e_hours) + ' hrs  ' + str('%02.f' % e_mins)\
         + ' mins  '+str('%02.f' % e_secs)+' secs  is the elapsed time \n '
         email_caleb('Bias Sweep Finished', "The program BaisSweep.py has \
@@ -1111,17 +1089,17 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
     if (verbose or verboseTop):
         print " "
         print "The program BaisSweep.py has reached its end, congratulations!"
-    #finally:
-    #    if ((not testmode) and (not chopper_off)):
-    #        DisableDrive()
-    #        "The command to disable the Stepper Motor drives has been sent"
-    #    if not testmode:
-    #        zeropots(True)
-    #        closetelnet()
-    #    if not biastestmode:
-    #        RFoff()
-    #        print "The RF power to the LO has been turned off."
-    #    print "The 'finally' clause was rasied since the code has run into an exception."
+    # finally:
+    #     if ((not testmode) and (not chopper_off)):
+    #         DisableDrive()
+    #         "The command to disable the Stepper Motor drives has been sent"
+    #     if not testmode:
+    #         zeropots(True)
+    #         closetelnet()
+    #     if not biastestmode:
+    #         RFoff()
+    #         print "The RF power to the LO has been turned off."
+    #     print "The 'finally' clause was raised since the code has run into an exception."
 
     return
     

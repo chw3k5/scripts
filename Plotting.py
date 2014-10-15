@@ -196,10 +196,8 @@ def SimpleSweepPlot(datadir, search_4Snums=False, Snums='', verbose=False, show_
         ####################
         ### Get the Data ###
         ####################
-        if platform == 'win32':
-            proSdatadir  = prodatadir + Snum + '\\'
-        elif platform == 'darwin':
-            proSdatadir  = prodatadir + Snum + '/'
+
+        proSdatadir  = prodatadir + Snum + '/'
 
         ### Get The Astronomy Quality Processed Sweep Data
         mV_mean, mV_std,  uA_mean, uA_std,TP_mean, TP_std, TP_num, TP_freq, \
@@ -989,10 +987,7 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
         ####################
         ### Get the Data ###
         ####################
-        if platform == 'win32':
-            proYdatadir  = prodatadir + Ynum + '\\'
-        elif platform == 'darwin':
-            proYdatadir  = prodatadir + Ynum + '/'
+        proYdatadir  = prodatadir + Ynum + '/'
 
         ######################################
         ###### Astronomy Bias Mode Data ######
@@ -1501,10 +1496,8 @@ def SingleSpectraPlotter(datadir, search_4Snums=False, Snums='', verbose=False,
         if verbose:
             print "ploting Spectra for Snum: " + str(Snum)
 
-        if platform == 'win32':
-            proSdatadir  = prodatadir + Snum + '\\'
-        elif platform == 'darwin':
-            proSdatadir  = prodatadir + Snum + '/'
+
+        proSdatadir  = prodatadir + Snum + '/'
 
         X_file = proSdatadir + "specdata_freq.npy"
         Y_file = proSdatadir + "specdata_mV.npy"
@@ -1596,10 +1589,7 @@ def YSpectraPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False,
         if verbose:
             print "ploting Spectra for Ynum: " + str(Ynum)
 
-        if platform == 'win32':
-            proSdatadir  = prodatadir + Ynum + '\\'
-        elif platform == 'darwin':
-            proSdatadir  = prodatadir + Ynum + '/'
+        proSdatadir  = prodatadir + Ynum + '/'
 
         X_file = proSdatadir + "Y_freq.npy"
         Y_file = proSdatadir + "Y_mV.npy"

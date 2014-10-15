@@ -1,8 +1,3 @@
-##############################################
-##############################################
-########## Local Oscillator Control ##########
-##############################################
-##############################################
 
     # I have to install
     # libusb=1.0 from http://sourceforge.net/projects/libusb/files/libusb-1.0/libusb-1.0.18/
@@ -32,13 +27,23 @@
 
     # AddRequest(ID, LJ_ioPUT_COUNTER_ENABLE,0,1,0,0)
 
+##############################################
+##############################################
+########## Local Oscillator Control ##########
+##############################################
+##############################################
+import u3, time
+from sys import platform
+# Caleb's programs
+from LabJack_config import NumChannels, Resolution, wavenames, loop_max
+from profunc import windir
+
 
 ############################
 ###### LabJackU3_DAQ0 ######
 ############################
 
 def LabJackU3_DAQ0(UCA_voltage):
-    import u3
     status = False
     if (0 <= UCA_voltage) and (UCA_voltage <= 5):
         lj = u3.U3()
@@ -55,7 +60,6 @@ def LabJackU3_DAQ0(UCA_voltage):
 ############################
 
 def LabJackU3_AIN0():
-    import u3
     lj = u3.U3()
     tp = lj.getAIN(0)
     lj.close()
@@ -67,7 +71,7 @@ def LabJackU3_AIN0():
 #########################
 def LJ_streamTP(filename, SampleFrequency, SampleTime, verbose):
     # Peter N. Saeta, 2013 November 11
-    # is a genuis
+    # is a genus
 
     # Caleb Wheeler found this code on the internet and used it like a
     # monkey. Modified May 20, 2014
@@ -79,11 +83,9 @@ def LJ_streamTP(filename, SampleFrequency, SampleTime, verbose):
     # sets the accuracy of the data. The smaller the number, the better
     # the accuracy, but the slower the sampling rate must be. See
     # http://labjack.com/support/u3/users-guide/3.2 for details.
-
-    import u3
-    import time
-    from LabJack_config import NumChannels, Resolution, wavenames, loop_max
-
+    from LabJack_config import wavenames
+    if platform == 'win32':
+        filename = windir(filename)
     # Prepare the u3 interface for streaming
 
     d = u3.U3()        # initialize the interface; assumes a single U3 is plugged in to a USB port
