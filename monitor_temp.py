@@ -111,7 +111,7 @@ elif platform == 'darwin':
     folder ='/Users/chw3k5/Documents/Grad_School/Kappa/temperatureData/Sep06_2014\\'
 
 
-monitor_type = 'cold' # options: 'coolpumpon', 'coolpumpoff', 'LN2fill', 'LHefill', 'almostcold', 'cold', 'fastwarm', 'slowwarm'
+monitor_type = 'fastwarm' # options: 'coolpumpon', 'coolpumpoff', 'LN2fill', 'LHefill', 'almostcold', 'cold', 'fastwarm', 'slowwarm'
 meas_period      = 7.0 # in seconds
 rest_time        = 0.5 # in seconds
 channels = [4,2,3]
@@ -189,7 +189,7 @@ elif monitor_type == 'almostcold':
     low_alarm_temperature  = 3. # in Kelvin
 elif monitor_type == 'cold':
     filename      = monitor_type+'.csv'
-    make_plots    = False
+    make_plots    = True
     max_count     = 5 # in loops (set to -1 to set to infinity)
     max_time      = 60 # in seconds (set to -1 to set to infinity)
     monitor_time  = 21*24*60*60 # in seconds (This is the total time that is script will monitor temperatures from the Lakeshore monitor)
@@ -199,7 +199,7 @@ elif monitor_type == 'cold':
     PeriodicEmail = True
     seconds_per_email      = 4*60*60 #12*60*60 # in seconds
     alarm_channel          = 4
-    high_alarm_temperature = 4.300 # in Kelvin
+    high_alarm_temperature = 5.000 # in Kelvin
     low_alarm_temperature  = 3. # in Kelvin
 elif monitor_type == 'fastwarm':
     filename      = monitor_type+'.csv'
