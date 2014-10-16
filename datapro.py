@@ -1,6 +1,8 @@
-from profunc import getparams, getSISdata, getmagdata, get_fastIV, ProcessMatrix, getLJdata, readspec, renamespec
+from profunc import getparams, getSISdata, getmagdata, get_fastIV, ProcessMatrix, getLJdata, readspec, renamespec, windir
 from domath import conv
 import os, numpy, sys, glob, shutil
+from sys import platform
+
 def ParamsProcessing(dirnames, proparamsfile, verbose):
     params_found        = False
     standSISdata_found  = False
@@ -105,10 +107,9 @@ def ProFastIV(fastIV_filename,  prodataname, mono_switcher, do_regrid, do_conv, 
 
 def AstroDataPro(datadir, proparamsfile, prodataname, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose):
     astrosweep_found = False
-    if sys.platform == 'win32':
-         sweepdir = datadir + 'sweep\\'
-    elif sys.platform == 'darwin':
-        sweepdir = datadir + 'sweep/'
+    sweepdir = datadir + 'sweep/'
+    if platform == 'win32':
+        sweepdir = windir(sweepdir)
     TP_list = glob.glob(sweepdir + "TP*.csv")
     if not TP_list == []:
         astrosweep_found = True
@@ -195,10 +196,10 @@ def GetSpecData(datadir, specdataname, do_norm=True,  norm_freq=1.42, norm_band=
                 do_freq_conv=False, min_cdf_freq=0.90, sigma_GHz=0.05, verbose=False):
     do_renamespec = False
     specsweep_found = False
-    if sys.platform == 'win32':
-         sweepdir = datadir + 'sweep\\'
-    elif sys.platform == 'darwin':
-        sweepdir = datadir + 'sweep/'
+    sweepdir = datadir + 'sweep/'
+    if platform == 'win32':
+        sweepdir = windir(sweepdir)
+
     spec_list = glob.glob(sweepdir + "spec*.csv")
     if not spec_list == []:
         specsweep_found = True
@@ -355,24 +356,12 @@ def SweepPro(datadir, proparamsfile, prodataname_fast, prodataname_unpump, proda
 def SweepDataPro(datadir, verbose=False, search_4Sweeps=True, search_str='Y', Snums=[],
                  mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01, do_conv_mV=False, sigma_mV=0.03, min_cdf_mV=0.95,
                  do_normspectra=False, norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90, sigma_GHz=0.05):
-    
-    # This is the location of the Kappa Scripts on Caleb's Mac
-    if sys.platform == 'win32':
-        func_dir='C:\\Users\\MtDewar\\Documents\\Kappa\\scripts'
-    elif sys.platform == 'darwin':
-        func_dir='/Users/chw3k5/Documents/Grad_School/Kappa/scripts'
-    func_dir_exists=False
-    for n in range(len(sys.path)):
-        if sys.path[n] == func_dir:
-            func_dir_exists=True
-    if not func_dir_exists:
-        sys.path.append(func_dir)
 
-    from profunc import getSnums   
-    if sys.platform == 'win32':
-        prodatadir = datadir + "prodata\\"
-    elif sys.platform == 'darwin':
-        prodatadir = datadir + "prodata/"
+
+    from profunc import getSnums
+    prodatadir = datadir + "prodata/"
+    if platform == 'win32':
+        prodatadir = windir(prodatadir)
     if os.path.isdir(prodatadir):
         # remove old processed data
         shutil.rmtree(prodatadir)
@@ -381,28 +370,25 @@ def SweepDataPro(datadir, verbose=False, search_4Sweeps=True, search_str='Y', Sn
     else:
         # make a folder for new processed data
         os.makedirs(prodatadir)
-    
-    if sys.platform == 'win32':
-        rawdatadir = datadir + "rawdata\\"
-    elif sys.platform == 'darwin':
-        rawdatadir = datadir + "rawdata/"
+
+    rawdatadir = datadir + "rawdata/"
+    if platform == 'win32':
+        rawdatadir = windir(rawdatadir)
     ### Find all the Y## directory if search_4Ynums = True
     if search_4Sweeps:
         Snums = getSnums(rawdatadir)                   
         
     ### step through all the Ynumbers and Process their files
     for Snum in Snums:
-        if sys.platform == 'win32':
-            sweepdir = rawdatadir + Snum + '\\'
-        elif sys.platform == 'darwin':
-            sweepdir = rawdatadir + Snum + '/'
+        sweepdir = rawdatadir + Snum + '/'
+        if platform == 'win32':
+            sweepdir = windir(sweepdir)
         if verbose:
             print 'reducing data in: ' + sweepdir
         # make the directory where this data goes
-        if sys.platform == 'win32':
-            prodatadir = datadir + "prodata\\" + Snum + '\\'
-        elif sys.platform == 'darwin':
-            prodatadir = datadir + "prodata/" + Snum + '/'
+        prodatadir = datadir + "prodata/" + Snum + '/'
+        if platform == 'win32':
+            prodatadir = windir(prodatadir)
         if not os.path.isdir(prodatadir):
             os.makedirs(prodatadir)
         #####################################
@@ -429,25 +415,14 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
              mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01, do_conv_mV=False, sigma_mV=0.03, min_cdf_mV=0.95,
              do_normspectra=False, norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90,
              sigma_GHz=0.05):
-    
-    # This is the location of the Kappa Scripts on Caleb's Mac
-    if sys.platform == 'win32':
-        func_dir='C:\\Users\\MtDewar\\Documents\\Kappa\\scripts'
-    elif sys.platform == 'darwin':
-        func_dir='/Users/chw3k5/Documents/Grad_School/Kappa/scripts'
-    func_dir_exists=False
-    for n in range(len(sys.path)):
-        if sys.path[n] == func_dir:
-            func_dir_exists=True
-    if not func_dir_exists:
-        sys.path.append(func_dir)
+
 
     from profunc import getYnums
     from domath import data2Yfactor, Specdata2Yfactor
-    if sys.platform == 'win32':
-        prodatadir = datadir + "prodata\\"
-    elif sys.platform == 'darwin':
-        prodatadir = datadir + "prodata/"
+
+    prodatadir = datadir + "prodata/"
+    if platform == 'win32':
+        prodatadir = windir(prodatadir)
     if os.path.isdir(prodatadir):
         # remove old processed data
         shutil.rmtree(prodatadir)
@@ -456,11 +431,11 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
     else:
         # make a folder for new processed data
         os.makedirs(prodatadir)
-    
+
+    rawdatadir = datadir + "rawdata/"
     if sys.platform == 'win32':
-        rawdatadir = datadir + "rawdata\\"
-    elif sys.platform == 'darwin':
-        rawdatadir = datadir + "rawdata/"
+        rawdatadir = windir(rawdatadir)
+
     ### Find all the Y## directory if search_4Ynums = True
     if search_4Ynums:
         Ynums = getYnums(rawdatadir, search_str)                   
@@ -468,17 +443,18 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
     ### step through all the Ynumbers and Process their files
     for Ynum_index in range(len(Ynums)):
         Ynum = Ynums[Ynum_index]
+
+        Ydatadir = rawdatadir + Ynum + '/'
         if sys.platform == 'win32':
-            Ydatadir = rawdatadir + Ynum + '\\'
-        elif sys.platform == 'darwin':
-            Ydatadir = rawdatadir + Ynum + '/'
+            Ydatadir = windir(Ydatadir)
+
         if verbose:
             print 'reducing data in: ' + Ydatadir
         # make the directory where this data goes
-        if sys.platform == 'win32':
-            prodatadir = datadir + "prodata\\" + Ynum + '\\'
-        elif sys.platform == 'darwin':
-            prodatadir = datadir + "prodata/" + Ynum + '/'
+        prodatadir = datadir + "prodata/" + Ynum + '/'
+        if platform == 'win32':
+            prodatadir = windir(prodatadir)
+
         if not os.path.isdir(prodatadir):
             os.makedirs(prodatadir)
             

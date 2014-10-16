@@ -200,8 +200,8 @@ def SimpleSweepPlot(datadir, search_4Snums=False, Snums='', verbose=False, show_
         proSdatadir  = prodatadir + Snum + '/'
 
         ### Get The Astronomy Quality Processed Sweep Data
-        mV_mean, mV_std,  uA_mean, uA_std,TP_mean, TP_std, TP_num, TP_freq, \
-        time_mean, pot, meas_num, astroprodata_found \
+        mV_mean, mV_std,  uA_mean, uA_std,TP_mean, TP_std, \
+        time_mean, pot, astroprodata_found \
             = getproSweep(proSdatadir)
 
         ### Get the Fast Processed Sweep Data
@@ -212,9 +212,9 @@ def SimpleSweepPlot(datadir, search_4Snums=False, Snums='', verbose=False, show_
 
         ### Get the Processed Parameters of the Sweep
         paramsfile = proSdatadir + 'proparams.csv'
-        K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, meanmag_mA, stdmag_mA, LOuAsweep, LOuAset, UCA_volt,  \
-        LOuA_set_pot, LOuA_magpot, meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, stdSIS_tp, SIS_pot, \
-        del_time, LOfreq, IFband, TP_int_time \
+        K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, meanmag_mA, stdmag_mA, LOuAsearch, LOuAset, UCA_volt,\
+        LOuA_set_pot, LOuA_magpot,meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, stdSIS_tp, SIS_pot, \
+        del_time, LOfreq, IFband, meas_num, TP_int_time, TP_num, TP_freq \
             = getproparams(paramsfile)
 
 
@@ -351,6 +351,7 @@ def SimpleSweepPlot(datadir, search_4Snums=False, Snums='', verbose=False, show_
             ### Column 1 ###
             ################
             xpos = xlimL + (5.0/18.0)*xscale
+            y2size = abs(ylimR2-ylimL2)
             yincrement = y2size/25.0
             ypos = ylimR2 - yincrement
 

@@ -13,7 +13,7 @@ all_Ydata         = False
 do_sweeps              = True
 do_SweepDataPro        = True
 do_SimpleSweepPlot     = True
-do_SingeSpectraPlotter = True
+do_SingeSpectraPlotter = False
 
 ### For Y-factor data and Sweeps ###
 do_Ysweeps              = False
@@ -32,7 +32,7 @@ if all_Single_Sweeps:
     do_SingeSpectraPlotter = True
 
 # The directory what the data is kept
-datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Oct06_14/300Kmag/'
+datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Oct16_14/WarmIV/'
 
 if do_sweeps:
         BiasSweep(datadir, verbose=False, verboseTop=True, verboseSet=True, careful=False,
@@ -41,11 +41,11 @@ if do_sweeps:
               SweepStart_feedTrue=65000, SweepStop_feedTrue=52000, SweepStep_feedTrue=500,
               SweepStart_feedFalse=65100, SweepStop_feedFalse=57000, SweepStep_feedFalse=100,
               sisV_feedback=True, do_sisVsweep=False, high_res_meas=5,
-              TPSampleFrequency=100, TPSampleTime=1200,
+              TPSampleFrequency=100, TPSampleTime=3,
               sisVsweep_start=-0.1, sisVsweep_stop=2.5, sisVsweep_step=0.1,
               sisPot_feedFalse_start=65100, sisPot_feedFalse_stop=57000, sisPot_feedFalse_step=100,
               sisPot_feedTrue_start=60000, sisPot_feedTrue_stop=54110, sisPot_feedTrue_step=200,
-              getspecs=True, spec_linear_sc=True, spec_freq_start=0, spec_freq_stop=10,
+              getspecs=False, spec_linear_sc=True, spec_freq_start=0, spec_freq_stop=10,
               spec_sweep_time='AUTO', spec_video_band=30, spec_resol_band=30,
               spec_attenu=0, lin_ref_lev=500, aveNum=32,
               Kaxis=0, sisVaxis=1, magaxis=2, LOpowaxis=3, LOfreqaxis=4, IFbandaxis=5,
@@ -54,18 +54,18 @@ if do_sweeps:
               IFband_start=1.42, IFband_stop=1.42, IFband_step=0.10,
               do_magisweep=False, mag_meas=10,
               magisweep_start=40, magisweep_stop=29, magisweep_step=1,
-              magpotsweep_start=1000, magpotsweep_stop=39000, magpotsweep_step=1000,
+              magpotsweep_start=65100, magpotsweep_stop=65100, magpotsweep_step=1000,
               do_LOuAsearch=True, UCA_meas=10,
               LOuAsearch_start=12, LOuAsearch_stop=12, LOuAsearch_step=-1,
               LOuA_magpot=1000, LOuA_set_pot=56800,
               UCAsweep_min=0.00, UCAsweep_max=0.00, UCAsweep_step=0.05,
               sweepShape="rectangular",
-              FinishedEmail=True, FiveMinEmail=True, PeriodicEmail=True,
-              seconds_per_email=7200, chopper_off=False, do_LOuApresearch=False, biastestmode=False)
+              FinishedEmail=False, FiveMinEmail=False, PeriodicEmail=False,
+              seconds_per_email=7200, chopper_off=False, do_LOuApresearch=False, biastestmode=True)
 
 
 if do_SweepDataPro:
-    SweepDataPro(datadir, verbose=True, search_4Sweeps=False, search_str='Y', Snums=['00003'],
+    SweepDataPro(datadir, verbose=True, search_4Sweeps=True, search_str='Y', Snums=['00003'],
                  mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01, do_conv_mV=True, sigma_mV=0.08, min_cdf_mV=0.95,
                  do_normspectra=True, norm_freq=1.42, norm_band=0.060, do_freq_conv=True, min_cdf_freq=0.90, sigma_GHz=0.10)
 
