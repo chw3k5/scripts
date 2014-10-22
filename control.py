@@ -161,7 +161,7 @@ def measmag(verbose):
 ###### setmag ######
 ####################
 
-def setmag(magpot, verbose):
+def setmag(magpot, verbose=False):
     mA_mag  = -999998
     V_mag   = -999998
     pot_mag = -999998 
@@ -253,7 +253,7 @@ def setmag_highlow(magpot):
 ######################
 ####### setmagI ######
 ######################
-def setmagI(mA_user, verbose, careful):
+def setmagI(mA_user, verbose=False, careful=False):
     from mag_config import step_decision, max_pot_pos, min_pot_pos, \
     high_pot_pos, low_pot_pos, loop1_thresh, pot_diff_thresh, loop1_max, \
     loop1_restar_max, subloop_max, subloop_min, rail_meas
@@ -461,7 +461,7 @@ def setmagI(mA_user, verbose, careful):
 ###### measSIS ######
 #####################
 
-def measSIS(verbose):
+def measSIS(verbose=False):
     from sisbias_config import sleep_list
     
     channel = '0'
@@ -541,7 +541,7 @@ def setfeedback(feedback):
 ###### setSIS ######
 ####################  
 
-def setSIS(sispot, feedback, verbose, careful):
+def setSIS(sispot, feedback, verbose=False, careful=False):
     from sisbias_config import SleepPerMes, feedon_low, feedon_high, feedoff_low, feedoff_high
     
     uA_sis  = -999998
@@ -612,7 +612,7 @@ def setSIS(sispot, feedback, verbose, careful):
 ###### setSIS_only ######
 #########################
 
-def setSIS_only(sispot, feedback, verbose, careful):
+def setSIS_only(sispot, feedback, verbose=False, careful=False):
     from sisbias_config import SleepPerMes, feedon_low, feedon_high, feedoff_low, feedoff_high    
     
     # safty catches, to keep the SIS bias within nominal ranges   
@@ -803,7 +803,7 @@ def setSIS_TP(sispot, feedback, verbose, careful):
 ########################
 ###### measSIS_TP ######
 ########################
-def measSIS_TP(sispot, feedback, verbose, careful):
+def measSIS_TP(sispot, feedback, verbose=False, careful=False):
     from sisbias_config import SleepPerMes, sleep_list
     channel = '0'
     message_list = []
@@ -1219,7 +1219,7 @@ def setSIS_Volt(mV_user, verbose, careful, cheat_num):
 ###### setLOI ######
 ####################
 
-def setLOI(uA_user, verbose, careful):
+def setLOI(uA_user, verbose=False, careful=False):
     from setLOI_config import uA_max, uA_min, sleep_time, max_meas_per_loop, scan_count_max, count_min
     
     # check to make sure the user input was within the range of values that can be achieved
@@ -1397,7 +1397,7 @@ def zeropots(verbose=True):
                 status   = True
                 finished = True
                 if verbose:
-                    print "Both the electromagnet and the SIS bias pots have been set at the central pot position: " + str(zeropots_center_pos)
+                    print "Both the electromagnet and the SIS bias pots have been set to the central pot position: " + str(zeropots_center_pos)
             elif (zeropots_max_count < count):
                 print "The max number of tries to zero the pot: " + str(zeropots_max_count)
                 print "has been exceeded, returning status = False"
@@ -1427,7 +1427,7 @@ def zeropots(verbose=True):
                 status   = True
                 finished = True
                 if verbose:
-                    print "Both the SIS bias pot has been set at the central pot position: " + str(zeropots_center_pos)
+                    print "Both the SIS bias pot has been set to the central pot position: " + str(zeropots_center_pos)
             elif zeropots_max_count < count:
                 print "The max number of tries to zero the pot: " + str(zeropots_max_count)
                 print "has been exceeded, returning status = False"
@@ -1475,3 +1475,49 @@ def zeropots(verbose=True):
                 
     return status
 
+def zeroSISpot(verbose=True):
+    from sisbias_config import zeropots_center_pos, zeropots_feedback, zeropots_careful, zeropots_max_count
+    finished = False
+    count = 0
+    status = False
+    while not finished:
+        count = count + 1
+        mV_sis, uA_sis, pot_sis = setSIS(zeropots_center_pos, zeropots_feedback, verbose, zeropots_careful)
+        if (pot_sis == zeropots_center_pos):
+            status   = True
+            finished = True
+            if verbose:
+                print "SIS bias pot has been set to the central pot position: " + str(zeropots_center_pos)
+        elif zeropots_max_count < count:
+            print "The max number of tries to zero the pot: " + str(zeropots_max_count)
+            print "has been exceeded, returning status = False"
+        elif not (pot_sis == zeropots_center_pos):
+            if verbose:
+                print "The SIS pot was not zeroed"
+                print "Trying again: attempt " + str(count + 1) + " of " + str(zeropots_max_count)
+
+    return status
+
+
+def zeroMAGpot(verbose=True):
+    from sisbias_config import zeropots_center_pos, zeropots_feedback, zeropots_careful, zeropots_max_count
+    finished = False
+    count = 0
+    status = False
+    while not finished:
+        count = count + 1
+        V_mag, mA_mag, pot_mag = setmag(zeropots_center_pos)
+        if (pot_mag == zeropots_center_pos):
+            status   = True
+            finished = True
+            if verbose:
+                print "mag bias pot has been set to the central pot position: " + str(zeropots_center_pos)
+        elif zeropots_max_count < count:
+            print "The max number of tries to zero the pot: " + str(zeropots_max_count)
+            print "has been exceeded, returning status = False"
+        elif not (pot_mag == zeropots_center_pos):
+            if verbose:
+                print "The mag pot was not zeroed"
+                print "Trying again: attempt " + str(count + 1) + " of " + str(zeropots_max_count)
+
+    return status

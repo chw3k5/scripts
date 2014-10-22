@@ -73,6 +73,7 @@ def GenEmailText(temp_data, Nhours, totalhours):
 # User  settings
 ###############################################################################
 from sys import platform
+from profunc import windir
 import serial, signal, time, os, sys, atpy, numpy, matplotlib
 from matplotlib import pyplot as plt
 from email_sender   import email_caleb, email_groppi, text_caleb
@@ -105,13 +106,13 @@ if serial_port == '':
     
 verbose = True
 # Data Folder
+folder ='/Users/chw3k5/Documents/Grad_School/Kappa/temperatureData/Oct20_2014/'
 if platform == 'win32':
-    folder = 'C:\\Users\\MtDewar\\Documents\\Kappa\\temperatureData\\Sep06_2014\\'
-elif platform == 'darwin':
-    folder ='/Users/chw3k5/Documents/Grad_School/Kappa/temperatureData/Sep06_2014\\'
+    folder = windir(folder)
 
 
-monitor_type = 'fastwarm' # options: 'coolpumpon', 'coolpumpoff', 'LN2fill', 'LHefill', 'almostcold', 'cold', 'fastwarm', 'slowwarm'
+
+monitor_type = 'coolpumpon' # options: 'coolpumpon', 'coolpumpoff', 'LN2fill', 'LHefill', 'almostcold', 'cold', 'fastwarm', 'slowwarm'
 meas_period      = 7.0 # in seconds
 rest_time        = 0.5 # in seconds
 channels = [4,2,3]

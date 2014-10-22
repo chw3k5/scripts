@@ -1,18 +1,17 @@
-import sys
-
 # Import this is the directory that has my scripts
 from Plotting import SingleSpectraPlotter, YfactorSweepsPlotter, SimpleSweepPlot, YSpectraPlotter
 from BiasSweep2 import BiasSweep
 from datapro import SweepDataPro, YdataPro
-
+from TestSweeper import testsweeps, protestsweeps, plottestsweeps
 
 all_Single_Sweeps = False
 all_Ydata         = False
+all_testsweeps   = False
 
 ### For Single Sweep ###
-do_sweeps              = True
-do_SweepDataPro        = True
-do_SimpleSweepPlot     = True
+do_sweeps              = False
+do_SweepDataPro        = False
+do_SimpleSweepPlot     = False
 do_SingeSpectraPlotter = False
 
 ### For Y-factor data and Sweeps ###
@@ -20,6 +19,13 @@ do_Ysweeps              = False
 do_YdataPro             = False
 do_YfactotSweepsPlotter = False
 do_YSpectra_Plotter     = False
+
+### TestSweeps ###
+do_testsweeps     = False
+do_protestsweeps  = True
+do_plottestsweeps = True
+iscold=False
+
 
 ####################
 ### The Programs ###
@@ -32,12 +38,12 @@ if all_Single_Sweeps:
     do_SingeSpectraPlotter = True
 
 # The directory what the data is kept
-datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Oct16_14/WarmIV/'
+datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Oct20_14/WarmIVfixed/'
 
 if do_sweeps:
         BiasSweep(datadir, verbose=False, verboseTop=True, verboseSet=True, careful=False,
-              sweepNstart=0, Ynum=0, testmode=False, warmmode=False,
-              do_fastsweep=True, do_unpumpedsweep=True, fastsweep_feedback=False,
+              sweepNstart=6, Ynum=6, testmode=False, warmmode=False,
+              do_fastsweep=False, do_unpumpedsweep=False, fastsweep_feedback=False,
               SweepStart_feedTrue=65000, SweepStop_feedTrue=52000, SweepStep_feedTrue=500,
               SweepStart_feedFalse=65100, SweepStop_feedFalse=57000, SweepStep_feedFalse=100,
               sisV_feedback=True, do_sisVsweep=False, high_res_meas=5,
@@ -66,13 +72,13 @@ if do_sweeps:
 
 if do_SweepDataPro:
     SweepDataPro(datadir, verbose=True, search_4Sweeps=True, search_str='Y', Snums=['00003'],
-                 mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01, do_conv_mV=True, sigma_mV=0.08, min_cdf_mV=0.95,
+                 mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01, do_conv_mV=True, sigma_mV=0.02, min_cdf_mV=0.95,
                  do_normspectra=True, norm_freq=1.42, norm_band=0.060, do_freq_conv=True, min_cdf_freq=0.90, sigma_GHz=0.10)
 
 if do_SimpleSweepPlot:
     SimpleSweepPlot(datadir, search_4Snums=True, Snums='', verbose=True, show_standdev=True, std_num=3, display_params=True,
                     show_plot=False, save_plot=True, do_eps=False,
-                    find_lin_mVuA=True, linif=0.3, der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
+                    find_lin_mVuA=True, linif=0.5, der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
                     der2_int=1, do_der2_conv=True, der2_min_cdf=0.95, der2_sigma=0.05,
                     plot_astromVuA=True, plot_astromVtp=True, plot_fastmVuA=True, plot_fastmVtp=True,
                     plot_unpumpmVuA=True, plot_unpumpmVtp=True)
@@ -152,3 +158,35 @@ if do_YfactotSweepsPlotter:
 if do_YSpectra_Plotter:
     YSpectraPlotter(datadir, search_4Ynums=True, Ynums='', verbose=True,
                     show_plot=False, save_plot=True, do_eps=False)
+
+
+
+
+
+if all_testsweeps:
+    do_testsweeps     = True
+    do_protestsweeps  = True
+    do_plottestsweeps = True
+
+datadir='/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Oct20_14/'
+if iscold:
+    datadir += 'coldtest/'
+else:
+    datadir += 'warmtest/'
+if do_testsweeps:
+    testsweeps(datadir, do_SISsweep=True, do_MAGsweep=True, iscold=iscold, verbose=True)
+
+if do_protestsweeps:
+    protestsweeps(datadir,
+                  mono_switcher=True, do_regrid=True, do_conv=False,
+                  regrid_mesh=0.01, min_cdf=0.9, sigma=0.01,
+                  verbose=False)
+
+if do_plottestsweeps:
+    plottestsweeps(datadir, plot_SIS=True, plot_MAG=True,
+                       show_std=True, std_num=10,
+                       show_plot=False, save_plot=True, do_eps=True,
+                       find_lin=True, linif=1.1,
+                       der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.05,
+                       der2_int=1, do_der2_conv=True, der2_min_cdf=0.95, der2_sigma=0.10,
+                       verbose=False)

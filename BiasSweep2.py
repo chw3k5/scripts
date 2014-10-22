@@ -880,8 +880,8 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
         time_stamp_sweep_list = []
         if not testmode:
             for meas_index in range(high_res_meas):
-                mV_sweep, uA_sweep, tp_sweep, pot_sweep, time_stamp_sweep = measSIS_TP(sisPot_thisloop,
-                                                                                       sisV_feedback, verbose, careful)
+                mV_sweep, uA_sweep, tp_sweep, pot_sweep, time_stamp_sweep \
+                    = measSIS_TP(sisPot_thisloop, sisV_feedback, verbose, careful)
                 mV_sweep_list.append(mV_sweep)
                 uA_sweep_list.append(uA_sweep)
                 tp_sweep_list.append(tp_sweep)

@@ -488,10 +488,9 @@ def getSISdata(filename):
     tp   = []
     pot  = []
     time = []
-    
     SISdata = atpy.Table(filename, type="ascii", delimiter=",")
     keys = SISdata.keys()
-    
+
     if 'mV'   in keys: mV   = SISdata.mV
     if 'uA'   in keys: uA   = SISdata.uA
     if 'tp'   in keys: tp   = SISdata.tp
@@ -507,12 +506,12 @@ def getmagdata(filename):
     mA  = []
     pot = []
     
-    SISdata = atpy.Table(filename, type="ascii", delimiter=",")
-    keys = SISdata.keys()
+    MAGdata = atpy.Table(filename, type="ascii", delimiter=",")
+    keys = MAGdata.keys()
     
-    if 'V'   in keys: V    = SISdata.V
-    if 'mA'  in keys: mA   = SISdata.mA
-    if 'pot' in keys: pot  = SISdata.pot
+    if 'V'   in keys: V    = MAGdata.V
+    if 'mA'  in keys: mA   = MAGdata.mA
+    if 'pot' in keys: pot  = MAGdata.pot
     
     return V, mA, pot
     
@@ -574,35 +573,65 @@ def readspec(filename):
     pwr  = data.pwr
     return freqs, pwr
 
+def getpromagSweep(datadir):
+    datafile = datadir + 'data.csv'
+    V_mean   = None
+    V_std    = None
+    mA_mean  = None
+    mA_std   = None
+    pot      = None
+    prodata_found = False
 
-def getproSweep(datadir):
-    datafile  = datadir + 'data.csv'
     if platform == 'win32':
         datafile = windir(datafile)
     if os.path.exists(datafile):
         temp = atpy.Table(datafile, type="ascii", delimiter=",")
-        mV_mean   = temp.mV_mean
-        mV_std    = temp.mV_std
-        uA_mean   = temp.uA_mean
-        uA_std    = temp.uA_std
-        TP_mean   = temp.TP_mean
-        TP_std    = temp.TP_std
-        time_mean = temp.time_mean
-        pot       = temp.pot
-        astroprodata_found = True
-    else:
-        mV_mean   = None
-        mV_std    = None
-        uA_mean   = None
-        uA_std    = None
-        TP_mean   = None
-        TP_std    = None
-        time_mean = None
-        pot       = None
-        astroprodata_found = False
+        keys = temp.keys()
+        if 'V_mean' in keys: V_mean = temp.V_mean
+        if 'V_std'  in keys: V_std  = temp.V_std
+
+        if 'mA_mean' in keys: mA_mean = temp.mA_mean
+        if 'mA_std'  in keys: mA_std  = temp.mA_std
+
+        if 'pot'     in keys: pot     = temp.pot
+        prodata_found = True
+
+
+    return V_mean, V_std,  mA_mean, mA_std, pot, prodata_found
+
+def getproSweep(datadir):
+    datafile  = datadir + 'data.csv'
+    mV_mean   = None
+    mV_std    = None
+    uA_mean   = None
+    uA_std    = None
+    TP_mean   = None
+    TP_std    = None
+    time_mean = None
+    pot       = None
+    prodata_found = False
+
+    if platform == 'win32':
+        datafile = windir(datafile)
+    if os.path.exists(datafile):
+        temp = atpy.Table(datafile, type="ascii", delimiter=",")
+        keys = temp.keys()
+        if 'mV_mean' in keys: mV_mean = temp.mV_mean
+        if 'mV_std'  in keys: mV_std  = temp.mV_std
+
+        if 'uA_mean' in keys: uA_mean = temp.uA_mean
+        if 'uA_std'  in keys: uA_std  = temp.uA_std
+
+        if 'TP_mean' in keys: TP_mean = temp.TP_mean
+        if 'TP_std'  in keys: TP_std  = temp.TP_std
+
+        if 'pot'     in keys: pot     = temp.pot
+        if 'time_mean' in keys: time_mean = temp.time_mean
+        prodata_found = True
+
     
     return mV_mean, mV_std,  uA_mean, uA_std,TP_mean, TP_std, \
-    time_mean, pot, astroprodata_found
+    time_mean, pot, prodata_found
      
 def getproYdata(datadir):
     if platform == 'win32':
@@ -730,47 +759,66 @@ def getproYdata(datadir):
 def getYnums(datadir, search_str):
     if platform == 'win32':
         datadir = windir(datadir)
+
+    # check to see if the path exists
+    if not os.path.isdir(datadir):
+        print 'The path', datadir
+        print 'does not exist'
+        print 'check the path and try again, killing script'
+        sys.exit()
+
     # get the Y numbers from the directory names in the datadir directory
     alldirs = []
     for root, dirs, files in os.walk(datadir):
         alldirs.append(dirs)
     try:
         topdirs = alldirs[0]
+        len_topdirs = len(topdirs)
     except IndexError:
         print "This error happens when the directory specified:" + str(datadir)
-        print "Does not exist. Check that the directory is correct and try egain."
+        print "Does is empty. Check that the directory is correct and try egain."
         print "Here is the variable that had the error 'alldirs':"+str(alldirs)
-        print "Killing script."
-        sys.exit()
+        len_topdirs = None
     Ynums = []
-    for topdir_index in range(len(topdirs)):
-        test_dir = topdirs[topdir_index]
-        if test_dir[0] == search_str:
-            Ynums.append(test_dir)
+    if len_topdirs is not None:
+        for topdir_index in range(len(topdirs)):
+            test_dir = topdirs[topdir_index]
+            if test_dir[0] == search_str:
+                Ynums.append(test_dir)
                 
     return Ynums
     
 def getSnums(datadir):
+
     if platform == 'win32':
         datadir = windir(datadir)
     search_str = 'Y'
+
+        # check to see if the path exists
+    if not os.path.isdir(datadir):
+        print 'The path', datadir
+        print 'does not exist'
+        print 'check the path and try again, killing script'
+        sys.exit()
+
     # get the Y numbers from the directory names in the datadir directory
     alldirs = []
     for root, dirs, files in os.walk(datadir):
         alldirs.append(dirs)
     try:
         topdirs = alldirs[0]
+        len_topdirs = len(topdirs)
     except IndexError:
         print "This error happens when the directory specified:" + str(datadir)
-        print "Does not exist. Check that the directory is correct and try egain."
+        print "Is empty. Check that the directory is correct and try egain."
         print "Here is the variable that had the error 'alldirs':"+str(alldirs)
-        print "Killing script."
-        sys.exit()
+        len_topdirs = None
     Snums = []
-    for topdir_index in range(len(topdirs)):
-        test_dir = topdirs[topdir_index]
-        if not test_dir[0] == search_str:
-            Snums.append(test_dir)
+    if len_topdirs is not None:
+        for topdir_index in range(len(topdirs)):
+            test_dir = topdirs[topdir_index]
+            if not test_dir[0] == search_str:
+                Snums.append(test_dir)
                 
     return Snums
 

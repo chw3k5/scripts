@@ -4,17 +4,6 @@
 # Import this is the directory that has my scripts
 import sys
 from control import opentelnet, closetelnet
-verbose='N'
-# This is the location of the Kappa Scripts on Caleb's Mac
-#func_dir='/Users/chw3k5/Documents/Grad_School/Kappa/scripts'
-func_dir='C:\\Users\\MtDewar\\Documents\\Kappa\\scripts'
-func_dir_exists=False
-for n in range(len(sys.path)):
-    if sys.path[n] == func_dir:
-        func_dir_exists=True
-if not func_dir_exists:
-    sys.path.append(func_dir)
-
 
 #############################
 ###### From control.py ######

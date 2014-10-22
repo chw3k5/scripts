@@ -105,6 +105,86 @@ def ProFastIV(fastIV_filename,  prodataname, mono_switcher, do_regrid, do_conv, 
         n.close()
     return fastIV_found
 
+def BasicDataPro(sweepdir, prodataname, is_SIS_data=True, mono_switcher=True, do_regrid=True,
+                 do_conv=False, regrid_mesh=0.01, min_cdf=0.9, sigma=0.05,
+                 verbose=False):
+    BasicDataFound = False
+    if platform == 'win32':
+        sweepdir = windir(sweepdir)
+    if is_SIS_data:
+        data_list = glob.glob(sweepdir + "SIS*.csv")
+    else:
+        data_list = glob.glob(sweepdir + "MAG*.csv")
+
+    if not data_list == []:
+        BasicDataFound  = True
+        len_data_list   = len(data_list)
+        P_sweep        = []
+        V_mean_sweep   = []
+        V_std_sweep    = []
+        I_mean_sweep   = []
+        I_std_sweep    = []
+        # read in SIS data for each sweep step
+        for sweep_index in range(len_data_list):
+            if is_SIS_data:
+                temp_mV, temp_uA, temp_tp, temp_pot, temp_time = getSISdata(sweepdir + 'SIS' + str(sweep_index + 1) + '.csv')
+                V = temp_mV
+                I = temp_uA
+                P = temp_pot
+            else:
+                V, mA, pot = getmagdata(sweepdir + 'MAG' + str(sweep_index + 1) + '.csv')
+                I = mA
+                P = pot
+
+            P_sweep.append(P[0])
+            V_mean_sweep.append(numpy.mean(V))
+            V_std_sweep.append(numpy.std(V))
+            I_mean_sweep.append(numpy.mean(I))
+            I_std_sweep.append(numpy.std(I))
+
+
+        # put the data into a matrix for processing
+        matrix  = numpy.zeros((len_data_list, 5))
+        matrix[:,0]  = V_mean_sweep
+        matrix[:,1]  = V_std_sweep
+        matrix[:,2]  = I_mean_sweep
+        matrix[:,3]  = I_std_sweep
+        matrix[:,4]  = P_sweep
+        # process the matrix
+        matrix, raw_matrix, mono_matrix, regrid_matrix, conv_matrix \
+            = ProcessMatrix(matrix, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose)
+        # put the information back into 1-D arrays
+        V_mean_sweep   = matrix[:,0]
+        V_std_sweep    = matrix[:,1]
+        I_mean_sweep   = matrix[:,2]
+        I_std_sweep    = matrix[:,3]
+        P_sweep        = matrix[:,4]
+        len_pro_data_list = len(P_sweep)
+        ### save the results of this calculations
+        if platform == 'win32':
+            prodataname = windir(prodataname)
+        n = open(prodataname, 'w')
+        if is_SIS_data:
+            n.write('mV_mean,mV_std,uA_mean,uA_std,pot\n')
+        else:
+            n.write('V_mean,V_std,mA_mean,mA_std,pot\n')
+
+        for sweep_index in range(len_pro_data_list):
+            n.write(
+                str(V_mean_sweep[sweep_index]) + ',' +
+                str(V_std_sweep[sweep_index]) + ',' +
+                str(I_mean_sweep[sweep_index]) + ',' +
+                str(I_std_sweep[sweep_index]) + ',' +
+                str(P_sweep[sweep_index]) +'\n'
+            )
+        n.close()
+    else:
+        print "No total Power data was found in ", sweepdir
+        print "Killing Script"
+        sys.exit()
+    return BasicDataFound
+
+
 def AstroDataPro(datadir, proparamsfile, prodataname, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose):
     astrosweep_found = False
     sweepdir = datadir + 'sweep/'
