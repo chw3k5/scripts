@@ -319,6 +319,23 @@ def AllanVar(data, tau, verbose):
 ###################################################
 ###### M sample Allan Variance (not working) ######
 ###################################################
+def allan_var(totpow, tau, tau_max=1000):
+    sig_tau   = []
+    tau       = int(tau)
+    tau_max   = min(tau_max, int(float(len(totpow))/(2.1*tau)))
+    for i in range(tau_max):
+        M_x   = len(totpow)
+        norm  = max(totpow)                      # normalization factor
+        x_l   = totpow[0:M_x-2*i-1]/norm
+        x_m   = totpow[i:M_x-i-1]/norm
+        x_u   = totpow[2*i:M_x-1]/norm
+        print, i, len(x_l), len(x_m), len(x_u)
+        coeff = 1.0/((2*(i*float(tau))**2)*(len(x_l)-2*i))
+        y2    = (x_u - 2*x_m + x_l)^2
+        total_y2   = sum(y2)
+        sig_tau.append(coeff*total_y2)
+    return sig_tau
+
 
 def AllanVarM(data, M, verbose):
     import numpy
