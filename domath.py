@@ -329,7 +329,7 @@ def allan_var(totpow, tau, tau_max=1000):
         x_l   = totpow[0:M_x-2*i-1]/norm
         x_m   = totpow[i:M_x-i-1]/norm
         x_u   = totpow[2*i:M_x-1]/norm
-        print, i, len(x_l), len(x_m), len(x_u)
+        print i, len(x_l), len(x_m), len(x_u)
         coeff = 1.0/((2*(i*float(tau))**2)*(len(x_l)-2*i))
         y2    = (x_u - 2*x_m + x_l)^2
         total_y2   = sum(y2)

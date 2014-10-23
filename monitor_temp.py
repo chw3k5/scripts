@@ -112,7 +112,7 @@ if platform == 'win32':
 
 
 
-monitor_type = 'coolpumpon' # options: 'coolpumpon', 'coolpumpoff', 'LN2fill', 'LHefill', 'almostcold', 'cold', 'fastwarm', 'slowwarm'
+monitor_type = 'almostcold' # options: 'coolpumpon', 'coolpumpoff', 'LN2fill', 'LHefill', 'almostcold', 'cold', 'fastwarm', 'slowwarm'
 meas_period      = 7.0 # in seconds
 rest_time        = 0.5 # in seconds
 channels = [4,2,3]
@@ -186,7 +186,7 @@ elif monitor_type == 'almostcold':
     PeriodicEmail = True
     seconds_per_email      = 1*60*60 #12*60*60 # in seconds
     alarm_channel          = 4
-    high_alarm_temperature = 4.500 # in Kelvin
+    high_alarm_temperature = 4.600 # in Kelvin
     low_alarm_temperature  = 3. # in Kelvin
 elif monitor_type == 'cold':
     filename      = monitor_type+'.csv'
@@ -200,7 +200,7 @@ elif monitor_type == 'cold':
     PeriodicEmail = True
     seconds_per_email      = 4*60*60 #12*60*60 # in seconds
     alarm_channel          = 4
-    high_alarm_temperature = 5.000 # in Kelvin
+    high_alarm_temperature = 4.300 # in Kelvin
     low_alarm_temperature  = 3. # in Kelvin
 elif monitor_type == 'fastwarm':
     filename      = monitor_type+'.csv'

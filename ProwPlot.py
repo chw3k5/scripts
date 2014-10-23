@@ -6,7 +6,7 @@ from TestSweeper import testsweeps, protestsweeps, plottestsweeps
 
 all_Single_Sweeps = False
 all_Ydata         = False
-all_testsweeps   = False
+all_testsweeps    = False
 
 ### For Single Sweep ###
 do_sweeps              = False
@@ -21,10 +21,10 @@ do_YfactotSweepsPlotter = False
 do_YSpectra_Plotter     = False
 
 ### TestSweeps ###
-do_testsweeps     = False
+do_testsweeps     = True
 do_protestsweeps  = True
 do_plottestsweeps = True
-iscold=False
+iscold = True
 
 
 ####################
@@ -186,7 +186,7 @@ if do_plottestsweeps:
     plottestsweeps(datadir, plot_SIS=True, plot_MAG=True,
                        show_std=True, std_num=10,
                        show_plot=False, save_plot=True, do_eps=True,
-                       find_lin=True, linif=1.1,
+                       find_lin=True, linif=0.4,
                        der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.05,
                        der2_int=1, do_der2_conv=True, der2_min_cdf=0.95, der2_sigma=0.10,
                        verbose=False)
