@@ -191,7 +191,9 @@ def derivative(data, deriv_int):
 ###########################
 ###### DoDerivatives ######
 ###########################
-def DoDerivatives(matrix, der1_int, do_der1_conv, der1_min_cdf, der1_sigma, der2_int, do_der2_conv, der2_min_cdf, der2_sigma, regrid_mesh, verbose):
+def DoDerivatives(matrix, der1_int, do_der1_conv, der1_min_cdf, der1_sigma,
+                  der2_int, do_der2_conv, der2_min_cdf, der2_sigma, regrid_mesh,
+                  verbose):
     status, der1 = derivative(matrix, der1_int)
     if do_der1_conv:
         der1, status  = conv(der1,  regrid_mesh, der1_min_cdf, der1_sigma, verbose)
@@ -211,7 +213,8 @@ def findlinear(x, ydprime, linif, verbose):
         status = True
     else:
         status =False
-        print "In the function findlinear the dependent and independent variables do not have the same length, returning statuse false"
+        print "In the function findlinear the dependent and independent variables do not have the same length,\n"+\
+              " returning statuse false"
     linMask      = numpy.zeros(len(x))
     dataMax      = max(abs(ydprime))
     normal_data  = abs(ydprime/dataMax)
@@ -262,13 +265,17 @@ def resfitter(x, y, lin_start, lin_end):
     
     return slopes, intercepts, X, Y
     
-def linfit(X, Y, linif, der1_int, do_der1_conv, der1_min_cdf, der1_sigma, der2_int, do_der2_conv, der2_min_cdf, der2_sigma, verbose):
+def linfit(X, Y, linif, der1_int, do_der1_conv, der1_min_cdf, der1_sigma,
+           der2_int, do_der2_conv, der2_min_cdf, der2_sigma,
+           verbose):
     matrix = numpy.zeros((len(X),2))
     matrix[:,0] = X
     matrix[:,1] = Y                
     regrid_mesh = abs(X[1]-X[0])
                                                                                  
-    der1, der2 = DoDerivatives(matrix, der1_int, do_der1_conv, der1_min_cdf, der1_sigma, der2_int, do_der2_conv, der2_min_cdf, der2_sigma, regrid_mesh, verbose)
+    der1, der2 = DoDerivatives(matrix, der1_int, do_der1_conv, der1_min_cdf, der1_sigma,
+                               der2_int, do_der2_conv, der2_min_cdf, der2_sigma, regrid_mesh,
+                               verbose)
     #status, lin_start_uAmV, lin_end_uAmV = findlinear(der2[:,0], der2[:,1], linif, verbose)
     #slopes, intercepts, bestfits_uA, bestfits_mV = resfitter(uA_unpumpedhot, mV_unpumpedhot, lin_start_uAmV, lin_end_uAmV)
     
@@ -323,7 +330,7 @@ def allan_var(totpow, tau, tau_max=1000):
     sig_tau   = []
     tau       = int(tau)
     tau_max   = min(tau_max, int(float(len(totpow))/(2.1*tau)))
-    for i in range(tau_max):
+    for i in range(1,tau_max+1):
         M_x   = len(totpow)
         norm  = max(totpow)                      # normalization factor
         x_l   = totpow[0:M_x-2*i-1]/norm
@@ -401,7 +408,8 @@ def FindOverlap(X, Y, mesh):
             count_Y += 1
         loop_count=loop_count+1
         if loop_count > loop_count_max:
-            print "The loop has gone on long enough to exceed the length of both Y_mV and X_mV, something is wrong maybe with the regridding. Status=False"
+            print "The loop has gone on long enough to exceed the length of both Y_mV and X_mV, \n"+\
+                  "something could be wrong with the regridding. Status=False"
             status=False
         if ((count_X>=len(X)-1) or (count_Y>=len(Y)-1)):
             finished=True
