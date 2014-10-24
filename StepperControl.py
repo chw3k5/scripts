@@ -37,7 +37,7 @@ import time
 serial_port = ''
 platform = sys.platform
 if platform == 'win32':
-    serial_port = 'COM4'
+    serial_port = 'COM7'
 elif platform == 'darwin':
     test_serial_port = '/dev/cu.PL2303-0000103D'
     if os.path.lexists(test_serial_port):

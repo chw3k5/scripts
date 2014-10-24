@@ -80,7 +80,7 @@ from email_sender   import email_caleb, email_groppi, text_caleb
 serial_port = ''
 
 if platform == 'win32':
-    serial_port = 'COM3'
+    serial_port = 'COM8'
 elif platform == 'darwin':
     test_serial_port = '/dev/cu.usbserial-000032FD'
     if os.path.lexists(test_serial_port):
@@ -209,7 +209,7 @@ elif monitor_type == 'fastwarm':
     max_time      = 60 # in seconds (set to -1 to set to infinity)
     monitor_time  = 1*25*60*60 # in seconds (This is the total time that is script will monitor temperatures from the Lakeshore monitor)
     monitor_sleep = 5*60   # in seconds
-    Nsecs         = 1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
+    Nsecs         = 6*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
     start_email   = True
     PeriodicEmail = True
     seconds_per_email      = 8*60*60 #12*60*60 # in seconds

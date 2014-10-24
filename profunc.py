@@ -2,12 +2,13 @@ import atpy
 import numpy
 import os, sys
 import shutil
+import random
 from sys import platform
 from domath import regrid, conv, FindOverlap # Caleb's Programs
 from operator import itemgetter
 
 def windir(filepath):
-    tempfilepath = filepath.replace('/Users/chw3k5/Documents/Grad_School/', 'C:\\Users\\MtDewar\\Documents\\')
+    tempfilepath = filepath.replace('/Users/chw3k5/Documents/Grad_School/', 'C:\\Users\\chwheele\\Documents\\')
     tempfilepath = tempfilepath.replace('IVsweep','sweep')
     winfilepath  = tempfilepath.replace('/','\\')
     return winfilepath
@@ -516,12 +517,13 @@ def getmagdata(filename):
     return V, mA, pot
     
 def getLJdata(filename):
+    rand_int = random.randint(0, 1000)
     if platform == 'win32':
         filename = windir(filename)
+    tempfilename = '/Users/chw3k5/Documents/Grad_School/deleteME'+str(rand_int)+'.csv'
     if platform == 'win32':
-        tempfilename = 'C:\\Users\\MtDewar\\Documents\\deleteME.csv'
-    elif platform == 'darwin':
-        tempfilename = '/Users/chw3k5/deleteME.csv'
+        tempfilename = windir(tempfilename)
+
 
     with open(filename, 'r') as f:
         first_line = f.readline()
