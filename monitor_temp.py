@@ -112,7 +112,7 @@ if platform == 'win32':
 
 
 
-monitor_type = 'almostcold' # options: 'coolpumpon', 'coolpumpoff', 'LN2fill', 'LHefill', 'almostcold', 'cold', 'fastwarm', 'slowwarm'
+monitor_type = 'cold' # options: 'coolpumpon', 'coolpumpoff', 'LN2fill', 'LHefill', 'almostcold', 'cold', 'fastwarm', 'slowwarm'
 meas_period      = 7.0 # in seconds
 rest_time        = 0.5 # in seconds
 channels = [4,2,3]

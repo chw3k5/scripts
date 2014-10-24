@@ -1,28 +1,10 @@
-import sys
-verbose='N'
-# This is the location of the Kappa Scripts on Caleb's Mac
-platform = sys.platform
-if platform == 'win32':
-    func_dir = 'C:\\Users\\MtDewar\\Documents\\Kappa\\scripts'
-elif platform == 'darwin':
-    func_dir = '/Users/chw3k5/Documents/Grad_School/Kappa/scripts'
-func_dir_exists=False
-for n in range(len(sys.path)):
-    if sys.path[n] == func_dir:
-        if not verbose == 'N':
-            print "The path to programs and functions exists"
-        func_dir_exists=True
-if not func_dir_exists:
-    sys.path.append(func_dir)
-    print "The path "+func_dir+" has been added to sys.path"
-    
 # from matplotlib import *
 # from pylab      import *
 # from zeropots   import zeropots
 import time
 import numpy
 from control import LabJackU3_DAQ0, measSIS, setSIS_TP, setSIS_Volt, setmagI
-from control import setSIS_only, setmag_only, measSIS_TP, zeropots, setfeedback
+from control import setSIS_only, setmag_only, measSIS_TP, zeropots, setfeedback, opentelnet, closetelnet
 from LOinput import setfreq, RFon, RFoff
 
 verbose = True
@@ -37,7 +19,7 @@ reset       = True # there is no need to keep ajusting the magnet, sis voltage, 
 magpot      = 103323 # pot position 
 pot_sis     =  56000 # pot position 
 UCA_voltage =      0 # in Volts
-RFin        =   14.4 # in GHz
+RFin        =   14.0 # in GHz
 
 uA_list  = []
 mV_list  = []
@@ -64,6 +46,8 @@ tp_local_STD_str   = ''
 tp_local_SEM_str   = ''
 tp_local_max_str   = ''
 
+opentelnet()
+RFon()
 if reset:        
     setmag_only(magpot)
     status = setfeedback(feedback)
@@ -186,5 +170,7 @@ for n in range(total_loops):
     print MAX
     print " "
     time.sleep(sleep_time)
+closetelnet()
+RFoff()
 print("End of script reached")
 # zeropots()
