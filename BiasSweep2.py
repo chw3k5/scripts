@@ -1067,6 +1067,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
 
     # turn things off after a run
     if ((not testmode) and (not chopper_off)):
+        GoBack()
         DisableDrive()
     if not testmode:
         zeropots(verbose)

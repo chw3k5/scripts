@@ -19,7 +19,7 @@ do_setmagI     = False # True or False
 
 do_RFfreqset   = False # True or False
 do_RFon        = False # True or False
-do_RFoff       = False # True or False
+do_RFoff       = True # True or False
 
 do_measSIS     = False # True or False
 do_setfeedback = False # True or False
