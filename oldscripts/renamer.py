@@ -1,9 +1,10 @@
+from oldscripts import GetFileNameData
+
+
 def renamer(csvfiles):
     import sys
     import os
-    import glob
-    from GetFileNameData import GetFileNameData
-    
+
     for n in range(len(csvfiles)):
         csvfile = csvfiles[n]       
 #        print "the csvfile is "+csvfile

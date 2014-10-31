@@ -1,7 +1,9 @@
+from oldscripts import GetFileNameData
+
+
 def Y_jobs3(Y_csvfiles):
     # This program is expecting 3 to 6 CSV files
-    from GetFileNameData import GetFileNameData
-    
+
     status = True
     
     wide_off_csv    = []

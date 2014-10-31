@@ -1,3 +1,6 @@
+from oldscripts import GetFileNameData
+
+
 def autoYfactor(setnum, start_Yrange, end_Yrange, do_recalc):
     # Notes
     # Y parameter CSV Files come in a varitiy of flavors with up to 6 files.
@@ -36,7 +39,6 @@ def autoYfactor(setnum, start_Yrange, end_Yrange, do_recalc):
     from find_Ynums      import find_Ynums
     from YfactorGuts     import YfactorGuts
     from renamer         import renamer
-    from GetFileNameData import GetFileNameData
     from data2Yfactor    import Ydata_stats
     import atpy
     import os

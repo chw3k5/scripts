@@ -1,4 +1,4 @@
-import visa, numpy, time
+import numpy, time
 from sys import platform
 # Caleb's programs
 from profunc import windir
@@ -13,6 +13,7 @@ def is_number(value):
 
 def getspec(filename, verbose=False, linear_sc=True, freq_start=0, freq_stop=6, sweep_time='AUTO', video_band=10,
             resol_band=30, attenu=0):
+    import visa
     if platform == 'win32':
         filename = windir(filename)
         
@@ -148,7 +149,7 @@ def getspec(filename, verbose=False, linear_sc=True, freq_start=0, freq_stop=6, 
 def getspecPlusTP(spec_filename, TP_filename, TPSampleFrequency, verbose=False, linear_sc=True,
                   freq_start=0, freq_stop=6, sweep_time='AUTO', video_band=10, resol_band=30, attenu=0,
                   aveNum=1, lin_ref_lev=500):
-
+    import visa
     if platform == 'win32':
         spec_filename = windir(spec_filename)
     #datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/spectra/'
@@ -278,5 +279,4 @@ def getspecPlusTP(spec_filename, TP_filename, TPSampleFrequency, verbose=False, 
         print error_code, "error code"
     return
 
-    return
 #getspec('C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\test\\SpecTest.csv')

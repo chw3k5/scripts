@@ -15,7 +15,7 @@ do_SimpleSweepPlot     = False
 do_SingeSpectraPlotter = False
 
 ### For Y-factor data and Sweeps ###
-do_Ysweeps              = True
+do_Ysweeps              = False
 do_YdataPro             = True
 do_YfactotSweepsPlotter = True
 do_YSpectra_Plotter     = False
@@ -102,7 +102,7 @@ if all_Ydata:
 
 
 # The directory what the data is kept
-datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Oct20_14/Y_MAG/'
+datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Oct20_14/Y_MAG2/'
 
 if do_Ysweeps:
     BiasSweep(datadir, verbose=False, verboseTop=True, verboseSet=True, careful=False,
@@ -142,7 +142,7 @@ if do_YdataPro:
 
 if do_YfactotSweepsPlotter:
     YfactorSweepsPlotter(datadir, search_4Ynums=True, Ynums='', verbose=True, mV_min=-0, mV_max=None,
-                         show_standdev=False, std_num=1,
+                         show_standdev=True, std_num=1,
                          display_params=True, show_plot=False, save_plot=True, do_eps=False,
                          plot_mVuA=True, plot_mVtp=True, plot_Yfactor=True, plot_Ntemp=False,
                          find_lin_mVuA=False, find_lin_mVtp=False, find_lin_Yf=False,

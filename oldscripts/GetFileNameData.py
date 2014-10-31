@@ -48,7 +48,7 @@ def GetFileNameData(csvfile):
                     finished=True                  
                 next_position=Full_FileName.find('.',position+1)
                 if not next_position == -1:
-    	            position=next_position
+                    position=next_position
                 else:
                     finished=True
     FileName=Full_FileName[:position + 1]
