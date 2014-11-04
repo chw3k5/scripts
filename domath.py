@@ -138,29 +138,35 @@ def conv(data, mesh, min_cdf, sigma, verbose):
     # Normal Kernel Calculation
     n=0
     finished=False
-    mV_len=len(data[:,0])
-    while not finished:
-        n=n+1
+    try:
+        mV_len=len(data[:,0])
+        while not finished:
+            n=n+1
+            Xnorm=range(-n,n+1)
+            norm=scipy.stats.norm(0, sigmaSteps).pdf(Xnorm)
+            cdf=sum(norm)
+            if cdf>=min_cdf:
+                finished=True
         Xnorm=range(-n,n+1)
         norm=scipy.stats.norm(0, sigmaSteps).pdf(Xnorm)
-        cdf=sum(norm)
-        if cdf>=min_cdf:
-            finished=True
-    Xnorm=range(-n,n+1)
-    norm=scipy.stats.norm(0, sigmaSteps).pdf(Xnorm)
-    normMatrix=numpy.zeros((mV_len,mV_len+len(norm)-1),dtype=float)
-    
-    # matrix kernal for convolution
-    for m in range(0,mV_len):
-        tempVec=numpy.zeros((mV_len+len(norm)-1),dtype=float)
-        tempVec[m:m+2*n+1]=norm
-        normMatrix[m,]=tempVec
-    normMatrix2=normMatrix[:,n:len(normMatrix[0,:])-n]
-    # here is the point where the actual convolution takes place
-    weight=numpy.sum(normMatrix2,axis=1)
-    for p in range(len(data[0,:])-1):        
-        data[:,p+1] = numpy.dot(data[:,p+1], normMatrix2)/weight
-        status = True
+        normMatrix=numpy.zeros((mV_len,mV_len+len(norm)-1),dtype=float)
+
+        # matrix kernal for convolution
+        for m in range(0,mV_len):
+            tempVec=numpy.zeros((mV_len+len(norm)-1),dtype=float)
+            tempVec[m:m+2*n+1]=norm
+            normMatrix[m,]=tempVec
+
+        normMatrix2=normMatrix[:,n:len(normMatrix[0,:])-n]
+        # here is the point where the actual convolution takes place
+        weight=numpy.sum(normMatrix2,axis=1)
+        for p in range(len(data[0,:])-1):
+            data[:,p+1] = numpy.dot(data[:,p+1], normMatrix2)/weight
+            status = True
+    except IndexError:
+        status = False
+    except TypeError:
+        status = False
     return data, status
 
 
@@ -171,20 +177,25 @@ def derivative(data, deriv_int):
     # y'=df(mV)/dmV
     # y'=d(data[:,1:])/d(data[:,0])
     last_index = len(data[:,0])
-    lenF       = len(data[0,1:])
-    deriv      = numpy.zeros((last_index-deriv_int,len(data[0,:])))
+    try:
+        lenF       = len(data[0,1:])
+        deriv      = numpy.zeros((last_index-deriv_int,len(data[0,:])))
 
-    Fdata1     = data[:last_index-deriv_int,1:]
-    Fdata2     = data[deriv_int:,1:]
-    Xdata1     = data[:last_index-deriv_int,0]
-    Xdata2     = data[deriv_int:,0]
+        Fdata1     = data[:last_index-deriv_int,1:]
+        Fdata2     = data[deriv_int:,1:]
+        Xdata1     = data[:last_index-deriv_int,0]
+        Xdata2     = data[deriv_int:,0]
 
-    Fdiff      = Fdata2 - Fdata1
-    Xdiff      = Xdata2 - Xdata1
-    for n in range(lenF):
-        deriv[:,n+1] = Fdiff[:,n]/Xdiff
-    deriv[:,0] = (Xdata1+Xdata2)/2
-    status = True
+        Fdiff      = Fdata2 - Fdata1
+        Xdiff      = Xdata2 - Xdata1
+        for n in range(lenF):
+            deriv[:,n+1] = Fdiff[:,n]/Xdiff
+        deriv[:,0] = (Xdata1+Xdata2)/2
+        status = True
+    except IndexError:
+        status = False
+        deriv = None
+        print 'deriv =', deriv
     return status, deriv
 
 
@@ -195,11 +206,16 @@ def DoDerivatives(matrix, der1_int, do_der1_conv, der1_min_cdf, der1_sigma,
                   der2_int, do_der2_conv, der2_min_cdf, der2_sigma, regrid_mesh,
                   verbose):
     status, der1 = derivative(matrix, der1_int)
-    if do_der1_conv:
-        der1, status  = conv(der1,  regrid_mesh, der1_min_cdf, der1_sigma, verbose)
-    status, der2 = derivative(der1, der2_int)
-    if do_der2_conv:
-        der2, status  = conv(der2,  regrid_mesh, der2_min_cdf, der2_sigma, verbose)
+    if der1 is not None:
+        if do_der1_conv:
+            der1, status  = conv(der1,  regrid_mesh, der1_min_cdf, der1_sigma, verbose)
+        status, der2 = derivative(der1, der2_int)
+        if do_der2_conv:
+            der2, status  = conv(der2,  regrid_mesh, der2_min_cdf, der2_sigma, verbose)
+    else:
+        der2 = None
+        print "der1 = ", der1
+        print "der2 = ", der2
     return der1, der2
 
 
@@ -232,9 +248,8 @@ def findlinear(x, ydprime, linif, verbose):
                 lin_start.append(n)
             elif (n == len(x)-1 and linMask[n] == 1):
                 lin_end.append(n)                                        
-    if verbose != 'N':
+    if verbose:
         print str(len(lin_end))+" linear regions were found:"
-        print
     return status, lin_start, lin_end 
   
 
@@ -270,17 +285,25 @@ def linfit(X, Y, linif, der1_int, do_der1_conv, der1_min_cdf, der1_sigma,
            verbose):
     matrix = numpy.zeros((len(X),2))
     matrix[:,0] = X
-    matrix[:,1] = Y                
-    regrid_mesh = abs(X[1]-X[0])
-                                                                                 
+    matrix[:,1] = Y
+    try:
+        regrid_mesh = abs(X[1]-X[0])
+    except IndexError:
+        regrid_mesh = 0.01
     der1, der2 = DoDerivatives(matrix, der1_int, do_der1_conv, der1_min_cdf, der1_sigma,
                                der2_int, do_der2_conv, der2_min_cdf, der2_sigma, regrid_mesh,
                                verbose)
     #status, lin_start_uAmV, lin_end_uAmV = findlinear(der2[:,0], der2[:,1], linif, verbose)
     #slopes, intercepts, bestfits_uA, bestfits_mV = resfitter(uA_unpumpedhot, mV_unpumpedhot, lin_start_uAmV, lin_end_uAmV)
-    
-    status, lin_start, lin_end = findlinear(der2[:,0], der2[:,1], linif, verbose)
-    slopes, intercepts, bestfits_X, bestfits_Y = resfitter(X, Y, lin_start, lin_end)
+    try:
+       # print der1 != [], der1
+        status, lin_start, lin_end = findlinear(der2[:,0], der2[:,1], linif, verbose)
+        slopes, intercepts, bestfits_X, bestfits_Y = resfitter(X, Y, lin_start, lin_end)
+    except TypeError:
+         slopes     = None
+         intercepts = None
+         bestfits_X = None
+         bestfits_Y = None
     
     return slopes, intercepts, bestfits_X, bestfits_Y
       

@@ -19,14 +19,14 @@ def testsweeps(datadir, do_SISsweep=True, do_MAGsweep=True, iscold=True,
         SISpot_step =    200
         MAGpot_min  =      0
         MAGpot_max  = 129000
-        MAGpot_step =   1000
+        MAGpot_step =  10000
     else:
         SISpot_min  =  65000
-        SISpot_max  =  50000
+        SISpot_max  =  58000
         SISpot_step =    500
         MAGpot_min  =      0
         MAGpot_max  = 129000
-        MAGpot_step =   1000
+        MAGpot_step =  10000
 
     ### These options below have only been tested with default values
     feedback = True
@@ -239,9 +239,9 @@ def plottestsweeps(datadir, plot_SIS=True, plot_MAG=True,
                 = allstarplotgen(SIS_mV_mean, SIS_uA_mean, y_std=SIS_uA_std, std_num=std_num,
                                  plot_list=[], leglines=[], leglabels=[],
                                  show_std=show_std, find_lin=find_lin,
-                                 label='IV curve', std_label='sigma', lin_label='Ohms',
+                                 label='IV curve', std_label='sigma', lin_label=' Ohms',
                                  color='Chartreuse', lin_color='black',
-                                 linw=5, std_linw=1, lin_linw=2,
+                                 linw=5, std_linw=3, lin_linw=2,
                                  ls='-', std_ls='dotted', lin_ls='-',
                                  scale_str='', linif=linif,
                                  der1_int=der1_int, do_der1_conv=do_der1_conv, der1_min_cdf=der1_min_cdf, der1_sigma=der1_sigma,
@@ -302,7 +302,7 @@ def plottestsweeps(datadir, plot_SIS=True, plot_MAG=True,
                 = allstarplotgen(MAG_V_mean, MAG_mA_mean, y_std=MAG_mA_std, std_num=std_num,
                                  plot_list=[], leglines=[], leglabels=[],
                                  show_std=show_std, find_lin=find_lin,
-                                 label='IV curve', std_label='sigma', lin_label='Ohms',
+                                 label='IV curve', std_label='sigma', lin_label=' Ohms',
                                  color='OrangeRed', lin_color='black',
                                  linw=5, std_linw=1, lin_linw=2,
                                  ls='-', std_ls='dotted', lin_ls='-',

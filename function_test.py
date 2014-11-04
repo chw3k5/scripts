@@ -19,10 +19,10 @@ do_setmagI     = False # True or False
 
 do_RFfreqset   = False # True or False
 do_RFon        = False # True or False
-do_RFoff       = True # True or False
+do_RFoff       = False # True or False
 
 do_measSIS     = False # True or False
-do_setfeedback = False # True or False
+do_setfeedback = True # True or False
 do_setSIS      = False # True or False
 do_setSIS_only = False # True or False
 do_setSIS_TP   = False # True or False
@@ -81,7 +81,7 @@ if do_measmag:
 
 if do_setmag:
     from control import setmag
-    magpot = 103323 # electromagnet potentiometer position 
+    magpot = 127000 # electromagnet potentiometer position
     verbose = True  # True or False
     V_mag, mA_mag, pot_mag = setmag(magpot, verbose)
 
@@ -127,7 +127,7 @@ if do_measSIS:
     
 if do_setfeedback:
     from control import setfeedback
-    feedback = True # True or False
+    feedback = False # True or False
     status   = setfeedback(feedback)
 
 if do_setSIS:

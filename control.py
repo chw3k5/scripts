@@ -5,6 +5,10 @@ import sys
 from LabJack_control import LabJackU3_DAQ0
 
 
+
+sis_channel = '0'
+mag_channel = '9'
+
 def opentelnet():
     global thzbiascomputer
     thzbiascomputer = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)
@@ -95,7 +99,7 @@ def attempt_meas(sleep_time, channel):
 
             truth_list2 = []
             truth_list2.append(    20 <= abs(V))
-            truth_list2.append(   200 <= abs(A))
+            truth_list2.append(   300 <= abs(A))
             truth_list2.append(130000 <= pot)
             if any(truth_list2):
                 redo = True
@@ -117,7 +121,7 @@ def attempt_meas(sleep_time, channel):
 
 def measmag(verbose):
     from mag_config import sleep_list
-    channel = '9'
+    channel = mag_channel
     
     message_list = []
     message_list.append("Had to wait extra time for the measurement to be returned")
@@ -180,7 +184,7 @@ def setmag(magpot, verbose=False):
             sys.exit()
         
     #set the pot position of the magnet and recound the current and volage
-    thzbiascomputer.write("setbias 9 "+str(numpy.round(magpot)) + " \n")
+    thzbiascomputer.write("setbias "+mag_channel+" "+str(numpy.round(magpot)) + " \n")
     # time.sleep(SleepPerMes)     
 
     
@@ -211,7 +215,7 @@ def setmag_only(magpot):
             sys.exit()
         
     #set the pot position of the magnet and record the current and voltage
-    thzbiascomputer.write("setbias 9 "+str(numpy.round(magpot)) + " \n")
+    thzbiascomputer.write("setbias "+mag_channel+" "+str(numpy.round(magpot)) + " \n")
     # time.sleep(SleepPerMes)     
 
     return
@@ -239,14 +243,14 @@ def setmag_highlow(magpot):
             print "killing script"
             sys.exit()
     elif ((0 <= magpot) and (magpot <65100)):
-        thzbiascomputer.write("setbias 9 0 \n")
+        thzbiascomputer.write("setbias "+mag_channel+" 0 \n")
 
     else:
-        thzbiascomputer.write("setbias 9 129796 \n")
+        thzbiascomputer.write("setbias "+mag_channel+" 129796 \n")
 
     sleep(0.5)
     #set the pot position of the magnet and record the current and voltage
-    thzbiascomputer.write("setbias 9 "+str(numpy.round(magpot)) + " \n")
+    thzbiascomputer.write("setbias "+mag_channel+" "+str(numpy.round(magpot)) + " \n")
     # time.sleep(SleepPerMes)     
 
     return
@@ -464,7 +468,7 @@ def setmagI(mA_user, verbose=False, careful=False):
 def measSIS(verbose=False):
     from sisbias_config import sleep_list
     
-    channel = '0'
+    channel = sis_channel
     
     message_list = []
     message_list.append("Had to wait extra time for the measurement to be returned")
@@ -485,9 +489,10 @@ def measSIS(verbose=False):
     for n in range(3,len(sleep_list)):
         verbose_list.append(True)
         
-          
+    redo = False
     for loop_index in range(len(sleep_list)):
         redo, mV_sis, uA_sis, pot_sis = attempt_meas(sleep_list[loop_index], channel)
+        #print redo, mV_sis, uA_sis, pot_sis
         if not redo:
             break
         if verbose_list[loop_index]:
@@ -543,7 +548,7 @@ def setfeedback(feedback):
 
 def setSIS(sispot, feedback, verbose=False, careful=False):
     from sisbias_config import SleepPerMes, feedon_low, feedon_high, feedoff_low, feedoff_high
-    
+
     uA_sis  = -999998
     mV_sis  = -999998
     pot_sis = -999998
@@ -598,7 +603,7 @@ def setSIS(sispot, feedback, verbose=False, careful=False):
             print "reseting pot to safe value: " + str(sispot)
 
     #set the pot position of the magnet and record the current and voltage
-    thzbiascomputer.write("setbias 0 "+str(numpy.round(sispot)) + " \n")
+    thzbiascomputer.write("setbias " + sis_channel + " "+str(numpy.round(sispot)) + " \n")
     #time.sleep(SleepPerMes)     
 
     
@@ -658,7 +663,7 @@ def setSIS_only(sispot, feedback, verbose=False, careful=False):
             print "careful is off, so the show must go on"
             print "reseting pot to safe value: " + str(sispot)
     #set the pot position of the magnet and record the current and voltage
-    thzbiascomputer.write("setbias 0 "+str(numpy.round(sispot)) + " \n")
+    thzbiascomputer.write("setbias "+sis_channel+" "+str(numpy.round(sispot)) + " \n")
     time.sleep(SleepPerMes)
     return
 

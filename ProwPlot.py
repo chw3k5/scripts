@@ -16,15 +16,11 @@ do_SingeSpectraPlotter = False
 
 ### For Y-factor data and Sweeps ###
 do_Ysweeps              = False
-do_YdataPro             = True
-do_YfactotSweepsPlotter = True
+do_YdataPro             = False
+do_YfactotSweepsPlotter = False
 do_YSpectra_Plotter     = False
 
-### TestSweeps ###
-do_testsweeps     = False
-do_protestsweeps  = False
-do_plottestsweeps = False
-iscold = True
+
 
 
 ####################
@@ -143,7 +139,7 @@ if do_YdataPro:
 
 if do_YfactotSweepsPlotter:
     YfactorSweepsPlotter(datadir, search_4Ynums=True, Ynums='', verbose=True, mV_min=-0, mV_max=None,
-                         show_standdev=True, std_num=1,
+                         show_standdev=False, std_num=1,
                          display_params=True, show_plot=False, save_plot=True, do_eps=False,
                          plot_mVuA=True, plot_mVtp=True, plot_Yfactor=True, plot_Ntemp=False,
                          find_lin_mVuA=False, find_lin_mVtp=False, find_lin_Yf=False,
@@ -161,20 +157,35 @@ if do_YSpectra_Plotter:
 
 
 
-
+### TestSweeps ###
+do_testsweeps     = True
+do_protestsweeps  = True
+do_plottestsweeps = True
+isdummydewar = False
+istestcirc   = True
+istestpixel  = True
+iscold       = False
 
 if all_testsweeps:
     do_testsweeps     = True
     do_protestsweeps  = True
     do_plottestsweeps = True
 
-datadir='/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Oct20_14/'
-if iscold:
+datadir='/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Nov04_14/'
+
+if isdummydewar:
+     datadir += 'dummydewar/'
+elif istestcirc:
+    datadir += 'testcircuit/'
+elif istestpixel:
+    datadir += 'testpixel/'
+elif iscold:
     datadir += 'coldtest/'
 else:
     datadir += 'warmtest/'
 if do_testsweeps:
-    testsweeps(datadir, do_SISsweep=True, do_MAGsweep=True, iscold=iscold, verbose=True)
+    testsweeps(datadir, do_SISsweep=True, do_MAGsweep=False, iscold=iscold, verbose=True,
+               numofmeas=10)
 
 if do_protestsweeps:
     protestsweeps(datadir,
@@ -186,7 +197,7 @@ if do_plottestsweeps:
     plottestsweeps(datadir, plot_SIS=True, plot_MAG=True,
                        show_std=True, std_num=10,
                        show_plot=False, save_plot=True, do_eps=True,
-                       find_lin=True, linif=0.4,
+                       find_lin=True, linif=1.1,
                        der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.05,
                        der2_int=1, do_der2_conv=True, der2_min_cdf=0.95, der2_sigma=0.10,
                        verbose=False)

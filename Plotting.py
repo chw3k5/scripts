@@ -499,14 +499,15 @@ def linifxyplotgen(x_vector, y_vector, label='', plot_list=[], leglines=[], legl
     slopes, intercepts, bestfits_x, bestfits_y \
                 =  linfit(x_vector, y_vector, linif, der1_int, do_der1_conv, der1_min_cdf, der1_sigma, der2_int,
                           do_der2_conv, der2_min_cdf, der2_sigma, verbose)
-    for n in range(len(bestfits_x[0,:])):
-        plot_list.append((bestfits_x[:,n], bestfits_y[:, n], color, linw, ls, scale_str))
-        leglines.append((color, ls, linw))
-        resist = 1000*(1.0/slopes[n])
-        if label is None:
-            leglabels.append(None)
-        else:
-            leglabels.append(str('%3.1f' % resist)+label)
+    if slopes is not None:
+        for n in range(len(bestfits_x[0,:])):
+            plot_list.append((bestfits_x[:,n], bestfits_y[:, n], color, linw, ls, scale_str))
+            leglines.append((color, ls, linw))
+            resist = 1000*(1.0/slopes[n])
+            if label is None:
+                leglabels.append(None)
+            else:
+                leglabels.append(str('%3.1f' % resist)+label)
     return plot_list, leglines, leglabels
 
 

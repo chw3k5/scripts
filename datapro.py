@@ -179,9 +179,11 @@ def BasicDataPro(sweepdir, prodataname, is_SIS_data=True, mono_switcher=True, do
             )
         n.close()
     else:
-        print "No total Power data was found in ", sweepdir
-        print "Killing Script"
-        sys.exit()
+        if verbose:
+            if is_SIS_data:
+                print "No SIS data was found in ", sweepdir
+            else:
+                print "No Magnet data was found in ", sweepdir
     return BasicDataFound
 
 
