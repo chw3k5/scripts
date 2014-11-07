@@ -76,7 +76,7 @@ from sys import platform
 from profunc import windir
 import serial, signal, time, os, sys, atpy, numpy, matplotlib
 from matplotlib import pyplot as plt
-from email_sender   import email_caleb, email_groppi, text_caleb
+from email_sender   import email_caleb, email_groppi, text_caleb, text_qroppi
 serial_port = ''
 
 if platform == 'win32':
@@ -469,7 +469,8 @@ while monitoring:
             alarm_body_text = alarm_msg + body_text
             email_caleb(alarm_subject, alarm_body_text)
             text_caleb(alarm_subject)
-            #email_groppi(alarm_subject, alarm_body_text)
+            email_groppi(alarm_subject, alarm_body_text)
+            text_qroppi(body_text)
 
             Email_time = current_time
             EmailTrigger = False
@@ -480,6 +481,7 @@ while monitoring:
                 body_text = GenEmailText(temps_wstats, Nhours, totalhours)
                 
                 email_caleb(subject, body_text)
+                email_groppi(subject, body_text)
                 Email_time = current_time
                 EmailTrigger = False
             

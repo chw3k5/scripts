@@ -72,3 +72,28 @@ def text_caleb(body_text):
     session.login(FROM, 'I8pi4fun')
     session.sendmail(FROM, TO, msg.as_string())
     session.quit()
+
+def text_qroppi(body_text):
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+
+    #subject   = "Test message"
+    #body_text = 'body text'
+
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = ''
+
+    body   = MIMEText(body_text)
+    msg.attach(body)
+
+    TO = '5209063509@text.att.net'
+    FROM = 'thz.lab.asu@gmail.com'
+
+    session = smtplib.SMTP('smtp.gmail.com', 587)
+    #session = smtplib.SMTP('smtp.gmail.com', 465)
+    session.ehlo()
+    session.starttls()
+    session.login(FROM, 'I8pi4fun')
+    session.sendmail(FROM, TO, msg.as_string())
+    session.quit()
