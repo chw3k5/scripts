@@ -19,10 +19,10 @@ do_setmagI     = False # True or False
 
 do_RFfreqset   = False # True or False
 do_RFon        = False # True or False
-do_RFoff       = False # True or False
+do_RFoff       = True # True or False
 
 do_measSIS     = False # True or False
-do_setfeedback = True # True or False
+do_setfeedback = False # True or False
 do_setSIS      = False # True or False
 do_setSIS_only = False # True or False
 do_setSIS_TP   = False # True or False
@@ -43,7 +43,7 @@ do_AllanVar    = False # True or False
 ###### From StepperControl.py ######
 ####################################
 
-do_stepperTest = False
+do_stepperTest = True
  # True or False
 
 #####################################
@@ -127,7 +127,7 @@ if do_measSIS:
     
 if do_setfeedback:
     from control import setfeedback
-    feedback = False # True or False
+    feedback = True # True or False
     status   = setfeedback(feedback)
 
 if do_setSIS:
@@ -167,11 +167,12 @@ if do_measSIS_TP:
 
 if do_setSIS_Volt:
     from control import setSIS_Volt
-    mV_user   = 1.8   # mV
+    mV_user   = 2.2   # mV
     verbose   = True  # True or False
     careful   = False # True or False
     cheat_num = 56666 # This is a guess at what the potentiometer position is at mV_user
     mV_sis, uA_sis, pot_sis = setSIS_Volt(mV_user, verbose, careful, cheat_num)
+    print 'mV_sis =' ,mV_sis, 'uA_sis =', uA_sis, 'pot_sis =', pot_sis
 
 if do_setLOI:
     from control import setLOI

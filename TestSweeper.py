@@ -23,7 +23,7 @@ def testsweeps(datadir, do_SISsweep=True, do_MAGsweep=True, iscold=True,
     else:
         SISpot_min  =  65000
         SISpot_max  =  58000
-        SISpot_step =    500
+        SISpot_step =    400
         MAGpot_min  =      0
         MAGpot_max  = 129000
         MAGpot_step =  10000

@@ -256,7 +256,8 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
               UCAsweep_min=3.45, UCAsweep_max=3.45, UCAsweep_step=0.05,
               sweepShape="rectangular",
               FinishedEmail=False, FiveMinEmail=False, PeriodicEmail=False,
-              seconds_per_email=1200, chopper_off=False, do_LOuApresearch=True, biastestmode=False):
+              seconds_per_email=1200, chopper_off=False, do_LOuApresearch=True, biastestmode=False,
+              warning=False):
 
     if ((not testmode) and (not chopper_off)):
         from StepperControl import initialize, GoForth, GoBack, DisableDrive
@@ -508,7 +509,8 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
         list_len = len(master_K_list)
         if verboseTop:
             print "List lengths are verified, starting control sequence"
-            raw_input("Press Enter to Continue")
+            if warning:
+                raw_input("Press Enter to Continue")
     else:
         print "list lengths in the function BiasSweep are not the same. " \
               "Search for 'Truth_list' in the code to find the source of this error."

@@ -106,13 +106,13 @@ if serial_port == '':
     
 verbose = True
 # Data Folder
-folder ='/Users/chw3k5/Documents/Grad_School/Kappa/temperatureData/Oct20_2014/'
+folder ='/Users/chw3k5/Documents/Grad_School/Kappa/temperatureData/Nov05_14/'
 if platform == 'win32':
     folder = windir(folder)
 
 
 
-monitor_type = 'fastwarm' # options: 'coolpumpon', 'coolpumpoff', 'LN2fill', 'LHefill', 'almostcold', 'cold', 'fastwarm', 'slowwarm'
+monitor_type = 'cold' # options: 'coolpumpon', 'coolpumpoff', 'LN2fill', 'LHefill', 'almostcold', 'cold', 'fastwarm', 'slowwarm'
 meas_period      = 7.0 # in seconds
 rest_time        = 0.5 # in seconds
 channels = [4,2,3]
@@ -131,7 +131,7 @@ if monitor_type=='coolpumpon':
     seconds_per_email = 20*60 #12*60*60 # in seconds
     alarm_channel = 2
     high_alarm_temperature = 300. # in Kelvin
-    low_alarm_temperature  = 80. # in Kelvin
+    low_alarm_temperature  =  80. # in Kelvin
 elif monitor_type=='coolpumpoff':
     filename      = monitor_type+'.csv'
     make_plots    = True
@@ -186,7 +186,7 @@ elif monitor_type == 'almostcold':
     PeriodicEmail = True
     seconds_per_email      = 1*60*60 #12*60*60 # in seconds
     alarm_channel          = 4
-    high_alarm_temperature = 4.600 # in Kelvin
+    high_alarm_temperature = 6.00 # in Kelvin
     low_alarm_temperature  = 3. # in Kelvin
 elif monitor_type == 'cold':
     filename      = monitor_type+'.csv'

@@ -75,7 +75,7 @@ def attempt_meas(sleep_time, channel):
     V   = -999999
     A   = -999999
     pot = -999999
-
+    channel = str(channel)
     out = CommandOutput(sleep_time, channel)
 
     V_temp    = out[0]
@@ -98,8 +98,8 @@ def attempt_meas(sleep_time, channel):
             pot  = int(numpy.round(float(pot_temp)))
 
             truth_list2 = []
-            truth_list2.append(    20 <= abs(V))
-            truth_list2.append(   300 <= abs(A))
+            truth_list2.append(    40 <= abs(V))
+            truth_list2.append(  1000 <= abs(A))
             truth_list2.append(130000 <= pot)
             if any(truth_list2):
                 redo = True
@@ -1286,8 +1286,8 @@ def setLOI(uA_user, verbose=False, careful=False):
             print " careful is off, I will allow the script to attempt to set the current anyway"
 
     # here we do a simpy binary search to find the region wear the uA_user is near        
-    Vfrac = float(1) # Votage range of search
-    UCA_current = float(3.0) # first guess in sweep   
+    Vfrac = 1.5 # Votage range of search
+    UCA_current = float(2.5) # first guess in sweep
     status = LabJackU3_DAQ0(UCA_current)
     mV_temp, uA_current, pot_temp = measSIS(verbose)
     if uA_current < uA_user:

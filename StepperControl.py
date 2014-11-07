@@ -64,7 +64,7 @@ if serial_port == '':
     print "When adding new device locations they will need to be added to this script"
     print 'killing the script'
     sys.exit()
-SleepTime = 0.5
+SleepTime = 1
 
 def DisableDrive():
     # Disable drive
@@ -316,7 +316,7 @@ def QuarterTurn():
     st.close()
     return status
 #
-def initialize(vel=1, accel=0.8):
+def initialize(vel=1, accel=0.5):
     st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1, timeout=2)
     time.sleep(SleepTime)
     if st.isOpen():
@@ -324,8 +324,8 @@ def initialize(vel=1, accel=0.8):
         # Disable drive
         write_str = write_str + b'DRIVE0\n'
 
-        # Erase any existing programs
-        write_str = write_str + 'ERASE\n'
+        ## Erase any existing programs
+        #write_str = write_str + 'ERASE\n'
 
         # Set drive resolution
         write_str = write_str + 'DRES25000\n'
@@ -398,10 +398,11 @@ def GoForth():
     time.sleep(SleepTime)
     if st.isOpen():
         # Set distance
-        st.write(b'D0.25\n')
+        write_str = 'D0.20\n'
         time.sleep(SleepTime)
         # send the go command
-        st.write(b'GO1\n')
+        write_str += 'GO1\n'
+        st.write(write_str)
         time.sleep(SleepTime)
         status = True
     else:
@@ -414,10 +415,11 @@ def GoBack():
     #time.sleep(SleepTime)
     if st.isOpen():
         # Set distance
-        st.write(b'D-0.25\n')
+        write_str = 'D-0.30\n'
         time.sleep(SleepTime)
         # send the go command
-        st.write(b'GO1\n')
+        write_str += 'GO1\n'
+        st.write(write_str)
         time.sleep(SleepTime)
         status = True
     else:
