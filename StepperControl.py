@@ -60,44 +60,163 @@ elif platform == 'darwin':
                         serial_port = test_serial_port
 if serial_port == '':
     print 'The serial device that you are trying to use in stControl.py was NOT found under the expected paths.'
-    print "check the device paths with 'ls /dev/cu*' and make sure the device is plugged." 
+    print "check the device paths with 'ls /dev/cu*' (mac only) and make sure the device is plugged into the computer."
     print "When adding new device locations they will need to be added to this script"
     print 'killing the script'
     sys.exit()
-SleepTime = 1
+SleepTime = 1.2
+initialize_sleep = 5
+
+st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1, timeout=2)
+
+
+##################################
+###### Standard Definitions ######
+##################################
+
+def initialize(vel=1, accel=0.5, verbose=True):
+    if st.isOpen():
+        write_str = ''
+        # Set drive resolution
+        write_str += 'DRES25000\n'
+        # Enable scaling
+        write_str += 'SCALE1\n'
+        # Set scaling
+        write_str += 'SCLD25000\n'
+        write_str += 'SCLV25000\n'
+        write_str += 'SCLA25000\n'
+
+        # Define axis as st
+        write_str += 'AXDEF0\n'
+        # Disable hardware end-of-travel limits
+        write_str += 'LH0\n'
+        # Pause command execution on stop command
+        write_str += 'COMEXS1\n'
+        # Disable continuous command processing mode
+        #write_str += 'COMEXC0\n'
+
+        # Set preset/continuous mode
+        #write_str += 'MC0\n'
+        # Set absolute/incremental mode
+        #write_str += 'MA0\n'
+        # Set current position as 0
+        write_str += 'PSET0\n'
+
+        ### Set Accelerations ###
+        accel_str = str(accel)
+        half_accel_str = str(accel/2.0)
+        if verbose:
+            print accel_str, '= acceleration string'
+            print half_accel_str, '= half acceleration string'
+
+        # acceleration
+        write_str += 'A' + accel_str + '\n'
+        # average acceleration (to determine 'S' curve shape)
+        write_str += 'AA' + half_accel_str + '\n'
+        # Set deceleration
+        write_str += 'AD' + accel_str + '\n'
+        # set average decoration
+        write_str += 'ADA' + half_accel_str + '\n'
+
+        ### Set Velocity ###
+        vel_str = str(vel)
+        write_str += 'V' + vel_str + '\n'
+        if verbose:
+            print vel, '= velocity string'
+
+        # Enable drive
+        #write_str = write_str + 'DRIVE1\n'
+        st.write(write_str)
+        time.sleep(initialize_sleep)
+
+        status = True
+    else:
+        print "The port is not open, returning status False"
+        status = False
+    return status
+#
+def GoForth(dist='0.25'):
+    status = False
+    if st.isOpen():
+        write_str = ''
+        # Enable drive
+        write_str += 'DRIVE1\n'
+        # Set distance
+        write_str += 'D'+str(dist)+'\n'
+        time.sleep(SleepTime)
+        # send the go command
+        write_str += 'GO1\n'
+        st.write(write_str)
+        time.sleep(SleepTime)
+        status = True
+    else:
+        print "The port is not open, returning status False"
+    return status
+#
+def GoBack(dist='0.25'):
+    status = False
+    #time.sleep(SleepTime)
+    if st.isOpen():
+        write_str = ''
+        # Enable drive
+        write_str += 'DRIVE1\n'
+        # Set distance
+        write_str += 'D-'+str(dist)+'\n'
+        time.sleep(SleepTime)
+        # send the go command
+        write_str += 'GO1\n'
+        st.write(write_str)
+        time.sleep(SleepTime)
+        status = True
+    else:
+        print "The port is not open, returning status False"
+    return status
 
 def DisableDrive():
     # Disable drive
     status = False
-    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
-    time.sleep(SleepTime)
     if st.isOpen():
         st.write(b'DRIVE0\n')
-        time.sleep(SleepTime)
         status = True
     else:
-        print "The port is not open, return in status False"
-    st.close()
+        print "The port is not open, returning status False"
     return status
-#    
+
+def stepper_close():
+    st.close()
+    return
+
+def reader():
+    st.write(b'STARTP\n')
+    char = 1
+    string = ''
+    while char:
+        char = st.readline()
+        string = string + char
+        print string
+    return
+
+
+
+################################
+###### Unused Definitions ######
+################################
+
 def SetResolution():
     # Set drive resolution to 25,000 microsteps 
-    status = False    
-    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
+    status = False
     time.sleep(SleepTime)
     if st.isOpen():
         st.write(b'DRES25000\n')
         time.sleep(SleepTime)
         status = True
     else:
-        print "The port is not open, return in status False"
-    st.close()
+        print "The port is not open, returning status False"
     return status
 #    
 def SetScaling():
     # Set scaling so that '1' represents 1 revolution
-    status = False    
-    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
+    status = False
     time.sleep(SleepTime)
     if st.isOpen():
         st.write(b'SCLD25000\n')
@@ -108,28 +227,24 @@ def SetScaling():
         time.sleep(SleepTime)
         status = True
     else:
-        print "The port is not open, return in status False"
-    st.close()
+        print "The port is not open, returning status False"
     return status
 #
 def EnableScaling():
     # Enable Scaling
-    status = False    
-    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
+    status = False
     time.sleep(SleepTime)
     if st.isOpen():
         st.write(b'SCALE1\n')
         time.sleep(SleepTime)
         status = True
     else:
-        print "The port is not open, return in status False"
-    st.close()
+        print "The port is not open, returning status False"
     return status    
 #
 def DefineAxis(AxisNum=0):
     # Define axis:  0 = st, 1 = servo # 0 is defult
-    status = False    
-    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
+    status = False
     time.sleep(SleepTime)
     if st.isOpen():
         if (AxisNum == 0 or AxisNum == 1):
@@ -139,16 +254,14 @@ def DefineAxis(AxisNum=0):
         else:
             print "AxisNum should be a 0 or 1, a number not a string. AxisNum = " +str(AxisNum)+" . Returning status = False"
     else:
-        print "The port is not open, return in status False"
-    st.close()
+        print "The port is not open, returning status False"
     return status
 #
 def HardwareLimits(HardwareLimitNum=0):
     # Hardware End-of-Travel Limit:
     # 0 = disable limits (0 is default)
     # 1-3 = enable motion restrictions in certain directions
-    status = False    
-    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
+    status = False
     time.sleep(SleepTime)
     if st.isOpen():
         if (HardwareLimitNum == 0 or HardwareLimitNum == 1 or HardwareLimitNum == 2 or HardwareLimitNum == 3):
@@ -158,16 +271,14 @@ def HardwareLimits(HardwareLimitNum=0):
         else:
             print "HardwareLimitNum  should be a 0, 1, 2, or 3 a number not a string. HardwareLimitNum = " +str(HardwareLimitNum)+" . Returning status = False"
     else:
-        print "The port is not open, return in status False"
-    st.close()
+        print "The port is not open, returning status False"
     return status
 #
 def StopBehavior(StopBehavoirNum=1):
     # Behavior on stop input or Stop command (!S):
     # 0 = discard commands in buffer and terminate program execution
     # 1 = pause command execution, continue with !C command (1 is default)
-    status = False    
-    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
+    status = False
     time.sleep(SleepTime)
     if st.isOpen():
         if (StopBehavoirNum == 0 or StopBehavoirNum == 1):
@@ -177,14 +288,12 @@ def StopBehavior(StopBehavoirNum=1):
         else:
             print "StopBehavoirNum  should be a 0 or 1, a number not a string. StopBehavoirNum = " +str(StopBehavoirNum)+" . Returning status = False"
     else:
-        print "The port is not open, return in status False"
-    st.close()
+        print "The port is not open, returning status False"
     return status
 #
 def ContinuousCmdMode(ContinuousCmdNum=0):
     # Continuous command processing mode:  0 = disable (pause until motion is complete) (0 is default), 1 = enable
-    status = False    
-    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
+    status = False
     time.sleep(SleepTime)
     if st.isOpen():
         if (ContinuousCmdNum == 0 or ContinuousCmdNum == 1):
@@ -194,15 +303,13 @@ def ContinuousCmdMode(ContinuousCmdNum=0):
         else:
             print "ContinuousCmdNum  should be a 0 or 1, a number not a string. ContinuousCmdNum = " +str(ContinuousCmdNum)+" . Returning status = False"
     else:
-        print "The port is not open, return in status False"
-    st.close()
+        print "The port is not open, returning status False"
     return status
 #
 def DistOrVelMode(DistOrVelNum=0):
     # Preset mode (0) = move specified distance (0 is default)
     # Continuous mode (1) = move at specified velocity
-    status = False    
-    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
+    status = False
     time.sleep(SleepTime)
     if st.isOpen():
         if (DistOrVelNum == 0 or DistOrVelNum == 1):
@@ -212,15 +319,13 @@ def DistOrVelMode(DistOrVelNum=0):
         else:
             print "DistOrVelNum  should be a 0 or 1, a number not a string. DistOrVelNumm = " +str(DistOrVelNum)+" . Returning status = False"
     else:
-        print "The port is not open, return in status False"
-    st.close()
+        print "The port is not open, returning status False"
     return status
 #
 def IncementOrAbsolute(IncementOrAbsoluteNum=0):
     # Incremental mode (0) = move w.r.t. position at start of move (0 is default)
     # Absolute mode (1) = move w.r.t. absolute zero
-    status = False    
-    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
+    status = False
     time.sleep(SleepTime)
     if st.isOpen():
         if (IncementOrAbsoluteNum == 0 or IncementOrAbsoluteNum == 1):
@@ -230,48 +335,42 @@ def IncementOrAbsolute(IncementOrAbsoluteNum=0):
         else:
             print "IncementOrAbsoluteNum  should be a 0 or 1, a number not a string. IncementOrAbsoluteNum = " +str(IncementOrAbsoluteNum)+" . Returning status = False"
     else:
-        print "The port is not open, return in status False"
-    st.close()
+        print "The port is not open, returning status False"
     return status
 #
 def SetZero():
     # Set current position as 0
-    status = False    
-    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
+    status = False
     time.sleep(SleepTime)
     if st.isOpen():
         st.write(b'PSET0\n')
         time.sleep(SleepTime)
         status = True
     else:
-        print "The port is not open, return in status False"
-    st.close()
+        print "The port is not open, returning status False"
     return status
 ###########################################################################
 ## MOTION SETTINGS:  Including: Acceleration, Velocity   
 def SetAccel(AccelNum):
     # Acceleration (revolutions/s^2)
-    status = False    
-    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
+    status = False
     time.sleep(SleepTime)
     if st.isOpen():
         if (AccelNum <= 1):
             st.write(b'A'+str(AccelNum)+'\n')
             time.sleep(SleepTime)
-            st.write(bAD+str(AccelNum)+'\n')
+            st.write(b'AD'+str(AccelNum)+'\n')
             time.sleep(SleepTime)
             status = True
         else:
             print "AccelNum should be less than 1 and a number not a string. AccelNum = " +str(AccelNum)+" . Returning status = False"
     else:
-        print "The port is not open, return in status False"
-    st.close()
+        print "The port is not open, returning status False"
     return status
 #
 def SetVel(VelNum):
     # Velocity (rev/s)
-    status = False    
-    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
+    status = False
     time.sleep(SleepTime)
     if st.isOpen():
         if (VelNum <= 1):
@@ -281,14 +380,12 @@ def SetVel(VelNum):
         else:
             print "VelNum should be less than 1 and a number not a string. VelNum = " +str(VelNum)+" . Returning status = False"
     else:
-        print "The port is not open, return in status False"
-    st.close()
+        print "The port is not open, returning status False"
     return status
 #
 def Rotate(RotateNum):
     # Set rotation distance
-    status = False    
-    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
+    status = False
     time.sleep(SleepTime)
     if st.isOpen():
         if (RotateNum <= 5):
@@ -298,133 +395,22 @@ def Rotate(RotateNum):
         else:
             print "RotateNum should be less than 5 and a number not a string. RotateNum = " +str(RotateNum)+" . Returning status = False"
     else:
-        print "The port is not open, return in status False"
-    st.close()
+        print "The port is not open, returning status False"
     return status   
 #
 def QuarterTurn():
     # rotation of a 1/4 turn.
-    status = False    
-    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1)
+    status = False
     time.sleep(SleepTime)
     if st.isOpen():
         st.write(b'D0.25\n')
         time.sleep(SleepTime)
         status = True
     else:
-        print "The port is not open, return in status False"
-    st.close()
+        print "The port is not open, returning status False"
     return status
 #
-def initialize(vel=1, accel=0.5):
-    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1, timeout=2)
-    time.sleep(SleepTime)
-    if st.isOpen():
-        write_str = ''
-        # Disable drive
-        write_str = write_str + b'DRIVE0\n'
 
-        ## Erase any existing programs
-        #write_str = write_str + 'ERASE\n'
-
-        # Set drive resolution
-        write_str = write_str + 'DRES25000\n'
-
-        # Enable scaling
-        write_str = write_str + 'SCALE1\n'
-
-        # Set scaling
-        write_str = write_str + 'SCLD25000\n'
-        write_str = write_str + 'SCLV25000\n'
-        write_str = write_str + 'SCLA25000\n'
-
-        # Define axis as st
-        write_str = write_str + 'AXDEF0\n'
-
-        # Disable hardware end-of-travel limits
-        write_str = write_str + 'LH0\n'
-
-        # Pause command execution on stop command
-        write_str = write_str + 'COMEXS1\n'
-
-        # Disable continuous command processing mode
-        write_str = write_str + 'COMEXC0\n'
-
-        # Set preset/continuous mode
-        write_str = write_str + 'MC0\n'
-
-        # Set absolute/incremental mode
-        write_str = write_str + 'MA0\n'
-
-        # Set current position as 0
-        write_str = write_str + 'PSET0\n'
-
-        ### Set Accelerations ###
-        accel_str = str(accel)
-        half_accel_str = str(accel/2.0)
-
-        # acceleration
-        write_str = write_str + 'A' + accel_str + '\n'
-
-        # average acceleration (to determine 'S' curve shape)
-        write_str = write_str + 'AA' + half_accel_str + '\n'
-
-        # Set deceleration
-        write_str = write_str + 'AD' + accel_str + '\n'
-
-        # set average decoration
-        write_str = write_str + 'ADA' + half_accel_str + '\n'
-
-        ### Set Velocity ###
-        vel_str = str(vel)
-        write_str = write_str + 'V' + vel_str + '\n'
-
-        # Enable drive
-        write_str = write_str + 'DRIVE1\n'
-
-        st.write(write_str)
-        time.sleep(SleepTime*5)
-
-
-        status = True
-    else:
-        print "The port is not open, return in status False"
-    st.close()
-    return status
-#
-def GoForth():
-    status = False
-    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1, timeout=2)
-    time.sleep(SleepTime)
-    if st.isOpen():
-        # Set distance
-        write_str = 'D0.20\n'
-        time.sleep(SleepTime)
-        # send the go command
-        write_str += 'GO1\n'
-        st.write(write_str)
-        time.sleep(SleepTime)
-        status = True
-    else:
-        print "The port is not open, return in status False"  
-    return status
-#
-def GoBack():
-    status = False
-    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1, timeout=2)
-    #time.sleep(SleepTime)
-    if st.isOpen():
-        # Set distance
-        write_str = 'D-0.30\n'
-        time.sleep(SleepTime)
-        # send the go command
-        write_str += 'GO1\n'
-        st.write(write_str)
-        time.sleep(SleepTime)
-        status = True
-    else:
-        print "The port is not open, return in status False"
-    return status
 
 # make commands to be executed every time the controller is started
 # def startup():
@@ -484,37 +470,26 @@ def GoBack():
 #         st.write(b'RESET\n')
 #         time.sleep(SleepTime)
 #     else:
-#         print "The port is not open, return in status False"
-#     st.close()
+#         print "The port is not open, returning status False"
+#
 #
 #     return
 
-def test_func():
-    #startup()
-    time.sleep(5)
-    GoForth()
-    time.sleep(5)
-    DisableDrive()
+
+
+def test(test_num=10,move_sleep=1, vel=0.2, accel=0.2,forth_dist='0.20',back_dist='0.30', verbose=True):
+    initialize(vel=vel, accel=accel, verbose=verbose)
+    for n in range(test_num):
+        GoForth(dist=forth_dist)
+        DisableDrive()
+        time.sleep(move_sleep)
+
+        #GoForth(dist='-'+back_dist)
+        GoBack(dist=back_dist)
+        DisableDrive()
+        time.sleep(move_sleep)
+    stepper_close()
     return
 
-def test2():
-    initialize(vel=0.2, accel=0.2)
-    for n in range(10):
-        GoForth()
-        time.sleep(2)
-        GoBack()
-        time.sleep(2)
-    DisableDrive()
-    return
-
-def reader():
-    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1, timeout=2)
-    st.write(b'STARTP\n')
-    char = 1
-    string = ''
-    while char:
-        char = st.readline()
-        string = string + char
-        print string
-    return
+#test(test_num=200, move_sleep=2, vel=0.5, accel=1, forth_dist='0.25',back_dist='0.25', verbose=True)
 

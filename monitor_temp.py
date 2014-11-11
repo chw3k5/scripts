@@ -4,6 +4,7 @@
 #
 # I had to install stuff to make USB to Serial stuff work on my mac
 # download at http://www.xbsd.nl/pub/osx-pl2303.kext.tgz
+# Lets see how long until Caleb sees this
 # 
 # Then follow the instructions at http://robpickering.com/2013/12/enabling-a-usb-to-serial-port-adapter-under-os-x-10-9-mavericks-1623
 # which are:
@@ -110,7 +111,7 @@ folder ='/Users/chw3k5/Documents/Grad_School/Kappa/temperatureData/Nov05_14/'
 if platform == 'win32':
     folder = windir(folder)
 
-
+do_emailgroppi = False
 
 monitor_type = 'cold' # options: 'coolpumpon', 'coolpumpoff', 'LN2fill', 'LHefill', 'almostcold', 'cold', 'fastwarm', 'slowwarm'
 meas_period      = 7.0 # in seconds
@@ -469,8 +470,9 @@ while monitoring:
             alarm_body_text = alarm_msg + body_text
             email_caleb(alarm_subject, alarm_body_text)
             text_caleb(alarm_subject)
-            email_groppi(alarm_subject, alarm_body_text)
-            text_qroppi(body_text)
+            if do_emailgroppi:
+                email_groppi(alarm_subject, alarm_body_text)
+                text_qroppi(body_text)
 
             Email_time = current_time
             EmailTrigger = False
@@ -481,7 +483,8 @@ while monitoring:
                 body_text = GenEmailText(temps_wstats, Nhours, totalhours)
                 
                 email_caleb(subject, body_text)
-                email_groppi(subject, body_text)
+                if do_emailgroppi:
+                    email_groppi(subject, body_text)
                 Email_time = current_time
                 EmailTrigger = False
             

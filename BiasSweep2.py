@@ -260,7 +260,15 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
               warning=False):
 
     if ((not testmode) and (not chopper_off)):
-        from StepperControl import initialize, GoForth, GoBack, DisableDrive
+        from StepperControl import initialize, GoForth, GoBack, DisableDrive, stepper_close
+
+
+    stepper_vel = 0.5
+    stepper_accel = 1.0
+    forth_dist = 0.25
+    back_dist = 0.25
+
+
     ##############################################
     ###### Connect to the THz bias Computer ######
     ##############################################
@@ -476,7 +484,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
     if ( (min(K_list) < 90) and (250 < max(K_list)) ):
         do_Ynum = True
         if ((not testmode) and (not chopper_off)):
-            initialize() # To start the chopper
+            initialize(vel=stepper_vel, accel=stepper_accel, verbose=verbose) # To start the chopper
         # this triggers the Y factor folder to be created
         Y_trigger = K_list[0]
         K_actual  = K_list[0]
@@ -573,9 +581,11 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
             if do_Ynum:
                 if ((not testmode) and (not first_loop)):
                     if  K_actual <= 150:
-                        GoForth()
+                        GoForth(dist=forth_dist)
+                        DisableDrive()
                     elif 150 < K_actual:
-                        GoBack()
+                        GoBack(dist=back_dist)
+                        DisableDrive()
                     K_actual = K_thisloop
                     if (verboseTop):
                         print K_actual, "K: The command to move the chopper has been sent"
@@ -1069,8 +1079,9 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
 
     # turn things off after a run
     if ((not testmode) and (not chopper_off)):
-        GoBack()
+        GoForth(dist=forth_dist)
         DisableDrive()
+        stepper_close()
     if not testmode:
         zeropots(verbose)
         closetelnet()

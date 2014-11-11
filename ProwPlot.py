@@ -9,6 +9,8 @@ all_Ydata         = False
 all_testsweeps    = False
 do_email = False
 warning = True
+start_num = 2
+
 
 ### For Single Sweep ###
 do_sweeps              = False
@@ -16,7 +18,7 @@ do_SweepDataPro        = False
 do_SimpleSweepPlot     = False
 do_SingeSpectraPlotter = False
 repeat  = 1
-start_num = 1
+
 
 
 ### For Y-factor data and Sweeps ###
@@ -106,7 +108,7 @@ if all_Ydata:
 
 
 # The directory what the data is kept
-datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Nov05_14/Y_MAG2/'
+datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Nov05_14/Y_MAG3/'
 
 if do_Ysweeps:
     sweep_num = start_num
@@ -129,7 +131,7 @@ if do_Ysweeps:
               IFband_start=1.42, IFband_stop=1.42, IFband_step=0.10,
               do_magisweep=False, mag_meas=10,
               magisweep_start=40, magisweep_stop=29, magisweep_step=1,
-              magpotsweep_start=10000, magpotsweep_stop=120001, magpotsweep_step=10000,
+              magpotsweep_start=1000, magpotsweep_stop=1001, magpotsweep_step=1000,
               do_LOuAsearch=True, UCA_meas=10,
               LOuAsearch_start=12, LOuAsearch_stop=12, LOuAsearch_step=-1,
               LOuA_magpot=1000, LOuA_set_pot=56800,
