@@ -848,7 +848,7 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
     # This fraction is added to the total size of the curves on the axis to make a margin
     x_margin_right = 0.
     x_margin_left  = 0.
-    y_margin_top   = 0.4
+    y_margin_top   = 0.5
     y_margin_bot   = 0.
 
 
@@ -1415,9 +1415,22 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                 ypos -= yincrement
             if ((Ydatafound) and (plot_Yfactor)):
                 Yfactor_max_str = Params_2_str(Yfactor_max, '%1.2f')
-                mV_Yfactor_max_str = Params_2_str(mV_Yfactor_max, '%1.3f')
+                mV_Yfactor_max_str = Params_2_str(mV_Yfactor_max, '%1.2f')
                 plt.text(xpos, ypos, 'max Y-factor ' +Yfactor_max_str + ' @ '+mV_Yfactor_max_str+' mV', color = Yfactor_color)
                 ypos -= yincrement
+                if Y_mV_min is None:
+                    Y_mV_range_min = min(mV_Yfactor)
+                else:
+                     Y_mV_range_min = Y_mV_min
+                if Y_mV_max is None:
+                    Y_mV_range_max = max(mV_Yfactor)
+                else:
+                     Y_mV_range_max = Y_mV_max
+                Y_mV_range_min_str = Params_2_str(Y_mV_range_min, '%1.2f')
+                Y_mV_range_max_str = Params_2_str(Y_mV_range_max, '%1.2f')
+                plt.text(xpos, ypos, 'in range [' + Y_mV_range_min_str + ',' + Y_mV_range_max_str + '] mV', color = Yfactor_color)
+                ypos -= yincrement
+
 
             ################
             ### Column 2 ###
