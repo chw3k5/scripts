@@ -80,7 +80,7 @@ def DataTrimmer(min_trim, max_trim, ordered_set, trim_list):
                 # Max trim
                 if min4min_trim < max_trim:
                     for index_max_trim in reversed(range(len(min_trimmed[:]))):
-                        if ordered_set[index_max_trim] <= max_trim:
+                        if min_trimmed[index_max_trim] <= max_trim:
                             trimmed = min_trimmed[:index_max_trim]
                             break
                 else:
@@ -672,7 +672,8 @@ def fastplotgen(mV,uA,tp,pot,
             print "The program failed the Data trimming"
             print "killing the script"
             sys.exit()
-
+        if verbose:
+            print "Data has been trimmed"
         [uA,tp,pot] = trimmed_list
 
 
@@ -690,7 +691,6 @@ def fastplotgen(mV,uA,tp,pot,
         scale_str = 'uA'
         y_vector  = uA
         yscale_info.append((scale_str, min(y_vector), max(y_vector)))
-
         #y_vector_list.append(list(y_vector))
         #label_list.append(labelPrefix+' '+type_label+' '+scale_str)
         #color_list.append(mVuA_color)
@@ -828,6 +828,7 @@ def properrors(x,delx,y,dely,z):
     return delz
 
 def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, mV_min=None, mV_max=None,
+                         Y_mV_min=None, Y_mV_max=None,
                          show_standdev=True, std_num=1, display_params=True,
                          show_plot=False, save_plot=True, do_eps=True,
                          plot_mVuA=True, plot_mVtp=True, plot_Yfactor=False, plot_Ntemp=False,
@@ -847,11 +848,11 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
     # This fraction is added to the total size of the curves on the axis to make a margin
     x_margin_right = 0.
     x_margin_left  = 0.
-    y_margin_top   = 0.2
+    y_margin_top   = 0.4
     y_margin_bot   = 0.
 
 
-    ax1_scaling = ('mV','uA')
+    ax1_scaling = ('mV','tp')
     ax2_scaling = ('mV','Yf')
 
     ### Plot Options ###
@@ -944,7 +945,12 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
     unpump_label     = 'LOoff '
 
     ax1_xlabel = 'Voltage (' + str(ax1_scaling[0]) + ')'
-    ax1_ylabel = 'Current (' + str(ax1_scaling[1]) + ')'
+    if str(ax1_scaling[1]) == 'uA':
+        ax1_ylabel = 'Current (uA)'
+    elif str(ax1_scaling[1]) == 'tp':
+        ax1_ylabel = 'Total Power (unscaled)'
+    else:
+        ax1_ylabel = '('+str(ax1_scaling[1])+')'
     ax2_ylabel = 'Y-Factor'
 
     ### Legend ###
@@ -1087,18 +1093,31 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
 
 
         if ((Ydatafound) and (plot_Yfactor)):
+            if ((Y_mV_min is not None) or (Y_mV_max is not None)):
+                status, trim_mV_Yfactor, trimmed_list = DataTrimmer(Y_mV_min, Y_mV_max, mV_Yfactor, [Yfactor])
+                trim_Yfactor = trimmed_list[0]
+            else:
+                trim_mV_Yfactor = mV_Yfactor
+                trim_Yfactor    = Yfactor
+
+
             if show_standdev:
                 y_std = properrors(cold_TP_mean,cold_TP_std,hot_TP_mean,hot_TP_std,Yfactor)
             else:
                 y_std = None
+            Yfactor_min = min(Yfactor)
+            Yfactor_max = max(Yfactor)
+            mV_Yfactor_min = mV_Yfactor[list(Yfactor).index(Yfactor_min)]
+            mV_Yfactor_max = mV_Yfactor[list(Yfactor).index(Yfactor_max)]
+
             if ax2_scaling[1] == 'Yf':
-                ax2_yscale_info.append(('Yf', min(Yfactor), max(Yfactor)))
+                ax2_yscale_info.append(('Yf', Yfactor_min, Yfactor_max))
                 plot_list = ax2_plot_list
             else:
-                ax1_yscale_info.append(('Yf', min(Yfactor), max(Yfactor)))
+                ax1_yscale_info.append(('Yf', Yfactor_min, Yfactor_max))
                 plot_list = ax1_plot_list
 
-            xscale_info.append((xscale_str,min(mV_Yfactor),max(mV_Yfactor)))
+            xscale_info.append((xscale_str,mV_Yfactor_min,mV_Yfactor_max))
             plot_list, leglines, leglabels \
                 = allstarplotgen(mV_Yfactor, Yfactor, y_std=y_std, std_num=std_num,
                                  plot_list=plot_list, leglines=leglines, leglabels=leglabels,
@@ -1203,17 +1222,6 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                               der1_int=der1_int, do_der1_conv=do_der1_conv, der1_min_cdf=der1_min_cdf, der1_sigma=der1_sigma,
                               der2_int=der2_int, do_der2_conv=do_der2_conv, der2_min_cdf=der2_min_cdf, der2_sigma=der2_sigma,
                               verbose=verbose)
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1331,7 +1339,10 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
 
 
             ### Axis Limits
-            ax1.set_ylim([ylimL1-y1size*y_margin_bot, ylimR1+y1size*y_margin_top])
+            if str(ax1_scaling[1]) == 'tp':
+                ax1.set_ylim([0-y1size*y_margin_bot, ylimR1+y1size*y_margin_top])
+            else:
+                ax1.set_ylim([ylimL1-y1size*y_margin_bot, ylimR1+y1size*y_margin_top])
             ax2.set_ylim([ylimL2-y2size*y_margin_bot, ylimR2+y2size*y_margin_top])
             ax1.set_xlim([xlimL-xsize*x_margin_left , xlimR+xsize*x_margin_right])
 
@@ -1364,12 +1375,12 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
             ################
             ### Column 1 ###
             ################
-            xpos = xlimL + (5.0/18.0)*xsize
-            yincrement = (y2size+y_margin_top+y_margin_bot)/25.0
+            xpos = xlimL + (4.0/18.0)*xsize
+            yincrement = (y2size*(1+(y_margin_top+y_margin_bot)))/25.0
             if ax2_plot_list != []:
-                ypos = ylimR2+y_margin_top
+                ypos = ylimR2+y_margin_top*y2size - yincrement
             else:
-                ypos = ylimR1+y_margin_top
+                ypos = ylimR1+y_margin_top*y1size  - yincrement
             if LOuAset is not None:
                 LOuAset_str = Params_2_str(LOuAset, '%2.3f')
                 plt.text(xpos, ypos, LOuAset_str + " uA LO", color = LOpwr_color)
@@ -1402,16 +1413,20 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                 LOuA_magpot_str = Params_2_str(LOuA_magpot, '%06f')
                 plt.text(xpos, ypos, "@" + LOuA_magpot_str + "  Magnet pot", color = LOpwr_color)
                 ypos -= yincrement
-
+            if ((Ydatafound) and (plot_Yfactor)):
+                Yfactor_max_str = Params_2_str(Yfactor_max, '%1.2f')
+                mV_Yfactor_max_str = Params_2_str(mV_Yfactor_max, '%1.3f')
+                plt.text(xpos, ypos, 'max Y-factor ' +Yfactor_max_str + ' @ '+mV_Yfactor_max_str+' mV', color = Yfactor_color)
+                ypos -= yincrement
 
             ################
             ### Column 2 ###
             ################
             xpos = xlimL + (12.0/18.0)*xsize
             if ax2_plot_list != []:
-                ypos = ylimR2+y_margin_top
+                ypos = ylimR2+y_margin_top*y2size - yincrement
             else:
-                ypos = ylimR1+y_margin_top
+                ypos = ylimR1+y_margin_top*y1size  - yincrement
 
             if magiset is not None:
                 plt.text(xpos, ypos,"magnet set value", color = mag_color)
@@ -1643,7 +1658,7 @@ def YSpectraPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False,
 
 
         if save_plot:
-            if do_eps:
+            if ((do_eps) and (not platform == 'win32')):
                 if verbose:
                     print "saving EPS file"
                 plt.savefig(plotdir+Ynum+"_spec.eps")

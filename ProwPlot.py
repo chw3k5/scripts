@@ -22,8 +22,8 @@ repeat  = 1
 
 
 ### For Y-factor data and Sweeps ###
-do_Ysweeps              = True
-do_YdataPro             = True
+do_Ysweeps              = False
+do_YdataPro             = False
 do_YfactotSweepsPlotter = True
 do_YSpectra_Plotter     = False
 
@@ -149,7 +149,8 @@ if do_YdataPro:
              sigma_GHz=0.10)
 
 if do_YfactotSweepsPlotter:
-    YfactorSweepsPlotter(datadir, search_4Ynums=True, Ynums='', verbose=True, mV_min=-0, mV_max=None,
+    YfactorSweepsPlotter(datadir, search_4Ynums=True, Ynums=[], verbose=True, mV_min=0, mV_max=5,
+                         Y_mV_min=1.8, Y_mV_max=2.2,
                          show_standdev=False, std_num=1,
                          display_params=True, show_plot=False, save_plot=True, do_eps=False,
                          plot_mVuA=True, plot_mVtp=True, plot_Yfactor=True, plot_Ntemp=False,

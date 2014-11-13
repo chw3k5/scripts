@@ -613,7 +613,7 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
 ###################################
 ######### General Options #########
 ###################################
-from sys import platform
+
 #verbose=True # True or False (default is False)
 
 ##### location of IV and TP parameter files, the data files

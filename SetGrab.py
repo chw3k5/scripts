@@ -106,62 +106,57 @@ def getSweeps(fullpaths, verbose=False):
             proYdatadir = fullpath + 'prodata/' + Ynum + '/'
             proYdatadir_hot  = proYdatadir + 'hot'
             proYdatadir_cold = proYdatadir + 'cold'
-            allSweeps.append(sweep(proYdatadir_hot))
-            allSweeps.append(sweep(proYdatadir_cold))
+            allSweeps.append(Sweep(proYdatadir_hot))
+            allSweeps.append(Sweep(proYdatadir_cold))
 
     return allSweeps
 
 
 
-
-
-
-### Options ###
-Ynums = None
-verbose = True
-
-### All the sets of data to collect the processed data from
-setnames = ['set4','set5','set6','set7','LOfreq','LOfreq2']
-
-
-#setnames.append('LOfreq')
-#setnames.append('LOfreq2')
-parent_folder = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/'
-fullpaths = [parent_folder + setname + '/' for setname in setnames]
-
-Ysweeps = getYsweeps(fullpaths, Ynums=Ynums, verbose=verbose)
-
-
-
-
-
-process_data = True
-do_allanvar = True
-
-############################
-###### Parameter Cuts ######
-############################
-min_tp_int = 10 # at least this, None is any
-max_tp_int = None # at most this, None is any
-
-### Do data processing
-if process_data:
-    for fullpath in fullpaths:
-        YdataPro(fullpath, verbose=verbose, search_4Ynums=search_4Ynums, search_str='Y', Ynums=Ynums, useOFFdata=False, Off_datadir='',
-                 mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01, do_conv_mV=True, sigma_mV=0.08, min_cdf_mV=0.95,
-                 do_normspectra=False, norm_freq=1.42, norm_band=0.060, do_freq_conv=True, min_cdf_freq=0.90,
-                 sigma_GHz=0.10)
-
 ### Do Cuts Based on Parameters
-#
-tp_int_cut_sweeps = []
-for sweep in allSweeps:
-    tp_int_time = sweep.tp_int_time
-    if ((min_tp_int is None) or (min_tp_int  <= tp_int_time)) and (
-        (max_tp_int is None) or (tp_int_time <=  max_tp_int)):
-        tp_int_cut_sweeps.append(sweep)
-        if verbose:
-            print sweep.longDescription()
+# total power integration time
+def tp_int_cut(sweeps, min_tp_int=None, max_tp_int=None, verbose=False):
+    tp_int_cut_sweeps = []
+    if verbose:
+        print 'cutting for total power integration time'
+    for sweep in sweeps:
+        tp_int_time = sweep.tp_int_time
+        if ((min_tp_int is None) or (min_tp_int  <= tp_int_time)) and (
+            (max_tp_int is None) or (tp_int_time <=  max_tp_int)):
+            tp_int_cut_sweeps.append(sweep)
+            if verbose:
+                print sweep.longDescription()
+    return tp_int_cut_sweeps
+
+# LO pump power in uA (that my code attempt to set)
+def LOuAset_cut(sweeps, min_LOuAset=None, max_LOuAset=None, verbose=False):
+    LOuAset_cut_sweeps = []
+    if verbose:
+        print 'cutting the LO pump power that the code attempted to set'
+    for sweep in sweeps:
+        LOuAset = sweep.LOuAset
+        if ((min_LOuAset is None) or (min_LOuAset  <= LOuAset)) and (
+            (max_LOuAset is None) or (LOuAset <=  max_LOuAset)):
+            LOuAset_cut_sweeps.append(sweep)
+            if verbose:
+                print sweep.longDescription()
+    return LOuAset_cut_sweeps
+
+# Cut if the difference between LO pump power and the standard measurement is too great
+def LOuAdiff_cut(sweeps, max_diff=1.0, verbose=False):
+    LOuAdiff_cut_sweeps = []
+    if verbose:
+        print 'cutting sweep with the difference of measured LO pump power and attempted setting of LO power greater then', max_diff, 'uA'
+    for sweep in sweeps:
+        LOuAset    = sweep.LOuAset
+        meanSIS_uA = sweep.meanSIS_uA
+        diff = abs(LOuAset - meanSIS_uA)
+        if diff <= max_diff:
+            LOuAdiff_cut_sweeps.append(sweep)
+            if verbose:
+                print sweep.longDescription()
+    return LOuAdiff_cut_sweeps
+
 
 
 
