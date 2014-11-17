@@ -6,7 +6,7 @@ import matplotlib
 from matplotlib import pyplot as plt
 #if platform == 'darwin':
 #    matplotlib.rc('text', usetex=True)
-from profunc import getproparams, getmultiParams,  getproSweep, get_fastIV, getproYdata, GetProDirsNames # Caleb's Functions
+from profunc import windir, getproparams, getmultiParams,  getproSweep, get_fastIV, getproYdata, GetProDirsNames # Caleb's Functions
 from domath  import linfit # Caleb's Functions
 
 
@@ -1620,6 +1620,8 @@ def YSpectraPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False,
             print "ploting Spectra for Ynum: " + str(Ynum)
 
         proSdatadir  = prodatadir + Ynum + '/'
+        if platform == 'win32':
+            proSdatadir = windir(proSdatadir)
 
         X_file = proSdatadir + "Y_freq.npy"
         Y_file = proSdatadir + "Y_mV.npy"

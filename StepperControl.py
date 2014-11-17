@@ -64,7 +64,7 @@ if serial_port == '':
     print "When adding new device locations they will need to be added to this script"
     print 'killing the script'
     sys.exit()
-SleepTime = 1.2
+SleepTime = 1.3
 initialize_sleep = 5
 
 st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1, timeout=2)
@@ -73,6 +73,16 @@ st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1, time
 ##################################
 ###### Standard Definitions ######
 ##################################
+
+def DisableDrive():
+    # Disable drive
+    status = False
+    if st.isOpen():
+        st.write(b'DRIVE0\n')
+        status = True
+    else:
+        print "The port is not open, returning status False"
+    return status
 
 def initialize(vel=1, accel=0.5, verbose=True):
     if st.isOpen():
@@ -93,14 +103,14 @@ def initialize(vel=1, accel=0.5, verbose=True):
         # Pause command execution on stop command
         write_str += 'COMEXS1\n'
         # Disable continuous command processing mode
-        #write_str += 'COMEXC0\n'
+        write_str += 'COMEXC0\n'
 
         # Set preset/continuous mode
         #write_str += 'MC0\n'
         # Set absolute/incremental mode
         #write_str += 'MA0\n'
         # Set current position as 0
-        write_str += 'PSET0\n'
+        #write_str += 'PSET0\n'
 
         ### Set Accelerations ###
         accel_str = str(accel)
@@ -143,12 +153,11 @@ def GoForth(dist='0.25'):
         write_str += 'DRIVE1\n'
         # Set distance
         write_str += 'D'+str(dist)+'\n'
-        time.sleep(SleepTime)
         # send the go command
         write_str += 'GO1\n'
         st.write(write_str)
         time.sleep(SleepTime)
-        status = True
+        status = DisableDrive()
     else:
         print "The port is not open, returning status False"
     return status
@@ -162,25 +171,16 @@ def GoBack(dist='0.25'):
         write_str += 'DRIVE1\n'
         # Set distance
         write_str += 'D-'+str(dist)+'\n'
-        time.sleep(SleepTime)
         # send the go command
         write_str += 'GO1\n'
         st.write(write_str)
         time.sleep(SleepTime)
-        status = True
+        status = DisableDrive()
     else:
         print "The port is not open, returning status False"
     return status
 
-def DisableDrive():
-    # Disable drive
-    status = False
-    if st.isOpen():
-        st.write(b'DRIVE0\n')
-        status = True
-    else:
-        print "The port is not open, returning status False"
-    return status
+
 
 def stepper_close():
     st.close()
@@ -481,15 +481,12 @@ def test(test_num=10,move_sleep=1, vel=0.2, accel=0.2,forth_dist='0.20',back_dis
     initialize(vel=vel, accel=accel, verbose=verbose)
     for n in range(test_num):
         GoForth(dist=forth_dist)
-        DisableDrive()
         time.sleep(move_sleep)
 
-        #GoForth(dist='-'+back_dist)
         GoBack(dist=back_dist)
-        DisableDrive()
         time.sleep(move_sleep)
     stepper_close()
     return
 
-#test(test_num=200, move_sleep=2, vel=0.5, accel=1, forth_dist='0.25',back_dist='0.25', verbose=True)
+#test(test_num=100, move_sleep=2, vel=0.5, accel=1, forth_dist='0.25',back_dist='0.25', verbose=True)
 

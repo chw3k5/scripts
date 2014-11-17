@@ -1286,7 +1286,7 @@ def setLOI(uA_user, verbose=False, careful=False):
             print " careful is off, I will allow the script to attempt to set the current anyway"
 
     # here we do a simpy binary search to find the region wear the uA_user is near        
-    Vfrac = 1.5 # Votage range of search
+    Vfrac = 1.8 # Votage range of search
     UCA_current = float(2.5) # first guess in sweep
     status = LabJackU3_DAQ0(UCA_current)
     mV_temp, uA_current, pot_temp = measSIS(verbose)

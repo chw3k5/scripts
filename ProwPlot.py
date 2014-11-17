@@ -7,9 +7,9 @@ from TestSweeper import testsweeps, protestsweeps, plottestsweeps
 all_Single_Sweeps = False
 all_Ydata         = False
 all_testsweeps    = False
-do_email = False
+do_email = True
 warning = True
-start_num = 2
+start_num = 5
 
 
 ### For Single Sweep ###
@@ -108,7 +108,7 @@ if all_Ydata:
 
 
 # The directory what the data is kept
-datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Nov05_14/Y_MAG3/'
+datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Nov05_14/Y_LOfreqMAGLOuA/'
 
 if do_Ysweeps:
     sweep_num = start_num
@@ -121,19 +121,19 @@ if do_Ysweeps:
               TPSampleFrequency=100, TPSampleTime=2,
               sisVsweep_start=-0.1, sisVsweep_stop=2.5, sisVsweep_step=0.1,
               sisPot_feedFalse_start=65100, sisPot_feedFalse_stop=57000, sisPot_feedFalse_step=100,
-              sisPot_feedTrue_start=60000, sisPot_feedTrue_stop=52110, sisPot_feedTrue_step=200,
+              sisPot_feedTrue_start=57500, sisPot_feedTrue_stop=52499, sisPot_feedTrue_step=250,
               getspecs=False, spec_linear_sc=True, spec_freq_start=0, spec_freq_stop=6,
               spec_sweep_time='AUTO', spec_video_band=100, spec_resol_band=100,
               spec_attenu=0, lin_ref_lev=500, aveNum=8,
               Kaxis=0, sisVaxis=1, magaxis=2, LOpowaxis=3, LOfreqaxis=4, IFbandaxis=5,
               K_list=[296, 77],
-              LOfreq_start=672, LOfreq_stop=672, LOfreq_step=0.25,
+              LOfreq_start=650, LOfreq_stop=691, LOfreq_step=10,
               IFband_start=1.42, IFband_stop=1.42, IFband_step=0.10,
               do_magisweep=False, mag_meas=10,
-              magisweep_start=40, magisweep_stop=29, magisweep_step=1,
-              magpotsweep_start=1000, magpotsweep_stop=1001, magpotsweep_step=1000,
+              magisweep_start=12, magisweep_stop=12, magisweep_step=1,
+              magpotsweep_start=0, magpotsweep_stop=20000, magpotsweep_step=4000,
               do_LOuAsearch=True, UCA_meas=10,
-              LOuAsearch_start=12, LOuAsearch_stop=12, LOuAsearch_step=-1,
+              LOuAsearch_start=18, LOuAsearch_stop=5, LOuAsearch_step=-3,
               LOuA_magpot=1000, LOuA_set_pot=56800,
               UCAsweep_min=0.00, UCAsweep_max=0.00, UCAsweep_step=0.05,
               sweepShape="rectangular",

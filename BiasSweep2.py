@@ -22,6 +22,9 @@ def MakeSetDirs(datadir):
         os.makedirs(rawdatadir)
     return
 
+
+
+
 def makeLists(start, stop, step):
     step = abs(step)
     newlist = []
@@ -29,13 +32,13 @@ def makeLists(start, stop, step):
         if (isinstance(start, int) and isinstance(stop, int) and isinstance(step, int)):
             newlist = range(start, stop, step)
         else:
-            newlist = numpy.arange(start, stop, step)
+            newlist = list(numpy.arange(start, stop, step))
     elif stop < start:
         step = step*-1
         if (isinstance(start, int) and isinstance(stop, int) and isinstance(step, int)):
             newlist = range(start, stop, step)
         else:
-            newlist = numpy.arange(start, stop, step)
+            newlist = list(numpy.arange(start, stop, step))
     elif start == stop:
         newlist = [start]
     return newlist
@@ -51,16 +54,16 @@ def orderLists(master_list_input):
         if isinstance(axis_num, int):
             axis_list.append(axis_num)
         else:
-            print "The function orderLists needs a list of tuples \
-            with each tuple containing (int, list). Something other than an int \
-            was found: ", axis_num
+            print "The function orderLists needs a list of tuples\n"+ \
+            "with each tuple containing (int, list). Something other than an int\n"+ \
+            "was found: ", axis_num
             sys.exit()
         if isinstance(single_list, list):
             unordered_lists.append(single_list)
         else:
-            print "The function orderLists needs a list of tuples \
-            with each tuple containing (int, list). Something other than a list \
-            was found: ", single_list
+            print "The function orderLists needs a list of tuples\n"+\
+            "with each tuple containing (int, list). Something other than a list\n"+ \
+            "was found: ", single_list
             sys.exit()
 
     for n in range(num_of_lists):
@@ -264,7 +267,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
 
 
     stepper_vel = 0.5
-    stepper_accel = 1.0
+    stepper_accel = 1
     forth_dist = 0.25
     back_dist = 0.25
 
@@ -582,10 +585,8 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
                 if ((not testmode) and (not first_loop)):
                     if  K_actual <= 150:
                         GoForth(dist=forth_dist)
-                        DisableDrive()
                     elif 150 < K_actual:
                         GoBack(dist=back_dist)
-                        DisableDrive()
                     K_actual = K_thisloop
                     if (verboseTop):
                         print K_actual, "K: The command to move the chopper has been sent"
