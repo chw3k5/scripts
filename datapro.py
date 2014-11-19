@@ -187,7 +187,7 @@ def BasicDataPro(sweepdir, prodataname, is_SIS_data=True, mono_switcher=True, do
     return BasicDataFound
 
 
-def AstroDataPro(datadir, proparamsfile, prodataname, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose):
+def AstroDataPro(datadir, proparamsfile, rawdataname, prodataname, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose):
     astrosweep_found = False
     sweepdir = datadir + 'sweep/'
     if platform == 'win32':
@@ -222,7 +222,6 @@ def AstroDataPro(datadir, proparamsfile, prodataname, mono_switcher, do_regrid, 
                 TP_freq  = TP_freq
             sweep_TP_mean.append(numpy.mean(temp_tp))
             sweep_TP_std.append(numpy.std(temp_tp))
-
         # Some Parts of the Parameter file are written here
         n = open(proparamsfile, 'a')
         n.write('meas_num,'    + str(meas_num)    + '\n')
@@ -230,6 +229,20 @@ def AstroDataPro(datadir, proparamsfile, prodataname, mono_switcher, do_regrid, 
         n.write('TP_num,'      + str(TP_num)      + '\n')
         n.write('TP_freq,'     + str(TP_freq)     + '\n')
         n.close()
+
+        # Write the minimally processes data to a file
+        rawfile = open(rawdataname, 'w')
+        rawfile.write('mV_mean,mV_std,uA_mean,uA_std,TP_mean,TP_std\n')
+        for sweep_index in range(len(sweep_mV_mean)):
+            rawfile.write(str(sweep_mV_mean[sweep_index]) + ',' +
+                    str(sweep_mV_std[sweep_index])  + ',' +
+                    str(sweep_uA_mean[sweep_index]) + ',' +
+                    str(sweep_uA_std[sweep_index])  + ',' +
+                    str(sweep_TP_mean[sweep_index]) + ',' +
+                    str(sweep_TP_std[sweep_index])  + '\n'
+                    )
+        rawfile.close()
+
 
         # put the data into a matrix for processing
         matrix  = numpy.zeros((len(sweep_mV_mean), 11))
@@ -394,7 +407,7 @@ def GetSpecData(datadir, specdataname, do_norm=True,  norm_freq=1.42, norm_band=
     return specsweep_found
 
 
-def SweepPro(datadir, proparamsfile, prodataname_fast, prodataname_unpump, prodataname_ast, specdataname,
+def SweepPro(datadir, proparamsfile, prodataname_fast, prodataname_unpump, rawdataname_ast, prodataname_ast, specdataname,
              mono_switcher_mV=True, do_regrid_mV=True, do_conv_mV=False, regrid_mesh_mV=0.01, min_cdf_mV=0.90, sigma_mV=0.03,
              do_normspectra=False, norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90,
              sigma_GHz=0.05,verbose=False):
@@ -418,7 +431,7 @@ def SweepPro(datadir, proparamsfile, prodataname_fast, prodataname_unpump, proda
 
     ### get the astronomy quality sweep data for this Y sweep
     astrosweep_found, sweep_mV_mean, sweep_TP_mean, TP_int_time \
-        = AstroDataPro(datadir, proparamsfile, prodataname_ast, mono_switcher_mV, do_regrid_mV, do_conv_mV, regrid_mesh_mV, min_cdf_mV,
+        = AstroDataPro(datadir, proparamsfile, rawdataname_ast, prodataname_ast, mono_switcher_mV, do_regrid_mV, do_conv_mV, regrid_mesh_mV, min_cdf_mV,
                  sigma_mV, verbose)
     n = open(proparamsfile, 'a')
     n.write('TP_int_time,'  + str(TP_int_time)  + '\n')
@@ -480,12 +493,13 @@ def SweepDataPro(datadir, verbose=False, search_4Sweeps=True, search_str='Y', Sn
         proparamsfile      = prodatadir + 'proparams.csv'
         prodataname_fast   = prodatadir + 'fastIV.csv'
         prodataname_unpump = prodatadir + 'unpumped.csv'
+        rawdataname_ast    = prodatadir + 'raw_data.csv'
         prodataname_ast    = prodatadir + 'data.csv'
         specdataname       = prodatadir + 'specdata'
         
         params_found, standSISdata_found, standmagdata_found, fastIV_found, unpumped_found, astrosweep_found,          \
         specsweep_found, sweep_mV_mean, sweep_TP_mean \
-            = SweepPro(sweepdir, proparamsfile, prodataname_fast, prodataname_unpump, prodataname_ast, specdataname,
+            = SweepPro(sweepdir, proparamsfile, prodataname_fast, prodataname_unpump, rawdataname_ast, prodataname_ast, specdataname,
              mono_switcher_mV=mono_switcher_mV, do_regrid_mV=do_regrid_mV, do_conv_mV=do_conv_mV,
              regrid_mesh_mV=regrid_mesh_mV, min_cdf_mV=min_cdf_mV, sigma_mV=sigma_mV,
              do_normspectra=do_normspectra, norm_freq=norm_freq, norm_band=norm_band, do_freq_conv=do_freq_conv,
@@ -550,12 +564,13 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
         hotproparamsfile      = prodatadir + 'hotproparams.csv'
         hotprodataname_fast   = prodatadir + 'hotfastIV.csv'
         hotprodataname_unpump = prodatadir + 'hotunpumped.csv'
+        hotrawdataname_ast    = prodatadir + 'hotraw_data.csv'
         hotprodataname_ast    = prodatadir + 'hotdata.csv'
         hotspecdataname       = prodatadir + 'hotspecdata'
         
         hotparams_found, hotstandSISdata_found, hotstandmagdata_found, fastIVhot_found, hotunpumped_found, \
         astrosweephot_found, hotspecsweep_found, hot_sweep_mV_mean,hot_sweep_TP_mean \
-            = SweepPro(hotdir, hotproparamsfile, hotprodataname_fast, hotprodataname_unpump, hotprodataname_ast,
+            = SweepPro(hotdir, hotproparamsfile, hotprodataname_fast, hotprodataname_unpump, hotrawdataname_ast, hotprodataname_ast,
                        hotspecdataname, mono_switcher_mV=mono_switcher_mV, do_regrid_mV=do_regrid_mV,
                        do_conv_mV=do_conv_mV, regrid_mesh_mV=regrid_mesh_mV, min_cdf_mV=min_cdf_mV, sigma_mV=sigma_mV,
                        do_normspectra=do_normspectra, norm_freq=norm_freq, norm_band=norm_band,
@@ -571,12 +586,13 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
         coldproparamsfile      = prodatadir + 'coldproparams.csv'
         coldprodataname_fast   = prodatadir + 'coldfastIV.csv'
         coldprodataname_unpump = prodatadir + 'coldunpumped.csv'
+        coldrawdataname_ast    = prodatadir + 'coldraw_data.csv'
         coldprodataname_ast    = prodatadir + 'colddata.csv'
         coldspecdataname       = prodatadir + 'coldspecdata'
         
-        coldparams_found, coldstandSISdata_found, coldstandmagdata_found, fastIVcold_found, coldunpumped_found,        \
-        astrosweepcold_found, coldspecsweep_found, cold_sweep_mV_mean,cold_sweep_TP_mean                                                    \
-            = SweepPro(colddir, coldproparamsfile, coldprodataname_fast, coldprodataname_unpump, coldprodataname_ast,
+        coldparams_found, coldstandSISdata_found, coldstandmagdata_found, fastIVcold_found, coldunpumped_found,\
+        astrosweepcold_found, coldspecsweep_found, cold_sweep_mV_mean,cold_sweep_TP_mean \
+            = SweepPro(colddir, coldproparamsfile, coldprodataname_fast, coldprodataname_unpump, coldrawdataname_ast, coldprodataname_ast,
                        coldspecdataname, mono_switcher_mV=mono_switcher_mV, do_regrid_mV=do_regrid_mV,
                        do_conv_mV=do_conv_mV, regrid_mesh_mV=regrid_mesh_mV, min_cdf_mV=min_cdf_mV, sigma_mV=sigma_mV,
                        do_normspectra=do_normspectra, norm_freq=norm_freq, norm_band=norm_band,
@@ -610,43 +626,3 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
         
     return
 
-###################################
-######### General Options #########
-###################################
-
-#verbose=True # True or False (default is False)
-
-##### location of IV and TP parameter files, the data files
-#setnum  = 3
-#datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/set'+str(setnum)+'/'
-
-#if sys.platform == 'win32':
-#    datadir = "C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\set" +str(setnum) + "\\"
-#    #datadir = "C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\warmmag\\"
-#elif sys.platform == 'darwin':
-#    datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/warmmag/'
-#    #datadir     = '/Users/chw3k5/Dropbox/kappa_data/NA38/IVsweep/set' + str(setnum) + '/'
-
-#
-# search_4Ynums = True # (the default is True)
-# search_str = 'Y' # default is 'Y'
-# Ynums=['Y0001'] # make a list array separate array values with commas like Ynums = ['Y01', 'Y02'] (defult is empty set [])
-#
-# useOFFdata = False # True or False
-# Off_datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/'
-#
-# ###########################################
-# ######### Data Processing Options #########
-# ###########################################
-#
-# mono_switcher = True # makes data monotonic in mV (default = True)
-#
-# do_regrid     = True # regrids data to uniform spacing (default = True)
-# regrid_mesh   = 0.01 # in mV (default = 0.01)
-#
-# do_conv = True # does a gaussian convolution of the data after regridding (default is False)
-# sigma   = 0.03 # in mV (default = 0.03)
-# min_cdf = 0.95 # fraction of Gaussian used in kernel calculation (default = 0.95)
-
-#YdataPro(datadir, verbose=True)
-#SweepDataPro(datadir, verbose=True, search_4Sweeps=True, Snums=['00001'], do_normspectra=True, do_conv_mV=True, do_freq_conv=True)

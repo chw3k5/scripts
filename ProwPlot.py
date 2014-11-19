@@ -108,7 +108,7 @@ if all_Ydata:
 
 
 # The directory what the data is kept
-datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Nov05_14/Y_LOfreqMAGLOuA/'
+datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Nov05_14/Y_MAG3/'
 
 if do_Ysweeps:
     sweep_num = start_num
@@ -143,7 +143,7 @@ if do_Ysweeps:
 
 
 if do_YdataPro:
-    YdataPro(datadir, verbose=True, search_4Ynums=True, search_str='Y', Ynums=[], useOFFdata=False, Off_datadir='',
+    YdataPro(datadir, verbose=True, search_4Ynums=True, search_str='Y', Ynums=['Y0001'], useOFFdata=False, Off_datadir='',
              mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01, do_conv_mV=True, sigma_mV=0.08, min_cdf_mV=0.95,
              do_normspectra=False, norm_freq=1.42, norm_band=0.060, do_freq_conv=True, min_cdf_freq=0.90,
              sigma_GHz=0.10)
@@ -151,6 +151,8 @@ if do_YdataPro:
 if do_YfactotSweepsPlotter:
     YfactorSweepsPlotter(datadir, search_4Ynums=True, Ynums=[], verbose=True, mV_min=0, mV_max=5,
                          Y_mV_min=1.8, Y_mV_max=2.2,
+                         plot_rawhot_mVuA=True, plot_rawhot_mVtp=True,
+                         plot_rawcold_mVuA=True, plot_rawcold_mVtp=True,
                          show_standdev=False, std_num=1,
                          display_params=True, show_plot=False, save_plot=True, do_eps=False,
                          plot_mVuA=True, plot_mVtp=True, plot_Yfactor=True, plot_Ntemp=False,

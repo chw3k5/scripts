@@ -634,7 +634,59 @@ def getproSweep(datadir):
     
     return mV_mean, mV_std,  uA_mean, uA_std,TP_mean, TP_std, \
     time_mean, pot, prodata_found
-     
+
+def getprorawdata(datadir):
+    if platform == 'win32':
+        datadir = windir(datadir)
+    hotdatafile  = datadir + 'hotraw_data.csv'
+    colddatafile = datadir + 'coldraw_data.csv'
+
+    hotdatafound  = False
+    hot_mV_mean   = None
+    hot_mV_std    = None
+    hot_uA_mean   = None
+    hot_uA_std    = None
+    hot_TP_mean   = None
+    hot_TP_std    = None
+
+    colddatafound  = False
+    cold_mV_mean   = None
+    cold_mV_std    = None
+    cold_uA_mean   = None
+    cold_uA_std    = None
+    cold_TP_mean   = None
+    cold_TP_std    = None
+
+    if os.path.exists(hotdatafile):
+        hot_data = atpy.Table(hotdatafile, type="ascii", delimiter=",")
+        hot_keys = hot_data.keys()
+        hotdatafound  = True
+        if 'mV_mean' in hot_keys: hot_mV_mean = hot_data.mV_mean
+        if 'mV_std'  in hot_keys: hot_mV_std  = hot_data.mV_std
+        if 'uA_mean' in hot_keys: hot_uA_mean = hot_data.uA_mean
+        if 'uA_std'  in hot_keys: hot_uA_std  = hot_data.uA_std
+        if 'TP_mean' in hot_keys: hot_TP_mean = hot_data.TP_mean
+        if 'TP_std'  in hot_keys: hot_TP_std  = hot_data.TP_std
+
+    if os.path.exists(colddatafile):
+        cold_data = atpy.Table(colddatafile, type="ascii", delimiter=",")
+        cold_keys = cold_data.keys()
+        colddatafound  = True
+        if 'mV_mean' in cold_keys: cold_mV_mean = cold_data.mV_mean
+        if 'mV_std'  in cold_keys: cold_mV_std  = cold_data.mV_std
+        if 'uA_mean' in cold_keys: cold_uA_mean = cold_data.uA_mean
+        if 'uA_std'  in cold_keys: cold_uA_std  = cold_data.uA_std
+        if 'TP_mean' in cold_keys: cold_TP_mean = cold_data.TP_mean
+        if 'TP_std'  in cold_keys: cold_TP_std  = cold_data.TP_std
+
+
+    return hot_mV_mean, cold_mV_mean, hot_mV_std, cold_mV_std,\
+           hot_uA_mean, cold_uA_mean, hot_uA_std, cold_uA_std,\
+           hot_TP_mean, cold_TP_mean, hot_TP_std, cold_TP_std,\
+           hotdatafound, colddatafound
+
+
+
 def getproYdata(datadir):
     if platform == 'win32':
         datadir = windir(datadir)

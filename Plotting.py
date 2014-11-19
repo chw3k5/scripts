@@ -6,7 +6,8 @@ import matplotlib
 from matplotlib import pyplot as plt
 #if platform == 'darwin':
 #    matplotlib.rc('text', usetex=True)
-from profunc import windir, getproparams, getmultiParams,  getproSweep, get_fastIV, getproYdata, GetProDirsNames # Caleb's Functions
+from profunc import windir, getproparams, getmultiParams,  getproSweep, get_fastIV, getproYdata, GetProDirsNames
+from profunc import getprorawdata # Caleb's Functions
 from domath  import linfit # Caleb's Functions
 
 
@@ -478,6 +479,15 @@ def xyplotgen(x_vector, y_vector, label='', plot_list=[], leglines=[], leglabels
     leglabels.append(label)
     return plot_list, leglines, leglabels
 
+def xyerrorplotgen(x_vector, y_vector, x_error=None, y_error=None,
+                   label='', raw_plot_list=[], raw_leglines=[], raw_leglabels=[],
+                   color='black', linw=1, fmt='o', markersize=10, alpha=1.0, capsize=1, scale_str=''):
+    raw_plot_list.append((x_vector, y_vector, x_error, y_error, color, linw, fmt, markersize, alpha, capsize, scale_str))
+    raw_leglines.append((color,'-',linw))
+    raw_leglabels.append(label)
+
+    return raw_plot_list, raw_leglines, raw_leglabels
+
 def stdaxplotgen(x_vector, y_vector, y_std, std_num=1, label='',
                  plot_list=[], leglines=[], leglabels=[],
                  color='black', linw=1, ls='-', scale_str=''):
@@ -829,6 +839,8 @@ def properrors(x,delx,y,dely,z):
 
 def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, mV_min=None, mV_max=None,
                          Y_mV_min=None, Y_mV_max=None,
+                         plot_rawhot_mVuA=False, plot_rawhot_mVtp=False,
+                         plot_rawcold_mVuA=False, plot_rawcold_mVtp=False,
                          show_standdev=True, std_num=1, display_params=True,
                          show_plot=False, save_plot=True, do_eps=True,
                          plot_mVuA=True, plot_mVtp=True, plot_Yfactor=False, plot_Ntemp=False,
@@ -924,6 +936,20 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
     coldunpump_mVpot_linw  = 1
     coldunpump_mVpot_ls    = 'solid'
 
+
+    raw_linw       = 1
+    raw_fmt        = 'o'
+    raw_markersize = 10
+    raw_alpha      = 0.5
+    raw_capsize    = 2
+
+    hotrawmVuA_color  = hotmVuA_color
+    coldrawmVuA_color = coldmVuA_color
+    hotrawmVtp_color  = hotmVtp_color
+    coldrawmVtp_color = coldmVtp_color
+
+
+
     # Calculate noise temperature instead
 
     Yfactor_color = 'green'
@@ -943,6 +969,13 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
     cold_labelPrefix = ' 77K '
     fast_label       = 'fast '
     unpump_label     = 'LOoff '
+
+    hotrawmVuA_label  = hot_labelPrefix  + 'error mVuA'
+    coldrawmVuA_label = cold_labelPrefix + 'error mVuA'
+
+    hotrawmVtp_label  = hot_labelPrefix  + 'error mVtp'
+    coldrawmVtp_label = cold_labelPrefix + 'error mVtp'
+
 
     ax1_xlabel = 'Voltage (' + str(ax1_scaling[0]) + ')'
     if str(ax1_scaling[1]) == 'uA':
@@ -1010,15 +1043,23 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
         hotdatafound, colddatafound, Ydatafound\
             = getproYdata(proYdatadir)
 
+        ### the less processed raw data
+        hotraw_mV_mean, coldraw_mV_mean, hotraw_mV_std, coldraw_mV_std,\
+        hotraw_uA_mean, coldraw_uA_mean, hotraw_uA_std, coldraw_uA_std,\
+        hotraw_TP_mean, coldraw_TP_mean, hotraw_TP_std, coldraw_TP_std,\
+        hotrawdatafound, coldrawdatafound = getprorawdata(proYdatadir)
+
 
         ax1_plot_list   = []
         ax2_plot_list   = []
+        raw_plot_list   = []
         leglines        = []
         leglabels       = []
         xscale_info     = []
         ax1_yscale_info = []
         ax2_yscale_info = []
         if hotdatafound:
+            #Solid line Plots
             labelPrefix = hot_labelPrefix
             mV       = hot_mV_mean
             mV_std   = hot_mV_std
@@ -1053,6 +1094,40 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                                   der1_int=der1_int, do_der1_conv=do_der1_conv, der1_min_cdf=der1_min_cdf, der1_sigma=der1_sigma,
                                   der2_int=der2_int, do_der2_conv=do_der2_conv, der2_min_cdf=der2_min_cdf, der2_sigma=der2_sigma,
                                   verbose=verbose)
+
+        if hotrawdatafound:
+            # Raw data with error bar plots
+            if plot_rawhot_mVuA:
+                xscale_str = 'mV'
+                yscale_str = 'uA'
+                mV       = hotraw_mV_mean
+                mV_std   = hotraw_mV_std
+                uA       = hotraw_uA_mean
+                uA_std   = hotraw_uA_std
+                xscale_info.append((xscale_str,min(mV),max(mV)))
+                yax1_scale_info.append((yscale_str,min(uA),max(uA)))
+                raw_plot_list, leglines, leglabels \
+                    = xyerrorplotgen(mV, uA, x_error=mV_std, y_error=uA_std,
+                                     label='error mVuA', raw_plot_list=raw_plot_list, raw_leglines=leglines, raw_leglabels=leglabels,
+                                     color=hotrawmVuA_color, linw=raw_linw,  fmt=raw_fmt, markersize=raw_markersize,
+                                     alpha=raw_alpha, capsize=raw_capsize, scale_str=yscale_str)
+
+            if plot_rawhot_mVtp:
+                xscale_str = 'mV'
+                yscale_str = 'tp'
+                mV       = hotraw_mV_mean
+                mV_std   = hotraw_mV_std
+                tp       = hotraw_TP_mean
+                tp_std   = hotraw_TP_std
+                xscale_info.append((xscale_str,min(mV),max(mV)))
+                yax1_scale_info.append((yscale_str,min(tp),max(tp)))
+                raw_plot_list, leglines, leglabels \
+                    = xyerrorplotgen(mV, tp, x_error=mV_std, y_error=tp_std,
+                                     label='error mVtp', raw_plot_list=raw_plot_list, raw_leglines=leglines, raw_leglabels=leglabels,
+                                     color=hotrawmVtp_color, linw=raw_linw,  fmt=raw_fmt, markersize=raw_markersize,
+                                     alpha=raw_alpha, capsize=raw_capsize, scale_str=yscale_str)
+
+
 
 
         if colddatafound:
@@ -1091,6 +1166,38 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                                   der2_int=der2_int, do_der2_conv=do_der2_conv, der2_min_cdf=der2_min_cdf, der2_sigma=der2_sigma,
                                   verbose=verbose)
 
+        if coldrawdatafound:
+            # Raw data with error bar plots
+            if plot_rawcold_mVuA:
+                xscale_str = 'mV'
+                yscale_str = 'uA'
+                mV       = coldraw_mV_mean
+                mV_std   = coldraw_mV_std
+                uA       = coldraw_uA_mean
+                uA_std   = coldraw_uA_std
+                xscale_info.append((xscale_str,min(mV),max(mV)))
+                yax1_scale_info.append((yscale_str,min(uA),max(uA)))
+                raw_plot_list, leglines, leglabels \
+                    = xyerrorplotgen(mV, uA, x_error=mV_std, y_error=uA_std,
+                                     label='error mVuA', raw_plot_list=raw_plot_list, raw_leglines=leglines, raw_leglabels=leglabels,
+                                     color=coldrawmVuA_color, linw=raw_linw,  fmt=raw_fmt, markersize=raw_markersize,
+                                     alpha=raw_alpha, capsize=raw_capsize, scale_str=yscale_str)
+
+            if plot_rawcold_mVtp:
+                xscale_str = 'mV'
+                yscale_str = 'tp'
+                mV       = coldraw_mV_mean
+                mV_std   = coldraw_mV_std
+                tp       = coldraw_TP_mean
+                tp_std   = coldraw_TP_std
+                xscale_info.append((xscale_str,min(mV),max(mV)))
+                yax1_scale_info.append((yscale_str,min(tp),max(tp)))
+                raw_plot_list, leglines, leglabels \
+                    = xyerrorplotgen(mV, tp, x_error=mV_std, y_error=tp_std,
+                                     label='error mVtp', raw_plot_list=raw_plot_list, raw_leglines=leglines, raw_leglabels=leglabels,
+                                     color=coldrawmVtp_color, linw=raw_linw,  fmt=raw_fmt, markersize=raw_markersize,
+                                     alpha=raw_alpha, capsize=raw_capsize, scale_str=yscale_str)
+
 
         if ((Ydatafound) and (plot_Yfactor)):
             if ((Y_mV_min is not None) or (Y_mV_max is not None)):
@@ -1105,10 +1212,10 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                 y_std = properrors(cold_TP_mean,cold_TP_std,hot_TP_mean,hot_TP_std,Yfactor)
             else:
                 y_std = None
-            Yfactor_min = min(Yfactor)
-            Yfactor_max = max(Yfactor)
-            mV_Yfactor_min = mV_Yfactor[list(Yfactor).index(Yfactor_min)]
-            mV_Yfactor_max = mV_Yfactor[list(Yfactor).index(Yfactor_max)]
+            Yfactor_min = min(trim_Yfactor)
+            Yfactor_max = max(trim_Yfactor)
+            mV_Yfactor_min = trim_mV_Yfactor[list(trim_Yfactor).index(Yfactor_min)]
+            mV_Yfactor_max = trim_mV_Yfactor[list(trim_Yfactor).index(Yfactor_max)]
 
             if ax2_scaling[1] == 'Yf':
                 ax2_yscale_info.append(('Yf', Yfactor_min, Yfactor_max))
@@ -1225,9 +1332,6 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
 
 
 
-
-
-
         ############################
         ###### Parameter Data ######
         ############################
@@ -1298,9 +1402,22 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                 scale_y_vector = numpy.array(y_vector)*scale_factor
                 if verbose:
                     print 'ax1', scale_str, scale_factor, color, linw, ls, numpy.shape(scale_x_vector), numpy.shape(scale_y_vector)
+                ax1.plot(scale_x_vector, scale_y_vector, color=color, linewidth=linw, ls=ls)
+
+            for plot_obj in raw_plot_list:
+                (x_vector, y_vector, x_error, y_error, color, linw, fmt, markersize, alpha, capsize, scale_str) = plot_obj
+                scale_factor = findscaling(scale_str,ax1_yscales)
                 scale_x_vector = numpy.array(x_vector)
                 scale_y_vector = numpy.array(y_vector)*scale_factor
-                ax1.plot(scale_x_vector, scale_y_vector, color=color, linewidth=linw, ls=ls)
+                if verbose:
+                    print 'raw_ax1', scale_str, scale_factor, color, linw, fmt, numpy.shape(scale_x_vector), numpy.shape(scale_y_vector)
+                ax1.plot(scale_x_vector, scale_y_vector, linestyle='None',color=color,
+                         marker=fmt, markersize=markersize, markerfacecolor=color, alpha=alpha)
+                ax1.errorbar(scale_x_vector, scale_y_vector, xerr=x_error, yerr=y_error,
+                             marker='|',color=color, capsize=capsize, linestyle='None', elinewidth=linw)
+
+                #ax1.plot(scale_x_vector, scale_y_vector, color='DarkSalmon', marker='o', linewidth=linw)
+                #ax1.plot(scale_x_vector, scale_y_vector, xerr=x_error, fmt=fmt, linewidth=linw)
             ### Axis Labels ###
             ax1.set_xlabel(ax1_xlabel)
             ax1.set_ylabel(ax1_ylabel)
@@ -1340,11 +1457,23 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
 
             ### Axis Limits
             if str(ax1_scaling[1]) == 'tp':
-                ax1.set_ylim([0-y1size*y_margin_bot, ylimR1+y1size*y_margin_top])
+                ax1_ylim0 = 0-y1size*y_margin_bot
             else:
-                ax1.set_ylim([ylimL1-y1size*y_margin_bot, ylimR1+y1size*y_margin_top])
-            ax2.set_ylim([ylimL2-y2size*y_margin_bot, ylimR2+y2size*y_margin_top])
-            ax1.set_xlim([xlimL-xsize*x_margin_left , xlimR+xsize*x_margin_right])
+                ax1_ylim0 = ylimL1-y1size*y_margin_bot
+            ax1_ylim1 = ylimR1+y1size*y_margin_top
+
+            ax1_xlim0 = xlimL-xsize*x_margin_left
+            ax1_xlim1 = xlimR+xsize*x_margin_right
+
+            ax2_ylim0 = ylimL2-y2size*y_margin_bot
+            ax2_ylim1 = ylimR2+y2size*y_margin_top
+
+
+            ax1.set_xlim([ax1_xlim0, ax1_xlim1])
+            ax1.set_ylim([ax1_ylim0, ax1_ylim1])
+            ax2.set_ylim([ax2_ylim0, ax2_ylim1])
+
+
 
 
         ###############################################
@@ -1429,6 +1558,7 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                 Y_mV_range_min_str = Params_2_str(Y_mV_range_min, '%1.2f')
                 Y_mV_range_max_str = Params_2_str(Y_mV_range_max, '%1.2f')
                 plt.text(xpos, ypos, 'in range [' + Y_mV_range_min_str + ',' + Y_mV_range_max_str + '] mV', color = Yfactor_color)
+                ax2.plot([mV_Yfactor_max, mV_Yfactor_max],[ylimL2, ylimR2], color=Yfactor_color)
                 ypos -= yincrement
 
 
