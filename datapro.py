@@ -205,9 +205,10 @@ def AstroDataPro(datadir, proparamsfile, rawdataname, prodataname, mono_switcher
         sweep_time_mean = []
         for sweep_index in range(len(TP_list)):
             # read in SIS data for each sweep step
-            temp_mV, temp_uA, temp_tp, temp_pot, temp_time = getSISdata(sweepdir + str(sweep_index + 1) + '.csv')
+            thefilename = sweepdir + str(sweep_index + 1) + '.csv'
+            temp_mV, temp_uA, temp_tp, temp_pot, temp_time = getSISdata(thefilename)
             if verbose:
-                print sweepdir + str(sweep_index + 1) + '.csv'
+                print 'Getting data in:', thefilename
             sweep_pot.append(temp_pot[0])
             sweep_mV_mean.append(numpy.mean(temp_mV))
             sweep_mV_std.append(numpy.std(temp_mV))
@@ -230,7 +231,7 @@ def AstroDataPro(datadir, proparamsfile, rawdataname, prodataname, mono_switcher
         n.write('TP_freq,'     + str(TP_freq)     + '\n')
         n.close()
 
-        # Write the minimally processes data to a file
+        # Write the minimally processed data to a file
         rawfile = open(rawdataname, 'w')
         rawfile.write('mV_mean,mV_std,uA_mean,uA_std,TP_mean,TP_std\n')
         for sweep_index in range(len(sweep_mV_mean)):
@@ -244,28 +245,31 @@ def AstroDataPro(datadir, proparamsfile, rawdataname, prodataname, mono_switcher
         rawfile.close()
 
 
-        # put the data into a matrix for processing
-        matrix  = numpy.zeros((len(sweep_mV_mean), 11))
-        matrix[:,0]  = sweep_mV_mean
-        matrix[:,1]  = sweep_mV_std
-        matrix[:,2]  = sweep_uA_mean
-        matrix[:,3]  = sweep_uA_std
-        matrix[:,4]  = sweep_TP_mean
-        matrix[:,5]  = sweep_TP_std
-        matrix[:,6]  = sweep_time_mean
-        matrix[:,7]  = sweep_pot
-        # process the matrix
-        matrix, raw_matrix, mono_matrix, regrid_matrix, conv_matrix \
-            = ProcessMatrix(matrix, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose)
-        # put the information back into 1-D arrays
-        sweep_mV_mean   = matrix[:,0]
-        sweep_mV_std    = matrix[:,1]
-        sweep_uA_mean   = matrix[:,2]
-        sweep_uA_std    = matrix[:,3]
-        sweep_TP_mean   = matrix[:,4]
-        sweep_TP_std    = matrix[:,5]
-        sweep_time_mean = matrix[:,6]
-        sweep_pot       = matrix[:,7]
+        if 1 < len(sweep_mV_mean):
+            # put the data into a matrix for processing
+            matrix  = numpy.zeros((len(sweep_mV_mean), 11))
+            matrix[:,0]  = sweep_mV_mean
+            matrix[:,1]  = sweep_mV_std
+            matrix[:,2]  = sweep_uA_mean
+            matrix[:,3]  = sweep_uA_std
+            matrix[:,4]  = sweep_TP_mean
+            matrix[:,5]  = sweep_TP_std
+            matrix[:,6]  = sweep_time_mean
+            matrix[:,7]  = sweep_pot
+            # process the matrix
+            matrix, raw_matrix, mono_matrix, regrid_matrix, conv_matrix \
+                = ProcessMatrix(matrix, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose)
+            # put the information back into 1-D arrays
+            sweep_mV_mean   = matrix[:,0]
+            sweep_mV_std    = matrix[:,1]
+            sweep_uA_mean   = matrix[:,2]
+            sweep_uA_std    = matrix[:,3]
+            sweep_TP_mean   = matrix[:,4]
+            sweep_TP_std    = matrix[:,5]
+            sweep_time_mean = matrix[:,6]
+            sweep_pot       = matrix[:,7]
+
+
         ### save the results of this calculations
         n = open(prodataname, 'w')
         n.write('mV_mean,mV_std,uA_mean,uA_std,TP_mean,TP_std,time_mean,pot\n')
@@ -612,6 +616,7 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
             # save the results of the Y factor calculation 
             o = open(prodatadir + 'Ydata.csv', 'w')
             o.write('mV_Yfactor,Yfactor\n')
+
             for sweep_index in range(len(mV_Yfactor)):
                 o.write(str(mV_Yfactor[sweep_index]) + ',' + str(Yfactor[sweep_index]) + '\n')    
             o.close()

@@ -412,6 +412,8 @@ def AllanVarM(data, M, verbose):
 ###### FindOverlap ######
 #########################
 def FindOverlap(X, Y, mesh):
+    X = list(X)
+    Y = list(Y)
     status   = True
     finished = False
     count_X        = 0
@@ -419,13 +421,14 @@ def FindOverlap(X, Y, mesh):
     loop_count     = 0
     loop_count_max = len(X)+len(Y)-1
 
-    X_test = X/mesh
-    Y_test = Y/mesh
+    X_test = [int(numpy.round(x/mesh)) for x in X]
+    Y_test = [int(numpy.round(y/mesh)) for y in Y]
+
 
     while not finished:
-        if round(X_test[count_X])==round(Y_test[count_Y]):
+        if X_test[count_X]==Y_test[count_Y]:
             finished=True
-        elif round(X_test[count_X])<round(Y_test[count_Y]):
+        elif X_test[count_X] < Y_test[count_Y]:
             count_X += 1
         else:
             count_Y += 1
@@ -452,17 +455,27 @@ def data2Yfactor(hot_mV, cold_mV, off_tp, hot_tp, cold_tp, mesh, verbose):
     status=True
     # the first thing that we need to do is find the over lap in the mV range for off, hot and cold
     off=numpy.mean(off_tp)
-    status, start_index_hot, start_index_cold, len_mV = FindOverlap(hot_mV, cold_mV, mesh)
-    if status:
-        mV_Yfactor = hot_mV[start_index_hot:start_index_hot+len_mV]
-        # The Y-Factor calculation
-        Yfactor    = []
-        for x in range(len_mV):
-            Yfactor.append((hot_tp[x]-off)/(cold_tp[x]-off))
+    hot_mV  = list(hot_mV)
+    cold_mV = list(cold_mV)
+    hot_tp  = list(hot_tp)
+    cold_tp = list(cold_tp)
+
+    if ((1 < len(hot_mV)) or (1 < len(cold_mV))):
+        status, start_index_hot, start_index_cold, len_mV = FindOverlap(hot_mV, cold_mV, mesh)
+        if status:
+            mV_Yfactor = hot_mV[start_index_hot:start_index_hot+len_mV]
+        else:
+            mV_Yfactor = None
+            Yfactor    = None
+            print "data2Yfactor failed"
     else:
-        mV_Yfactor = None
-        Yfactor    = None
-        print "data2Yfactor failed"
+        mV_Yfactor = [numpy.mean([numpy.mean(hot_mV),numpy.mean(cold_mV)])]
+        len_mV = 1
+
+    # The Y-Factor calculation
+    Yfactor    = []
+    for x in range(len_mV):
+        Yfactor.append((hot_tp[x]-off)/(cold_tp[x]-off))
 
     return mV_Yfactor, Yfactor, status
 
@@ -485,32 +498,17 @@ def Specdata2Yfactor(prodatadir, verbose=False):
     cold_mVs   = numpy.load(cold_mVs_file)
     cold_pwr   = numpy.load(cold_pwr_file)
 
-    mV_mesh = abs(hot_mVs[1,0] - hot_mVs[0,0])
-    mV_mesh_test = abs(cold_mVs[1,0] - cold_mVs[0,0])
-    if not ((mV_mesh - mV_mesh_test) < 0.0001):
-        print "The mV mesh of the hot and cold spectral frequency surface do not match in the directory:"
-        print prodatadir
-        print mV_mesh, " is the hot mV mesh"
-        print mV_mesh_test, " is the cold mV mesh"
-        sys.exit()
-
-    # Find the Overlap of the hot and cold Matrices in mV
-    hot_mV  =  hot_mVs[:,0]
-    cold_mV = cold_mVs[:,0]
-    status, start_index_hot_mV, start_index_cold_mV, len_mV = FindOverlap(hot_mV, cold_mV, mV_mesh)
-    if status:
-        end_index_hot_mV  = start_index_hot_mV+len_mV
-        end_index_cold_mV = start_index_cold_mV+len_mV
-        hot_freqs  = hot_freqs[start_index_hot_mV:end_index_hot_mV,:]
-        hot_mVs    = hot_mVs[start_index_hot_mV:end_index_hot_mV,:]
-        hot_pwr    = hot_pwr[start_index_hot_mV:end_index_hot_mV,:]
-        cold_freqs = cold_freqs[start_index_cold_mV:end_index_cold_mV,:]
-        cold_mVs   = cold_mVs[start_index_cold_mV:end_index_cold_mV,:]
-        cold_pwr   = cold_pwr[start_index_cold_mV:end_index_cold_mV,:]
+    if len(hot_freqs) < 2:
+        hot_freqs  = numpy.array(hot_freqs[0])
+        hot_mVs    = numpy.array(hot_mVs[0])
+        hot_pwr    = numpy.array(hot_pwr[0])
+        cold_freqs = numpy.array(cold_freqs[0])
+        cold_mVs   = numpy.array(cold_mVs[0])
+        cold_pwr   = numpy.array(cold_pwr[0])
 
         # Find the Overlap of the hot and cold Matrices in frequency
-        freq_mesh      = abs(hot_freqs[0,1]  - hot_freqs[0,0])
-        freq_mesh_test = abs(cold_freqs[0,1] - cold_freqs[0,0])
+        freq_mesh      = abs(hot_freqs[1]  - hot_freqs[0])
+        freq_mesh_test = abs(cold_freqs[1] - cold_freqs[0])
         if not ((freq_mesh - freq_mesh_test) < 0.0001):
             print "The freq mesh of the hot and cold spectral frequency surface do not match in the directory:"
             print prodatadir
@@ -518,26 +516,73 @@ def Specdata2Yfactor(prodatadir, verbose=False):
             print freq_mesh_test, " is the cold freq mesh"
             sys.exit()
 
-        hot_freq  =  hot_freqs[0,:]
-        cold_freq = cold_freqs[0,:]
-        status, start_index_hot_freq, start_index_cold_freq, len_freq = FindOverlap(hot_freq, cold_freq, freq_mesh)
+
+        status, start_index_hot_freq, start_index_cold_freq, len_freq = FindOverlap(hot_freqs, cold_freqs, freq_mesh)
         if status:
             end_index_hot_freq  = start_index_hot_freq+len_freq
             end_index_cold_freq = start_index_cold_freq+len_freq
-            hot_freqs  = hot_freqs[:,start_index_hot_freq:end_index_hot_freq]
-            hot_mVs    = hot_mVs[:,start_index_hot_freq:end_index_hot_freq]
-            hot_pwr    = hot_pwr[:,start_index_hot_freq:end_index_hot_freq]
-            cold_freqs = cold_freqs[:,start_index_cold_freq:end_index_cold_freq]
-            cold_mVs   = cold_mVs[:,start_index_cold_freq:end_index_cold_freq]
-            cold_pwr   = cold_pwr[:,start_index_cold_freq:end_index_cold_freq]
+            hot_freqs  = hot_freqs[start_index_hot_freq:end_index_hot_freq]
+            hot_mVs    = hot_mVs[start_index_hot_freq:end_index_hot_freq]
+            hot_pwr    = hot_pwr[start_index_hot_freq:end_index_hot_freq]
+            cold_freqs = cold_freqs[start_index_cold_freq:end_index_cold_freq]
+            cold_mVs   = cold_mVs[start_index_cold_freq:end_index_cold_freq]
+            cold_pwr   = cold_pwr[start_index_cold_freq:end_index_cold_freq]
+        status = True
+    else:
 
+        mV_mesh = abs(hot_mVs[1,0] - hot_mVs[0,0])
+        mV_mesh_test = abs(cold_mVs[1,0] - cold_mVs[0,0])
+        if not ((mV_mesh - mV_mesh_test) < 0.0001):
+            print "The mV mesh of the hot and cold spectral frequency surface do not match in the directory:"
+            print prodatadir
+            print mV_mesh, " is the hot mV mesh"
+            print mV_mesh_test, " is the cold mV mesh"
+            sys.exit()
+
+        # Find the Overlap of the hot and cold Matrices in mV
+        hot_mV  =  hot_mVs[:,0]
+        cold_mV = cold_mVs[:,0]
+        status, start_index_hot_mV, start_index_cold_mV, len_mV = FindOverlap(hot_mV, cold_mV, mV_mesh)
+        if status:
+            end_index_hot_mV  = start_index_hot_mV+len_mV
+            end_index_cold_mV = start_index_cold_mV+len_mV
+            hot_freqs  = hot_freqs[start_index_hot_mV:end_index_hot_mV,:]
+            hot_mVs    = hot_mVs[start_index_hot_mV:end_index_hot_mV,:]
+            hot_pwr    = hot_pwr[start_index_hot_mV:end_index_hot_mV,:]
+            cold_freqs = cold_freqs[start_index_cold_mV:end_index_cold_mV,:]
+            cold_mVs   = cold_mVs[start_index_cold_mV:end_index_cold_mV,:]
+            cold_pwr   = cold_pwr[start_index_cold_mV:end_index_cold_mV,:]
+
+            # Find the Overlap of the hot and cold Matrices in frequency
+            freq_mesh      = abs(hot_freqs[0,1]  - hot_freqs[0,0])
+            freq_mesh_test = abs(cold_freqs[0,1] - cold_freqs[0,0])
+            if not ((freq_mesh - freq_mesh_test) < 0.0001):
+                print "The freq mesh of the hot and cold spectral frequency surface do not match in the directory:"
+                print prodatadir
+                print freq_mesh, " is the hot freq mesh"
+                print freq_mesh_test, " is the cold freq mesh"
+                sys.exit()
+
+            hot_freq  =  hot_freqs[0,:]
+            cold_freq = cold_freqs[0,:]
+            status, start_index_hot_freq, start_index_cold_freq, len_freq = FindOverlap(hot_freq, cold_freq, freq_mesh)
             if status:
-                YspecmV = hot_pwr/cold_pwr
-                numpy.save(prodatadir + "Y.npy",YspecmV)
-                numpy.save(prodatadir + "Y_freq.npy",hot_freqs)
-                numpy.save(prodatadir + "Y_mV.npy",hot_mVs)
+                end_index_hot_freq  = start_index_hot_freq+len_freq
+                end_index_cold_freq = start_index_cold_freq+len_freq
+                hot_freqs  = hot_freqs[:,start_index_hot_freq:end_index_hot_freq]
+                hot_mVs    = hot_mVs[:,start_index_hot_freq:end_index_hot_freq]
+                hot_pwr    = hot_pwr[:,start_index_hot_freq:end_index_hot_freq]
+                cold_freqs = cold_freqs[:,start_index_cold_freq:end_index_cold_freq]
+                cold_mVs   = cold_mVs[:,start_index_cold_freq:end_index_cold_freq]
+                cold_pwr   = cold_pwr[:,start_index_cold_freq:end_index_cold_freq]
 
-    if not status:
+
+    if status:
+        YspecmV = hot_pwr/cold_pwr
+        numpy.save(prodatadir + "Y.npy",YspecmV)
+        numpy.save(prodatadir + "Y_freq.npy",hot_freqs)
+        numpy.save(prodatadir + "Y_mV.npy",hot_mVs)
+    else:
         print "The Specdata2Yfactor failed in the directory:"
         print prodatadir
         print "Killing the script"

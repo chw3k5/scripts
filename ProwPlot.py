@@ -1,5 +1,5 @@
 # Import this is the directory that has my scripts
-from Plotting import SingleSpectraPlotter, YfactorSweepsPlotter, SimpleSweepPlot, YSpectraPlotter
+from Plotting import SingleSpectraPlotter, YfactorSweepsPlotter, SimpleSweepPlot, YSpectraPlotter2D
 from BiasSweep2 import BiasSweep
 from datapro import SweepDataPro, YdataPro
 from TestSweeper import testsweeps, protestsweeps, plottestsweeps
@@ -24,8 +24,8 @@ repeat  = 1
 ### For Y-factor data and Sweeps ###
 do_Ysweeps              = False
 do_YdataPro             = False
-do_YfactotSweepsPlotter = True
-do_YSpectra_Plotter     = False
+do_YfactotSweepsPlotter = False
+do_YSpectra_Plotter     = True
 
 
 
@@ -89,7 +89,7 @@ if do_SimpleSweepPlot:
                     plot_unpumpmVuA=True, plot_unpumpmVtp=True)
 
 if do_SingeSpectraPlotter:
-    SingleSpectraPlotter(datadir, search_4Snums=True, Snums='', verbose=False,
+    SingleSpectraPlotter(datadir, search_4Snums=True, Snums=[], verbose=False,
                         show_plot=False, save_plot=True, do_eps=False)
 
 
@@ -108,7 +108,8 @@ if all_Ydata:
 
 
 # The directory what the data is kept
-datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Nov05_14/Y_MAG3/'
+datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Nov05_14/singlebiastest/'
+#datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/LOfreq2/'
 
 if do_Ysweeps:
     sweep_num = start_num
@@ -143,7 +144,7 @@ if do_Ysweeps:
 
 
 if do_YdataPro:
-    YdataPro(datadir, verbose=True, search_4Ynums=True, search_str='Y', Ynums=['Y0001'], useOFFdata=False, Off_datadir='',
+    YdataPro(datadir, verbose=True, search_4Ynums=False, search_str='Y', Ynums=['Y0001'], useOFFdata=False, Off_datadir='',
              mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01, do_conv_mV=True, sigma_mV=0.08, min_cdf_mV=0.95,
              do_normspectra=False, norm_freq=1.42, norm_band=0.060, do_freq_conv=True, min_cdf_freq=0.90,
              sigma_GHz=0.10)
@@ -151,8 +152,8 @@ if do_YdataPro:
 if do_YfactotSweepsPlotter:
     YfactorSweepsPlotter(datadir, search_4Ynums=True, Ynums=[], verbose=True, mV_min=0, mV_max=5,
                          Y_mV_min=1.8, Y_mV_max=2.2,
-                         plot_rawhot_mVuA=True, plot_rawhot_mVtp=True,
-                         plot_rawcold_mVuA=True, plot_rawcold_mVtp=True,
+                         plot_rawhot_mVuA=False, plot_rawhot_mVtp=True,
+                         plot_rawcold_mVuA=False, plot_rawcold_mVtp=True,
                          show_standdev=False, std_num=1,
                          display_params=True, show_plot=False, save_plot=True, do_eps=False,
                          plot_mVuA=True, plot_mVtp=True, plot_Yfactor=True, plot_Ntemp=False,
@@ -163,10 +164,10 @@ if do_YfactotSweepsPlotter:
                          hotunpumped_find_lin_mVuA=True, coldunpumped_find_lin_mVuA=False,
                          linif=0.4, der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
                          der2_int=1, do_der2_conv=True, der2_min_cdf=0.95, der2_sigma=0.05,
-                         do_Ycut=False, start_Yplot=1, end_Yplot=2)
+                         do_xkcd=False)
 
 if do_YSpectra_Plotter:
-    YSpectraPlotter(datadir, search_4Ynums=True, Ynums='', verbose=True,
+    YSpectraPlotter2D(datadir, search_4Ynums=True, Ynums=[], verbose=True,
                     show_plot=False, save_plot=True, do_eps=False)
 
 

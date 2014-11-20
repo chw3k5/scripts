@@ -694,64 +694,65 @@ def getproYdata(datadir):
     colddatafile = datadir + 'colddata.csv'
     Ydatafile    = datadir + 'Ydata.csv'
 
+    hot_mV_mean   = None
+    hot_mV_std    = None
+    hot_uA_mean   = None
+    hot_uA_std    = None
+    hot_TP_mean   = None
+    hot_TP_std    = None
+    hot_time_mean = None
+    hot_pot       = None
+    hotdatafound  = False
+
+    cold_mV_mean   = None
+    cold_mV_std    = None
+    cold_uA_mean   = None
+    cold_uA_std    = None
+    cold_TP_mean   = None
+    cold_TP_std    = None
+    cold_time_mean = None
+    cold_pot       = None
+    colddatafound  = False
+
+    mV_Yfactor = None
+    Yfactor    = None
+    Ydatafound = False
+
 
     if os.path.exists(hotdatafile):
-        temp = atpy.Table(hotdatafile, type="ascii", delimiter=",")
-        hot_mV_mean   = temp.mV_mean
-        hot_mV_std    = temp.mV_std
-        hot_uA_mean   = temp.uA_mean
-        hot_uA_std    = temp.uA_std
-        hot_TP_mean   = temp.TP_mean
-        hot_TP_std    = temp.TP_std
-        hot_time_mean = temp.time_mean
-        hot_pot       = temp.pot
+        hot_data = atpy.Table(hotdatafile, type="ascii", delimiter=",")
+        hot_keys = hot_data.keys()
         hotdatafound  = True
-    else:
-        hot_mV_mean   = None
-        hot_mV_std    = None
-        hot_uA_mean   = None
-        hot_uA_std    = None
-        hot_TP_mean   = None
-        hot_TP_std    = None
-        hot_time_mean = None
-        hot_pot       = None
-        hotdatafound  = False
-
+        if 'mV_mean'   in hot_keys: hot_mV_mean   = hot_data.mV_mean
+        if 'mV_std'    in hot_keys: hot_mV_std    = hot_data.mV_std
+        if 'uA_mean'   in hot_keys: hot_uA_mean   = hot_data.uA_mean
+        if 'uA_std'    in hot_keys: hot_uA_std    = hot_data.uA_std
+        if 'TP_mean'   in hot_keys: hot_TP_mean   = hot_data.TP_mean
+        if 'TP_std'    in hot_keys: hot_TP_std    = hot_data.TP_std
+        if 'time_mean' in hot_keys: hot_time_mean = hot_data.time_mean
+        if 'pot'       in hot_keys: hot_pot       = hot_data.pot
     if os.path.exists(colddatafile):
-        temp = atpy.Table(colddatafile, type="ascii", delimiter=",")
-        cold_mV_mean   = temp.mV_mean
-        cold_mV_std    = temp.mV_std
-        cold_uA_mean   = temp.uA_mean
-        cold_uA_std    = temp.uA_std
-        cold_TP_mean   = temp.TP_mean
-        cold_TP_std    = temp.TP_std
-        cold_time_mean = temp.time_mean
-        cold_pot       = temp.pot
+        cold_data = atpy.Table(colddatafile, type="ascii", delimiter=",")
+        cold_keys = cold_data.keys()
         colddatafound  = True
-    else:
-        temp = atpy.Table(colddatafile, type="ascii", delimiter=",")
-        cold_mV_mean   = None
-        cold_mV_std    = None
-        cold_uA_mean   = None
-        cold_uA_std    = None
-        cold_TP_mean   = None
-        cold_TP_std    = None
-        cold_time_mean = None
-        cold_pot       = None
-        colddatafound  = False
-
+        if 'mV_mean'   in cold_keys: cold_mV_mean   = cold_data.mV_mean
+        if 'mV_std'    in cold_keys: cold_mV_std    = cold_data.mV_std
+        if 'uA_mean'   in cold_keys: cold_uA_mean   = cold_data.uA_mean
+        if 'uA_std'    in cold_keys: cold_uA_std    = cold_data.uA_std
+        if 'TP_mean'   in cold_keys: cold_TP_mean   = cold_data.TP_mean
+        if 'TP_std'    in cold_keys: cold_TP_std    = cold_data.TP_std
+        if 'time_mean' in cold_keys: cold_time_mean = cold_data.time_mean
+        if 'pot'       in cold_keys: cold_pot       = cold_data.pot
     if os.path.exists(Ydatafile):
-        temp = atpy.Table(Ydatafile, type="ascii", delimiter=",")
-        mV_Yfactor = temp.mV_Yfactor
-        Yfactor    = temp.Yfactor
+        Y_data = atpy.Table(Ydatafile, type="ascii", delimiter=",")
+        Y_keys = Y_data.keys()
         Ydatafound = True
-    else:
-        mV_Yfactor = None
-        Yfactor    = None
-        Ydatafound = False
-    
+        if 'mV_Yfactor' in Y_keys: mV_Yfactor = Y_data.mV_Yfactor
+        if 'Yfactor'    in Y_keys: Yfactor    = Y_data.Yfactor
+
     # make sure all the Y mV data overlaps
-    if (hotdatafound and colddatafound and Ydatafound):
+    if ((1 < len(list(hot_mV_mean))) and (1 < len(list(cold_mV_mean))) and (1 < len(list(mV_Yfactor)))
+        and (hotdatafound) and (colddatafound) and (Ydatafound)):
         if 1 < len(hot_mV_mean):
             mesh = (hot_mV_mean[1]-hot_mV_mean[0])
         else:

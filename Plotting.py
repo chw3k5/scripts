@@ -10,6 +10,11 @@ from profunc import windir, getproparams, getmultiParams,  getproSweep, get_fast
 from profunc import getprorawdata # Caleb's Functions
 from domath  import linfit # Caleb's Functions
 
+from mpl_toolkits.mplot3d import axes3d
+from matplotlib import cm
+platform = sys.platform
+#if platform == 'darwin':
+#    matplotlib.rc('text', usetex=True)
 
 
 
@@ -43,70 +48,74 @@ def GetAllTheProFastSweepData(prodatadir):
 
 
 def DataTrimmer(min_trim, max_trim, ordered_set, trim_list):
-    if min_trim is not None:
-        set_max = max(ordered_set)
+    if len(list(ordered_set)) < 2:
+        status      = True
+        trimmed      = ordered_set
+        trimmed_list = trim_list
     else:
-        set_max = None
-    if max_trim is not None:
-        set_min = min(ordered_set)
-    else:
-        set_min = None
-
-    index_min_trim = 0
-    min4min_trim = None
-    status = True
-    trimmed = None
-    if not ((max_trim is None) and (min_trim is None)):
-        if ((max_trim is not None) and (min_trim is not None) and (max_trim < min_trim)):
-            print "max_trim is less than or equal to min_trim, min trim must be strictly less than max_trim"
-            print "min_trim:", min_trim
-            print "max_trim:", max_trim
-            print "returning status=False"
-            status = False
+        if min_trim is not None:
+            set_max = max(ordered_set)
         else:
-            # Min trim
-            if min_trim is not None:
-                if min_trim < set_max:
-                    for index_min_trim in range(len(ordered_set[:])):
-                        if min_trim <= ordered_set[index_min_trim]:
-                            min_trimmed = ordered_set[index_min_trim:]
-                            #print ordered_set[index_min_trim]
-                            min4min_trim = min(min_trimmed)
-                            break
+            set_max = None
+        if max_trim is not None:
+            set_min = min(ordered_set)
+        else:
+            set_min = None
+        index_min_trim = 0
+        min4min_trim = None
+        status = True
+        trimmed = None
+        if not ((max_trim is None) and (min_trim is None)):
+            if ((max_trim is not None) and (min_trim is not None) and (max_trim < min_trim)):
+                print "max_trim is less than or equal to min_trim, min trim must be strictly less than max_trim"
+                print "min_trim:", min_trim
+                print "max_trim:", max_trim
+                print "returning status=False"
+                status = False
             else:
-                min4min_trim = set_min
-                min_trimmed = ordered_set
-
-            if max_trim is not None:
-                # Max trim
-                if min4min_trim < max_trim:
-                    for index_max_trim in reversed(range(len(min_trimmed[:]))):
-                        if min_trimmed[index_max_trim] <= max_trim:
-                            trimmed = min_trimmed[:index_max_trim]
-                            break
+                # Min trim
+                if min_trim is not None:
+                    if min_trim < set_max:
+                        for index_min_trim in range(len(ordered_set[:])):
+                            if min_trim <= ordered_set[index_min_trim]:
+                                min_trimmed = ordered_set[index_min_trim:]
+                                #print ordered_set[index_min_trim]
+                                min4min_trim = min(min_trimmed)
+                                break
                 else:
-                    print max_trim, "=max_trim is greater than the minimum of the the ordered set that has been already been trimmed sweep, that is:", min4min_trim
-                    print "The min value of the ordered set before trimming was:", set_min
-                    print "It is likely that the difference of max_trim and min_trim is greater that the spacing of values in the ordered set"
-                    print "min_trim:", min_trim
-                    print "max_trim:", max_trim
-                    print "ordered_set:", ordered_set
-                    print "min_trimmed:", min4min_trim
-                    print "returning status=False"
-                    status = False
-            else:
-                trimmed = min_trimmed
-    else:
-        trimmed = ordered_set
+                    min4min_trim = set_min
+                    min_trimmed = ordered_set
 
-    #print trimmed[0],trimmed[-1]
-    # trim the corresponding values in the list dependent variables
-    trimmed_list = []
-    if ((trim_list != []) and (status)):
-        list_length = len(trimmed)
-        index_max_trim = index_min_trim + list_length
-        for trim in trim_list:
-            trimmed_list.append(trim[index_min_trim:index_max_trim])
+                if max_trim is not None:
+                    # Max trim
+                    if min4min_trim < max_trim:
+                        for index_max_trim in reversed(range(len(min_trimmed[:]))):
+                            if min_trimmed[index_max_trim] <= max_trim:
+                                trimmed = min_trimmed[:index_max_trim]
+                                break
+                    else:
+                        print max_trim, "=max_trim is greater than the minimum of the the ordered set that has been already been trimmed sweep, that is:", min4min_trim
+                        print "The min value of the ordered set before trimming was:", set_min
+                        print "It is likely that the difference of max_trim and min_trim is greater that the spacing of values in the ordered set"
+                        print "min_trim:", min_trim
+                        print "max_trim:", max_trim
+                        print "ordered_set:", ordered_set
+                        print "min_trimmed:", min4min_trim
+                        print "returning status=False"
+                        status = False
+                else:
+                    trimmed = min_trimmed
+        else:
+            trimmed = ordered_set
+
+        #print trimmed[0],trimmed[-1]
+        # trim the corresponding values in the list dependent variables
+        trimmed_list = []
+        if ((trim_list != []) and (status)):
+            list_length = len(trimmed)
+            index_max_trim = index_min_trim + list_length
+            for trim in trim_list:
+                trimmed_list.append(trim[index_min_trim:index_max_trim])
 
     return status, trimmed, trimmed_list
 
@@ -584,20 +593,21 @@ def astroplodatagen(mV, mV_std, uA, uA_std, TP, TP_std, time_apx, pot_apx,
                      linif=0.3, der1_int=1, do_der1_conv=False, der1_min_cdf=0.9, der1_sigma=0.05,
                      der2_int=1,do_der2_conv=False, der2_min_cdf=0.9, der2_sigma=0.1, verbose=False):
 
-    trim_list = [mV_std, uA, uA_std, TP, TP_std, time_apx, pot_apx]
-    # The trimming part of the script for mV values on the X-axis
-    if ((mV_min is None) and (mV_max is None)):
-        if verbose:
-            print "Data trimming is not selected"
-            print "the plot X-axis min and max will depend on the lines being plotted"
-    else:
-        status, mV, trimmed_list = DataTrimmer(mV_min, mV_max, mV, trim_list)
-        if not status:
-            print "The program failed the Data trimming"
-            print "killing the script"
-            sys.exit()
+    if 1 < len(list(mV)):
+        trim_list = [mV_std, uA, uA_std, TP, TP_std, time_apx, pot_apx]
+        # The trimming part of the script for mV values on the X-axis
+        if ((mV_min is None) and (mV_max is None)):
+            if verbose:
+                print "Data trimming is not selected"
+                print "the plot X-axis min and max will depend on the lines being plotted"
+        else:
+            status, mV, trimmed_list = DataTrimmer(mV_min, mV_max, mV, trim_list)
+            if not status:
+                print "The program failed the Data trimming"
+                print "killing the script"
+                sys.exit()
 
-        [mV_std, uA, uA_std, TP, TP_std, time_apx, pot_apx] = trimmed_list
+            [mV_std, uA, uA_std, TP, TP_std, time_apx, pot_apx] = trimmed_list
 
 
     # (Xdata, Y_data, color, linewidth, linestyle, scales-like-'TP'or'uA'or'')
@@ -852,7 +862,7 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                          linif=0.3,
                          der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
                          der2_int=1, do_der2_conv=True, der2_min_cdf=0.95, der2_sigma=0.05,
-                         do_Ycut=False, start_Yplot=0, end_Yplot=3
+                         do_xkcd=False
                          ):
     #####################
     ###### Options ######
@@ -1390,6 +1400,9 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
         #####################################
         plt.clf()
 
+        if do_xkcd:
+            plt.xkcd(scale=1, length=100,randomness=2)
+
         ##############
         ### AXIS 1 ###
         ##############
@@ -1422,6 +1435,9 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
             ax1.set_xlabel(ax1_xlabel)
             ax1.set_ylabel(ax1_ylabel)
             ### Axis Limits
+            if str(ax1_scaling[1]) == 'tp':
+                ylimL1 = min(0,ylimL1)
+
             xsize = abs(xlimL-xlimR)
             y1size = abs(ylimL1-ylimR1)
 
@@ -1640,14 +1656,6 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
 
 def SingleSpectraPlotter(datadir, search_4Snums=False, Snums='', verbose=False,
                     show_plot=False, save_plot=True, do_eps=False):
-    import sys
-    import numpy
-    from mpl_toolkits.mplot3d import axes3d
-    from matplotlib import pyplot as plt
-    from matplotlib import cm
-    platform = sys.platform
-    #if platform == 'darwin':
-    #    matplotlib.rc('text', usetex=True)
 
     Snums, prodatadir, plotdir = GetProDirsNames(datadir, search_4Snums, Snums)
 
@@ -1730,17 +1738,271 @@ def SingleSpectraPlotter(datadir, search_4Snums=False, Snums='', verbose=False,
 
     return
 
+import random
+def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[], display_params=True, verbose=False,
+                       show_plot=False, save_plot=True, do_eps=False):
 
-def YSpectraPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False,
+    colors = ['BlueViolet','Brown','CadetBlue','Chartreuse', 'Chocolate','Coral','CornflowerBlue','Crimson','Cyan',
+              'DarkBlue','DarkCyan','DarkGoldenRod', 'DarkGreen','DarkMagenta','DarkOliveGreen','DarkOrange',
+              'DarkOrchid','DarkRed','DarkSalmon','DarkSeaGreen','DarkSlateBlue','DodgerBlue','FireBrick','ForestGreen',
+              'Fuchsia','Gold','GoldenRod','Green','GreenYellow','HotPink','IndianRed','Indigo','LawnGreen',
+              'LightCoral','Lime','LimeGreen','Magenta','Maroon', 'MediumAquaMarine','MediumBlue','MediumOrchid',
+              'MediumPurple','MediumSeaGreen','MediumSlateBlue','MediumTurquoise','MediumVioletRed','MidnightBlue',
+              'Navy','Olive','OliveDrab','Orange','OrangeRed','Orchid','PaleVioletRed','Peru','Pink','Plum','Purple',
+              'Red','RoyalBlue','SaddleBrown','Salmon','SandyBrown','Sienna','SkyBlue','SlateBlue','SlateGrey',
+              'SpringGreen','SteelBlue','Teal','Tomato','Turquoise','Violet','Yellow','YellowGreen']
+
+    random.shuffle(colors)
+    print colors
+
+
+    Ynums, proYdatadir, plotdir = GetProDirsNames(datadir, search_4Ynums, Ynums)
+    for Ynum in Ynums:
+        if verbose:
+            print "ploting Spectra for Snum: " + str(Ynum)
+        proSdatadir  = proYdatadir + Ynum + '/'
+
+        X_file = proSdatadir + "Y_freq.npy"
+        Y_file = proSdatadir + "Y_mV.npy"
+        Z_file = proSdatadir + "Y.npy"
+
+        freq_matrix = numpy.load(X_file)
+        mV_matrix   = numpy.load(Y_file)
+        pwrs_matrix = numpy.load(Z_file)
+
+        shapetest = numpy.shape(freq_matrix)
+        lentest = len(shapetest)
+
+
+        ############################
+        ###### Parameter Data ######
+        ############################
+
+        ### Get the Processed Parameters of the Sweep
+        paramsfile_list = []
+        paramsfile_list.append(proYdatadir + 'hotproparams.csv')
+        paramsfile_list.append(proYdatadir + 'coldproparams.csv')
+        K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, meanmag_mA, stdmag_mA, LOuAsearch, LOuAset, UCA_volt,\
+        LOuA_set_pot, LOuA_magpot,meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, stdSIS_tp, SIS_pot, \
+        del_time, LOfreq, IFband, meas_num, TP_int_time, TP_num, TP_freq \
+            = getmultiParams(paramsfile_list)
+
+
+
+
+        if lentest < 2:
+            if verbose:
+                print 'A Single Bias point for Y factor spectral calculation was found'
+            biaspoints = 1
+            singleflag = True
+            freqs = freq_matrix
+            mVs   = [mV_matrix[0]]
+        else:
+            biaspoints = shapetest[0]
+            singleflag = False
+            freqs = freq_matrix[0,:]
+            mVs   = mV_matrix[:,0]
+            if verbose:
+                print biaspoints, 'Bias points for Y factor spectral calculation were found'
+
+        print mVs, freqs
+        plot_list = []
+        leglines  = []
+        leglabels = []
+        color_len = len(colors)
+        for spec_index in range(biaspoints):
+            color = colors((spec_index % color_len))
+            mV = mVs[spec_index]
+            pwrs = pwrs_matrix[spec_index,:]
+            plot_list, leglines, leglabels \
+                = xyplotgen(freqs, pwrs, label='Bias'+str('%1.2f' % mV)+'mV',
+                            plot_list=plot_list, leglines=leglines, leglabels=leglabels,
+                            color=color, linw=1, ls='-', scale_str='' )
+
+
+        ### Axis Labels ###
+        ax1.set_xlabel('Frequency (GHz)')
+        ax1.set_ylabel('Y factor')
+        ### Axis Limits
+        #ax1.set_xlim([ax1_xlim0, ax1_xlim1])
+        #ax1.set_ylim([ax1_ylim0, ax1_ylim1])
+
+        if (plot_list != []):
+            fig, ax1 = plt.subplots()
+            for plot_obj in plot_list:
+                (x_vector, y_vector, color, linw, ls, scale_str) = plot_obj
+                ax1.plot(x_vector, y_vector, color=color, linewidth=linw, ls=ls)
+
+        ###############################################
+        ###### Things to Make the Plot Look Good ######
+        ###############################################
+
+        ### Legend ###
+        final_leglines  = []
+        final_leglabels = []
+        for indexer in range(len(leglines)):
+            if ((leglines[indexer] != None) and (leglabels[indexer] != None)):
+                final_leglabels.append(leglabels[indexer])
+                legline_data = leglines[indexer]
+                color = legline_data[0]
+                ls    = legline_data[1]
+                linw  = legline_data[2]
+                final_leglines.append(plt.Line2D(range(10), range(10), color=color, ls=ls, linewidth=linw))
+        matplotlib.rcParams['legend.fontsize'] = legendsize
+        plt.legend(tuple(final_leglines),tuple(final_leglabels), numpoints=1, loc=legendloc)
+
+
+
+
+        ######################################################
+        ###### Put Sweep ParameterS on the Plot as Text ######
+        ######################################################
+        if display_params:
+            ################
+            ### Column 1 ###
+            ################
+            xpos = xlimL + (4.0/18.0)*xsize
+            yincrement = (y2size*(1+(y_margin_top+y_margin_bot)))/25.0
+            if ax2_plot_list != []:
+                ypos = ylimR2+y_margin_top*y2size - yincrement
+            else:
+                ypos = ylimR1+y_margin_top*y1size  - yincrement
+            if LOuAset is not None:
+                LOuAset_str = Params_2_str(LOuAset, '%2.3f')
+                plt.text(xpos, ypos, LOuAset_str + " uA LO", color = LOpwr_color)
+                ypos -= yincrement
+            if UCA_volt is not None:
+                UCA_volt_str = Params_2_str(UCA_volt, '%1.5f')
+                plt.text(xpos, ypos, UCA_volt_str + " V  UCA", color = LOpwr_color)
+                ypos -= yincrement
+            if meanSIS_mV is not None:
+                meanSIS_mV_str = Params_2_str(meanSIS_mV, '%2.2f')
+                if stdSIS_mV is not None:
+                    stdSIS_mV_str = Params_2_str(stdSIS_mV, '%2.2f', 'round')
+                    plt.text(xpos, ypos, meanSIS_mV_str + " " + stdSIS_mV_str + " mV", color = LOpwr_color)
+                else:
+                    plt.text(xpos, ypos, str('%1.3f' % meanSIS_mV) + " mV", color = LOpwr_color)
+                ypos -= yincrement
+            if meanSIS_uA is not None:
+                meanSIS_uA_str = Params_2_str(meanSIS_uA, '%2.2f')
+                if stdSIS_uA is not None:
+                    stdSIS_uA_str = Params_2_str(stdSIS_uA, '%2.2f', 'round')
+                    plt.text(xpos, ypos, meanSIS_uA_str + " " + stdSIS_uA_str+ " uA", color = LOpwr_color)
+                else:
+                    plt.text(xpos, ypos, str('%2.2f' % meanSIS_uA) + " uA", color = LOpwr_color)
+                ypos -= yincrement
+            if LOuA_set_pot is not None:
+                LOuA_set_pot_str = Params_2_str(LOuA_set_pot, '%06.f')
+                plt.text(xpos, ypos, "@" + LOuA_set_pot_str + " SIS bias pot", color = LOpwr_color)
+                ypos -= yincrement
+            if LOuA_magpot is not None:
+                LOuA_magpot_str = Params_2_str(LOuA_magpot, '%06f')
+                plt.text(xpos, ypos, "@" + LOuA_magpot_str + "  Magnet pot", color = LOpwr_color)
+                ypos -= yincrement
+            if ((Ydatafound) and (plot_Yfactor)):
+                Yfactor_max_str = Params_2_str(Yfactor_max, '%1.2f')
+                mV_Yfactor_max_str = Params_2_str(mV_Yfactor_max, '%1.2f')
+                plt.text(xpos, ypos, 'max Y-factor ' +Yfactor_max_str + ' @ '+mV_Yfactor_max_str+' mV', color = Yfactor_color)
+                ypos -= yincrement
+                if Y_mV_min is None:
+                    Y_mV_range_min = min(mV_Yfactor)
+                else:
+                     Y_mV_range_min = Y_mV_min
+                if Y_mV_max is None:
+                    Y_mV_range_max = max(mV_Yfactor)
+                else:
+                     Y_mV_range_max = Y_mV_max
+                Y_mV_range_min_str = Params_2_str(Y_mV_range_min, '%1.2f')
+                Y_mV_range_max_str = Params_2_str(Y_mV_range_max, '%1.2f')
+                plt.text(xpos, ypos, 'in range [' + Y_mV_range_min_str + ',' + Y_mV_range_max_str + '] mV', color = Yfactor_color)
+                ax2.plot([mV_Yfactor_max, mV_Yfactor_max],[ylimL2, ylimR2], color=Yfactor_color)
+                ypos -= yincrement
+
+
+            ################
+            ### Column 2 ###
+            ################
+            xpos = xlimL + (12.0/18.0)*xsize
+            if ax2_plot_list != []:
+                ypos = ylimR2+y_margin_top*y2size - yincrement
+            else:
+                ypos = ylimR1+y_margin_top*y1size  - yincrement
+
+            if magiset is not None:
+                plt.text(xpos, ypos,"magnet set value", color = mag_color)
+                ypos -= yincrement
+                magiset_str = Params_2_str(magiset, '%2.4f')
+                plt.text(xpos, ypos, magiset_str + " mA" , color=mag_color)
+                ypos -= yincrement
+            if meanmag_mA is not None:
+                plt.text(xpos, ypos,"magnet meas value", color = mag_color)
+                ypos -= yincrement
+                meanmag_mA_str = Params_2_str(meanmag_mA, '%2.4f')
+                stdmag_mA_str = Params_2_str(stdmag_mA, '%2.4f', 'round')
+                plt.text(xpos, ypos, meanmag_mA_str +  " " + stdmag_mA_str + " mA", color = mag_color)
+                ypos -= yincrement
+            if magpot is not None:
+                magpot_str = Params_2_str(magpot, '%06.f')
+                plt.text(xpos, ypos, magpot_str + " mag pot", color = mag_color)
+                ypos -= yincrement
+            if LOfreq is not None:
+                LOfreq_str = Params_2_str(LOfreq, '%3.2f')
+                plt.text(xpos, ypos, LOfreq_str + " GHz", color = LOfreq_color)
+                ypos -= yincrement
+            if IFband is not None:
+                IFband_str = Params_2_str(IFband, '%1.3f')
+                plt.text(xpos, ypos, IFband_str + " GHz", color = IFband_color)
+                ypos -= yincrement
+            if TP_int_time is not None:
+                TP_int_time_str = Params_2_str(TP_int_time, '%1.3f')
+                plt.text(xpos, ypos, TP_int_time_str + " secs", color = TP_int_time_color)
+                ypos -= yincrement
+
+        ##################
+        ### Save Plots ###
+        ##################
+        if save_plot:
+            if do_eps:
+                filename = plotdir+Ynum+".eps"
+                if verbose:
+                    print "saving EPS file: ", filename
+                plt.savefig(filename)
+            else:
+                filename = plotdir+Ynum+".png"
+                if verbose:
+                    print "saving PNG file: ", filename
+                plt.savefig(filename)
+
+
+        ##################
+        ### Show Plots ###
+        ##################
+        if show_plot:
+            plt.show()
+            plt.draw()
+        else:
+            plt.close("all")
+
+        if verbose:
+            print " "
+    plt.close("all")
+
+
+
+
+
+
+
+
+
+
+
+    return
+
+
+def YSpectraPlotter3D(datadir, search_4Ynums=False, Ynums=[], verbose=False,
                     show_plot=False, save_plot=True, do_eps=False):
-    import sys
-    import numpy
-    from mpl_toolkits.mplot3d import axes3d
-    from matplotlib import pyplot as plt
-    from matplotlib import cm
-    platform = sys.platform
-    #if platform == 'darwin':
-    #    matplotlib.rc('text', usetex=True)
+
 
     Ynums, prodatadir, plotdir = GetProDirsNames(datadir, search_4Ynums, Ynums)
 
