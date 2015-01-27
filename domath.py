@@ -460,10 +460,14 @@ def data2Yfactor(hot_mV, cold_mV, off_tp, hot_tp, cold_tp, mesh, verbose):
     hot_tp  = list(hot_tp)
     cold_tp = list(cold_tp)
 
+    Yfactor    = []
     if ((1 < len(hot_mV)) or (1 < len(cold_mV))):
         status, start_index_hot, start_index_cold, len_mV = FindOverlap(hot_mV, cold_mV, mesh)
         if status:
             mV_Yfactor = hot_mV[start_index_hot:start_index_hot+len_mV]
+            # The Y-Factor calculation
+            for x in range(len_mV):
+                Yfactor.append((hot_tp[x]-off)/(cold_tp[x]-off))
         else:
             mV_Yfactor = None
             Yfactor    = None
@@ -472,10 +476,7 @@ def data2Yfactor(hot_mV, cold_mV, off_tp, hot_tp, cold_tp, mesh, verbose):
         mV_Yfactor = [numpy.mean([numpy.mean(hot_mV),numpy.mean(cold_mV)])]
         len_mV = 1
 
-    # The Y-Factor calculation
-    Yfactor    = []
-    for x in range(len_mV):
-        Yfactor.append((hot_tp[x]-off)/(cold_tp[x]-off))
+
 
     return mV_Yfactor, Yfactor, status
 

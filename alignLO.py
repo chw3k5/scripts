@@ -16,10 +16,10 @@ total_loops =  20
 sleep_time  =  1.0
 
 reset       = True # there is no need to keep ajusting the magnet, sis voltage, and UCA votage if you are doing multiple runs
-magpot      = 120000 # pot position
-pot_sis     =  55000 # pot position
-UCA_voltage =   3.50 # in Volts
-RFin        =   672 # in GHz
+magpot      = 10000 # pot position
+pot_sis     =  55500 # pot position
+UCA_voltage =   2 # in Volts
+RFin        =   654 # in GHz
 
 uA_list  = []
 mV_list  = []

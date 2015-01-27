@@ -18,7 +18,7 @@ def getspec(filename, verbose=False, linear_sc=True, freq_start=0, freq_stop=6, 
         filename = windir(filename)
         
     #datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/spectra/'
-    #filename = 'C:\\Users\\MtDewar\\Documents\\Kappa\0\NA38\\test\\SpecTest.csv'
+    #filename = 'C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\test\\SpecTest.csv'
     
     sa = visa.instrument("GPIB0::5::INSTR")
     extra_sleep_fraction = 0.05 # fraction of the total sweep time to add to waiting time for a singe sweep

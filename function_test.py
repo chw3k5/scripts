@@ -22,7 +22,7 @@ do_RFon        = False # True or False
 do_RFoff       = True # True or False
 
 do_measSIS     = False # True or False
-do_setfeedback = False # True or False
+do_setfeedback = False# True or False
 do_setSIS      = False # True or False
 do_setSIS_only = False # True or False
 do_setSIS_TP   = False # True or False
@@ -43,7 +43,7 @@ do_AllanVar    = False # True or False
 ###### From StepperControl.py ######
 ####################################
 
-do_stepperTest = True
+do_stepperTest = False
  # True or False
 
 #####################################
@@ -81,7 +81,7 @@ if do_measmag:
 
 if do_setmag:
     from control import setmag
-    magpot = 127000 # electromagnet potentiometer position
+    magpot = 12000 # electromagnet potentiometer position
     verbose = True  # True or False
     V_mag, mA_mag, pot_mag = setmag(magpot, verbose)
 
@@ -105,7 +105,7 @@ if do_setmagI:
 #############################
 if do_RFfreqset:
     from LOinput import  setfreq            
-    freq = 14.0 # in GHz
+    freq = 672 # in GHz
     setfreq(freq)
     
 if do_RFon:
@@ -132,7 +132,7 @@ if do_setfeedback:
 
 if do_setSIS:
     from control import setSIS
-    sispot   = 56800 # potentiometer position for the SIS bias
+    sispot   = 55500 # potentiometer position for the SIS bias
     feedback = True  # True or False, True (V mode), False (R mode)
     verbose  = True  # True or False
     careful   = False # True or False

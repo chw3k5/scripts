@@ -243,7 +243,7 @@ def setmag_highlow(magpot):
             print "killing script"
             sys.exit()
     elif ((0 <= magpot) and (magpot <65100)):
-        thzbiascomputer.write("setbias "+mag_channel+" 0 \n")
+        thzbiascomputer.write("setbias "+mag_channel+" 1000 \n")
 
     else:
         thzbiascomputer.write("setbias "+mag_channel+" 129796 \n")
@@ -1286,7 +1286,7 @@ def setLOI(uA_user, verbose=False, careful=False):
             print " careful is off, I will allow the script to attempt to set the current anyway"
 
     # here we do a simpy binary search to find the region wear the uA_user is near        
-    Vfrac = 1.8 # Votage range of search
+    Vfrac = 2.5 # Votage range of search (This is the initial range that is cut in half each loop)
     UCA_current = float(2.5) # first guess in sweep
     status = LabJackU3_DAQ0(UCA_current)
     mV_temp, uA_current, pot_temp = measSIS(verbose)
