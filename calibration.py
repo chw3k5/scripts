@@ -15,6 +15,10 @@ import numpy as np
 Calibration procedures for some devices including:
 The Electromagnet
 """
+magpath='/Users/chw3k5/Google Drive/Kappa/NA38/calibration/mag/'
+
+do_magcalsweep = False
+do_makeoffsets = True
 
 #####################
 ### Electromagnet ###
@@ -120,8 +124,9 @@ def magnet_find_offset(path,mag_channel,caltype=('V_biascom','mA_biascom')):
 
     return
 
-path='/Users/chw3k5/Documents/Grad_School/Kappa/NA38/calibration/mag/'
-#path='/Users/chw3k5/Google Drive/Kappa/NA38/calibration/mag/'
-filename = path+'channel'+mag_channel+'.csv'
-magnet_cal_sweep(filename)
-#magnet_find_offset(path,mag_channel,caltype=('mA_biascom','A_meas'))
+if __name__ == "__main__":
+    if do_magcalsweep:
+        filename = magpath+'channel'+mag_channel+'.csv'
+        magnet_cal_sweep(filename)
+    if do_makeoffsets:
+        magnet_find_offset(magpath,mag_channel,caltype=('mA_biascom','A_meas'))
