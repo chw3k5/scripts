@@ -180,7 +180,7 @@ do_testsweeps     = True
 do_protestsweeps  = True
 do_plottestsweeps = True
 istester     = False
-isdummydewar = True
+isdummydewar = False
 istestcirc   = False
 istestpixel  = False
 iscold       = False
@@ -190,7 +190,7 @@ if all_testsweeps:
     do_protestsweeps  = True
     do_plottestsweeps = True
 
-datadir='/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Dec12_14/'
+datadir='/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Feb05_15/'
 if istester:
     datadir += 'test/'
 elif isdummydewar:
@@ -204,7 +204,7 @@ elif iscold:
 else:
     datadir += 'warmtest/'
 if do_testsweeps:
-    testsweeps(datadir, do_SISsweep=False, do_MAGsweep=True, iscold=iscold, verbose=True,
+    testsweeps(datadir, do_SISsweep=True, do_MAGsweep=True, iscold=iscold, verbose=True,
                numofmeas=10)
 
 if do_protestsweeps:
@@ -214,7 +214,7 @@ if do_protestsweeps:
                   verbose=False)
 
 if do_plottestsweeps:
-    plottestsweeps(datadir, plot_SIS=False, plot_MAG=True,
+    plottestsweeps(datadir, plot_SIS=True, plot_MAG=True,
                        show_std=True, std_num=10,
                        show_plot=False, save_plot=True, do_eps=True,
                        find_lin=True, linif=1.1,

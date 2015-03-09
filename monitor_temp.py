@@ -107,7 +107,7 @@ if serial_port == '':
     
 verbose = True
 # Data Folder
-folder ='/Users/chw3k5/Documents/Grad_School/Kappa/temperatureData/Nov05_14/'
+folder ='/Users/chw3k5/Documents/Grad_School/Kappa/temperatureData/Mar04_15/'
 if platform == 'win32':
     folder = windir(folder)
 
@@ -143,10 +143,10 @@ elif monitor_type=='coolpumpoff':
     Nsecs        =  1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
     start_email   = True
     PeriodicEmail = True
-    seconds_per_email = 60*60 #12*60*60 # in seconds
+    seconds_per_email = 30*60 #12*60*60 # in seconds
     alarm_channel = 4
     high_alarm_temperature = 300. # in Kelvin
-    low_alarm_temperature  =  80. # in Kelvin
+    low_alarm_temperature  = 120. # in Kelvin
 elif monitor_type == 'LN2fill':
     filename      = monitor_type+'.csv'
     make_plots    = True
@@ -185,9 +185,9 @@ elif monitor_type == 'almostcold':
     Nsecs         =  1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
     start_email   = True
     PeriodicEmail = True
-    seconds_per_email      = 1*60*60 #12*60*60 # in seconds
+    seconds_per_email      = 1*30*60 #12*60*60 # in seconds
     alarm_channel          = 4
-    high_alarm_temperature = 6.00 # in Kelvin
+    high_alarm_temperature = 4.50 # in Kelvin
     low_alarm_temperature  = 3. # in Kelvin
 elif monitor_type == 'cold':
     filename      = monitor_type+'.csv'
@@ -199,7 +199,7 @@ elif monitor_type == 'cold':
     Nsecs         =  1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
     start_email   = True
     PeriodicEmail = True
-    seconds_per_email      = 4*60*60 #12*60*60 # in seconds
+    seconds_per_email      = 6*60*60 #12*60*60 # in seconds
     alarm_channel          = 4
     high_alarm_temperature = 4.300 # in Kelvin
     low_alarm_temperature  = 3. # in Kelvin

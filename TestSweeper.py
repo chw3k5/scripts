@@ -26,7 +26,7 @@ def testsweeps(datadir, do_SISsweep=True, do_MAGsweep=True, iscold=True,
         SISpot_step =    400
         MAGpot_min  =      0
         MAGpot_max  = 129000
-        MAGpot_step =  10000
+        MAGpot_step =   5000
 
     ### These options below have only been tested with default values
     feedback = True
