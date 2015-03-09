@@ -27,7 +27,7 @@ class SCPI:
 
 
     def scpi_comm(self,command):
-        print command, ', is the command'
+        #print command, ', is the command'
         if self.debug:
             return str(random.random())
         if self.port == 'file':

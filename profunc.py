@@ -30,6 +30,7 @@ def getparams(filename):
     LOuA_magpot  = None
     LOfreq       = None
     IFband       = None
+    mag_chan     = '9'
     params = atpy.Table(filename, type="ascii", delimiter=",")
     for params_index in range(len(params.param)):
         if params.param[params_index] == 'temp':
@@ -67,7 +68,9 @@ def getparams(filename):
         elif params.param[params_index] == 'IFband':
             if params.value[params_index] != 'biastestmode':
                 IFband = float(params.value[params_index])
-    return K_val, magisweep, magiset, magpot, LOuAsearch, LOuAset, UCA_volt, LOuA_set_pot, LOuA_magpot, LOfreq, IFband
+        elif params.param[params_index] == 'mag_chan':
+            mag_chan = params.value[params_index]
+    return K_val, magisweep, magiset, magpot, LOuAsearch, LOuAset, UCA_volt, LOuA_set_pot, LOuA_magpot, LOfreq, IFband, mag_chan
     
 def getproparams(filename):
     if platform == 'win32':
@@ -99,6 +102,7 @@ def getproparams(filename):
     TP_int_time  = None
     TP_num       = None
     TP_freq      = None
+    mag_chan     = None
 
     params = atpy.Table(filename, type="ascii", delimiter=",")
     for params_index in range(len(params.param)):
@@ -167,11 +171,13 @@ def getproparams(filename):
             TP_num = float(params.value[params_index])
         elif params.param[params_index] == 'TP_freq':
             TP_freq = float(params.value[params_index])
+        elif params.param[params_index] == 'mag_chan':
+            mag_chan = params.value[params_index]
 
 
     return K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, meanmag_mA, stdmag_mA, LOuAsearch, LOuAset, UCA_volt,\
            LOuA_set_pot, LOuA_magpot,meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, stdSIS_tp, SIS_pot, \
-           del_time, LOfreq, IFband, meas_num, TP_int_time, TP_num, TP_freq
+           del_time, LOfreq, IFband, meas_num, TP_int_time, TP_num, TP_freq, mag_chan
 
 def getmultiParams(ParamsFile_list):
     if platform == 'win32':
@@ -208,6 +214,7 @@ def getmultiParams(ParamsFile_list):
     TP_int_time  = []
     TP_num       = []
     TP_freq      = []
+    mag_chan     = []
 
     for ParamsFile in ParamsFile_list:
 
@@ -215,7 +222,7 @@ def getmultiParams(ParamsFile_list):
         meanmag_mA_temp, stdmag_mA_temp, LOuAsearch_temp, LOuAset_temp, UCA_volt_temp, LOuA_set_pot_temp,\
         LOuA_magpot_temp, meanSIS_mV_temp, stdSIS_mV_temp, meanSIS_uA_temp, stdSIS_uA_temp, meanSIS_tp_temp,\
         stdSIS_tp_temp, SIS_pot_temp, del_time_temp, LOfreq_temp, IFband_temp, meas_num_temp, \
-        TP_int_time_temp, TP_num_temp, TP_freq_temp \
+        TP_int_time_temp, TP_num_temp, TP_freq_temp, mag_chan_temp\
             = getproparams(ParamsFile)
 
         K_val.append(K_val_temp)
@@ -249,6 +256,7 @@ def getmultiParams(ParamsFile_list):
         TP_int_time.append(TP_int_time_temp)
         TP_num.append(TP_num_temp)
         TP_freq.append(TP_freq_temp)
+        mag_chan.append(mag_chan_temp)
 
     # the test to determine if all the parameters are the same or not
     K_val_sametest        = True
@@ -282,6 +290,7 @@ def getmultiParams(ParamsFile_list):
     TP_int_time_sametest  = True
     TP_num_sametest       = True
     TP_freq_sametest      = True
+    mag_chan_sametest     = True
 
     ParamsFile_list_len = len(ParamsFile_list)
     if 1 < ParamsFile_list_len:
@@ -397,6 +406,10 @@ def getmultiParams(ParamsFile_list):
             if TP_freq[n] != TP_freq[n+1]:
                 TP_freq_sametest = False
                 break
+        for n in range(ParamsFile_list_len - 1):
+            if mag_chan[n] != mag_chan[n+1]:
+                mag_chan_sametest = False
+                break
 
 
         if K_val_sametest:
@@ -457,12 +470,14 @@ def getmultiParams(ParamsFile_list):
             TP_num = TP_num[0]
         if TP_freq_sametest:
             TP_freq = TP_freq[0]
+        if mag_chan_sametest:
+            mag_chan = mag_chan[0]
 
     return K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, \
            meanmag_mA, stdmag_mA, LOuAsearch, LOuAset, UCA_volt,LOuA_set_pot, \
            LOuA_magpot,meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, \
            stdSIS_tp, SIS_pot, del_time, LOfreq, IFband, meas_num, \
-           TP_int_time, TP_num, TP_freq
+           TP_int_time, TP_num, TP_freq, mag_chan
 
 
 

@@ -1,6 +1,7 @@
 __author__ = 'chw3k5'
 from control import opentelnet, closetelnet, setmag_only, measmag, mag_channel
 from profunc import windir
+from agilent34410A import Agilent34410ADriver
 
 from sys import exit
 from time import sleep
@@ -15,17 +16,18 @@ Calibration procedures for some devices including:
 The Electromagnet
 """
 
-
-
 #####################
 ### Electromagnet ###
 #####################
 
-def magnet_cal_sweep(filename, test_pots=range(0,129001,10000),sleep_after_set=1, meas_per_pos=10,verbose=True):
+def magnet_cal_sweep(filename, test_pots=range(0,129001,1000),sleep_after_set=1, meas_per_pos=10,verbose=True):
     filename = windir(filename)
     opentelnet()
+    multimeter = Agilent34410ADriver()
+
+
     calfile = open(filename, 'w')
-    calfile.write('pot,V_biascom,mA_biascom\n')
+    calfile.write('pot,V_biascom,mA_biascom,mA_meas\n')
     for current_pot in test_pots:
         if verbose:
             print 'current pot  ',current_pot
@@ -34,7 +36,17 @@ def magnet_cal_sweep(filename, test_pots=range(0,129001,10000),sleep_after_set=1
         sleep(sleep_after_set)
         for measurement_number in range(meas_per_pos):
             V_biascom, mA_biascom, pot_biascom = measmag(verbose)
-            write_string=str(pot_biascom)+','+str(V_biascom)+','+str(mA_biascom)
+
+            A_meas = multimeter.read_current()
+            try:
+                mA_meas = float(A_meas)*1000.0
+            except:
+                sleep(1)
+                A_meas  = multimeter.read_current()
+                mA_meas = float(A_meas)*1000.0
+
+
+            write_string=str(pot_biascom)+','+str(V_biascom)+','+str(mA_biascom)+','+str(mA_meas)
             if verbose:
                 print 'current meas ',write_string
             calfile.write(write_string+'\n')
@@ -111,5 +123,5 @@ def magnet_find_offset(path,mag_channel,caltype=('V_biascom','mA_biascom')):
 path='/Users/chw3k5/Documents/Grad_School/Kappa/NA38/calibration/mag/'
 #path='/Users/chw3k5/Google Drive/Kappa/NA38/calibration/mag/'
 filename = path+'channel'+mag_channel+'.csv'
-#magnet_cal_sweep(filename)
-magnet_find_offset(path,mag_channel,caltype=('pot','mA_biascom'))
+magnet_cal_sweep(filename)
+#magnet_find_offset(path,mag_channel,caltype=('mA_biascom','A_meas'))

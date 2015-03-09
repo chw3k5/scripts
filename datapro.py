@@ -12,7 +12,7 @@ def ParamsProcessing(dirnames, proparamsfile, verbose):
     if os.path.isfile(paramsfile):
         params_found  = True
         # load the params file for the data
-        K_val, magisweep, magiset, magpot, LOuAsearch, LOuAset, UCA_volt, LOuA_set_pot, LOuA_magpot, LOfreq, IFband \
+        K_val, magisweep, magiset, magpot, LOuAsearch, LOuAset, UCA_volt, LOuA_set_pot, LOuA_magpot, LOfreq, IFband, mag_chan \
             = getparams(paramsfile)
     
     ##### Processing Standard SIS bias measurments ######
@@ -29,7 +29,7 @@ def ParamsProcessing(dirnames, proparamsfile, verbose):
         standmagdata_found  = True
         # load the standard electromagnet measurments for the data
         standmagdata_V, standmagdata_mA, standmagdata_pot =                    \
-        getmagdata(standmagdatafile)
+        getmagdata(standmagdatafile, mag_chan)
     
     ### processed parameter file (uses at most 'params.csv', 'sisdata.csv', 'magdata.csv')
     # record the parameters of every sweep
@@ -45,10 +45,12 @@ def ParamsProcessing(dirnames, proparamsfile, verbose):
             n.write('magisweep,False\n')
             n.write('magpot,' +  str(magpot) + '\n')
     if standmagdata_found:
+        n.write('mag_chan,'   + str(mag_chan)                    + '\n')
         n.write('meanmag_V,'  + str(numpy.mean(standmagdata_V))  + '\n')
         n.write('stdmag_V,'   + str(numpy.std(standmagdata_V))   + '\n')
         n.write('meanmag_mA,' + str(numpy.mean(standmagdata_mA)) + '\n')
         n.write('stdmag_mA,'  + str(numpy.std(standmagdata_mA))  + '\n')
+
     if params_found:
         if LOuAsearch == True:
             n.write('LOuAsearch,True\n')

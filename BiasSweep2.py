@@ -4,7 +4,7 @@ from sys import platform
 from profunc import windir
 from LabJack_control import LabJackU3_DAQ0, LJ_streamTP
 from control import  opentelnet, closetelnet, measmag, setmagI, setmag_highlow, setfeedback, \
-    setSIS_only, setSIS_Volt, setLOI, measSIS_TP, zeropots
+    setSIS_only, setSIS_Volt, setLOI, measSIS_TP, zeropots, mag_channel
 from LOinput import RFon, RFoff, setfreq
 from email_sender   import email_caleb
 from fastSISsweep   import getfastSISsweep
@@ -966,6 +966,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
             params.write('LOuA_magpot,' + str(LOuA_magpot) + '\n')
             params.write('LOfreq,' + str(LOfreq_thisloop) + '\n')
             params.write('IFband,' + str(IFband_thisloop) + '\n')
+            params.write('mag_chan,' + str(mag_channel) + '\n')
             params.close()
 
 

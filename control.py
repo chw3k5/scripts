@@ -7,7 +7,7 @@ from LabJack_control import LabJackU3_DAQ0
 
 
 sis_channel = '0'
-mag_channel = '10'
+mag_channel = '11'
 
 def opentelnet():
     global thzbiascomputer

@@ -224,7 +224,7 @@ def SimpleSweepPlot(datadir, search_4Snums=False, Snums='', verbose=False, show_
         paramsfile = proSdatadir + 'proparams.csv'
         K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, meanmag_mA, stdmag_mA, LOuAsearch, LOuAset, UCA_volt,\
         LOuA_set_pot, LOuA_magpot,meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, stdSIS_tp, SIS_pot, \
-        del_time, LOfreq, IFband, meas_num, TP_int_time, TP_num, TP_freq \
+        del_time, LOfreq, IFband, meas_num, TP_int_time, TP_num, TP_freq, mag_chan \
             = getproparams(paramsfile)
 
 
@@ -1352,7 +1352,7 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
         paramsfile_list.append(proYdatadir + 'coldproparams.csv')
         K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, meanmag_mA, stdmag_mA, LOuAsearch, LOuAset, UCA_volt,\
         LOuA_set_pot, LOuA_magpot,meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, stdSIS_tp, SIS_pot, \
-        del_time, LOfreq, IFband, meas_num, TP_int_time, TP_num, TP_freq \
+        del_time, LOfreq, IFband, meas_num, TP_int_time, TP_num, TP_freq, mag_chan \
             = getmultiParams(paramsfile_list)
 
 
@@ -1784,7 +1784,7 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[], display_params=Tru
         paramsfile_list.append(proYdatadir + 'coldproparams.csv')
         K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, meanmag_mA, stdmag_mA, LOuAsearch, LOuAset, UCA_volt,\
         LOuA_set_pot, LOuA_magpot,meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, stdSIS_tp, SIS_pot, \
-        del_time, LOfreq, IFband, meas_num, TP_int_time, TP_num, TP_freq \
+        del_time, LOfreq, IFband, meas_num, TP_int_time, TP_num, TP_freq, mag_chan \
             = getmultiParams(paramsfile_list)
 
 
