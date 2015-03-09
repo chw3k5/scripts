@@ -1,6 +1,5 @@
 import sys
 from sys import platform
-
 from datapro import YdataPro
 from profunc import getproYdata, GetProDirsNames, getproparams, getmultiParams, getproSweep, windir
 from Plotting import GetAllTheProFastSweepData
@@ -56,6 +55,8 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
 
 
     allYsweeps = []
+    search_4Ynums = True
+    Ynums = None
     for fullpath in fullpaths:
         Ynums, prodatadir, plotdir = GetProDirsNames(fullpath, search_4Ynums, Ynums)
         for Ynum in Ynums:

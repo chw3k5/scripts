@@ -1,7 +1,8 @@
 __author__ = 'chw3k5'
 from sys import platform
+import matplotlib
 from matplotlib import pyplot as plt
-import os, shutil
+import os, shutil, numpy
 from datapro import YdataPro
 from profunc import windir
 from SetGrab import getYsweeps, tp_int_cut, LOuAset_cut, LOuAdiff_cut
@@ -60,6 +61,22 @@ if platform == 'win32':
 fullpaths = [parent_folder + setname + '/' for setname in setnames]
 
 Ysweeps = getYsweeps(fullpaths, Ynums=Ynums, verbose=verbose)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # clear out the old plots if you are going to make new ones in an old directory

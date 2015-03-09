@@ -8,9 +8,12 @@ from domath import regrid, conv, FindOverlap # Caleb's Programs
 from operator import itemgetter
 
 def windir(filepath):
-    tempfilepath = filepath.replace('/Users/chw3k5/Documents/Grad_School/', 'C:\\Users\\chwheele\\Documents\\')
-    tempfilepath = tempfilepath.replace('IVsweep','sweep')
-    winfilepath  = tempfilepath.replace('/','\\')
+    if platform == 'win32':
+        tempfilepath = filepath.replace('/Users/chw3k5/Documents/Grad_School/', 'C:\\Users\\chwheele\\Documents\\')
+        tempfilepath = tempfilepath.replace('IVsweep','sweep')
+        winfilepath  = tempfilepath.replace('/','\\')
+    else:
+        winfilepath = filepath
     return winfilepath
 
 def getparams(filename):
