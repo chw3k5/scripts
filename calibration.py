@@ -5,6 +5,7 @@ from agilent34410A import Agilent34410ADriver
 
 from sys import exit
 from time import sleep
+from shutil import copyfile
 import os
 from scipy import stats
 from atpy import Table
@@ -16,9 +17,30 @@ Calibration procedures for some devices including:
 The Electromagnet
 """
 magpath='/Users/chw3k5/Google Drive/Kappa/NA38/calibration/mag/'
+offset_channel = '10' # string number
 
 do_magcalsweep = False
 do_makeoffsets = True
+
+def fetchoffset(filename,path=''):
+    defult_path = windir('/Users/chw3k5/Google Drive/Kappa/NA38/calibration/mag/')
+    fullname = None
+    local_filename = path+filename
+    defult_filename = defult_path+filename
+    if os.path.isfile(local_filename):
+        fullname = local_filename
+    elif os.path.isfile(defult_filename):
+        fullname = defult_filename
+        copyfile(defult_filename, local_filename)
+    if fullname is None:
+        m = 1.
+        b = 0.
+    else:
+        offsets = Table(fullname, type="ascii", delimiter=",")
+        m = float(offsets.m)
+        b = float(offsets.b)
+    return m, b
+
 
 #####################
 ### Electromagnet ###
@@ -61,8 +83,12 @@ def magnet_cal_sweep(filename, test_pots=range(0,129001,1000),sleep_after_set=1,
 
 
 def magnet_find_offset(path,mag_channel,caltype=('V_biascom','mA_biascom')):
+    defult_calfilename = windir('/Users/chw3k5/Google Drive/Kappa/NA38/calibration/mag/channel'+str(mag_channel)+'.csv')
+
     calfilename = path+'channel'+mag_channel+'.csv'
-    if os.path.isfile(calfilename):
+    if (os.path.isfile(defult_calfilename) or os.path.isfile(calfilename)):
+        if not os.path.isfile(calfilename):
+            calfilename = defult_calfilename
         calfile = Table(calfilename, type="ascii", delimiter=",")
         keys = calfile.keys()
         from_type=str(caltype[0])
@@ -110,7 +136,7 @@ def magnet_find_offset(path,mag_channel,caltype=('V_biascom','mA_biascom')):
         print '\n','from: '+str(from_type)+'   to: '+str(final_type)+'\n',write_str
         hold=raw_input('1 to accept this offset')
         if hold == '1':
-            offset_file = open(path+str(mag_channel)+str(from_type)+'-'+str(final_type), 'w')
+            offset_file = open(path+str(mag_channel)+str(from_type)+'-'+str(final_type)+'.csv', 'w')
             offset_file.write('m,b,r,p,std_err\n')
 
             offset_file.write(write_str+'\n')
@@ -129,4 +155,4 @@ if __name__ == "__main__":
         filename = magpath+'channel'+mag_channel+'.csv'
         magnet_cal_sweep(filename)
     if do_makeoffsets:
-        magnet_find_offset(magpath,mag_channel,caltype=('mA_biascom','A_meas'))
+        magnet_find_offset(magpath,offset_channel,caltype=('mA_biascom','mA_meas'))

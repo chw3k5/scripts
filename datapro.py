@@ -1,5 +1,6 @@
 from profunc import getparams, getSISdata, getmagdata, get_fastIV, ProcessMatrix, getLJdata, readspec, renamespec, windir
 from domath import conv
+from calibration import fetchoffset
 import os, numpy, sys, glob, shutil
 from sys import platform
 
@@ -29,7 +30,7 @@ def ParamsProcessing(dirnames, proparamsfile, verbose):
         standmagdata_found  = True
         # load the standard electromagnet measurments for the data
         standmagdata_V, standmagdata_mA, standmagdata_pot =                    \
-        getmagdata(standmagdatafile, mag_chan)
+        getmagdata(standmagdatafile)
     
     ### processed parameter file (uses at most 'params.csv', 'sisdata.csv', 'magdata.csv')
     # record the parameters of every sweep
@@ -45,11 +46,13 @@ def ParamsProcessing(dirnames, proparamsfile, verbose):
             n.write('magisweep,False\n')
             n.write('magpot,' +  str(magpot) + '\n')
     if standmagdata_found:
+        ########
+        m_magoffset, b_magoffset = fetchoffset(filename=str(mag_chan)+'mA_biascom-mA_meas.csv',path=dirnames)
         n.write('mag_chan,'   + str(mag_chan)                    + '\n')
-        n.write('meanmag_V,'  + str(numpy.mean(standmagdata_V))  + '\n')
-        n.write('stdmag_V,'   + str(numpy.std(standmagdata_V))   + '\n')
-        n.write('meanmag_mA,' + str(numpy.mean(standmagdata_mA)) + '\n')
-        n.write('stdmag_mA,'  + str(numpy.std(standmagdata_mA))  + '\n')
+        n.write('meanmag_V,'  + str((numpy.mean(standmagdata_V)*m_magoffset)+b_magoffset) + '\n')
+        n.write('stdmag_V,'   + str((numpy.std(standmagdata_V)*m_magoffset)+b_magoffset)   + '\n')
+        n.write('meanmag_mA,' + str((numpy.mean(standmagdata_mA)*m_magoffset)+b_magoffset) + '\n')
+        n.write('stdmag_mA,'  + str((numpy.std(standmagdata_mA)*m_magoffset)+b_magoffset)  + '\n')
 
     if params_found:
         if LOuAsearch == True:

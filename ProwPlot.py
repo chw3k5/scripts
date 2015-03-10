@@ -23,8 +23,8 @@ repeat  = 1
 
 ### For Y-factor data and Sweeps ###
 do_Ysweeps              = False
-do_YdataPro             = False
-do_YfactotSweepsPlotter = False
+do_YdataPro             = True
+do_YfactotSweepsPlotter = True
 do_YSpectra_Plotter     = False
 
 
@@ -99,8 +99,9 @@ if do_SingeSpectraPlotter:
 
 
 
-
+###########################
 ### For Y factor sweeps ###
+###########################
 if all_Ydata:
     do_YdataPro             = True
     do_YfactotSweepsPlotter = True
@@ -109,7 +110,7 @@ if all_Ydata:
 
 # The directory what the data is kept
 start_num = 0
-datadir   = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/Nov05_14/Y_LO654/'
+datadir   = '/Users/chw3k5/Documents/Grad_School/Kappa_preGoogleDrive/NA38/IVsweep/set6/'
 #datadir = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/LOfreq2/'
 
 if do_Ysweeps:
@@ -176,9 +177,9 @@ if do_YSpectra_Plotter:
 
 
 ### TestSweeps ###
-do_testsweeps     = True
-do_protestsweeps  = True
-do_plottestsweeps = True
+do_testsweeps     = False
+do_protestsweeps  = False
+do_plottestsweeps = False
 istester     = False
 isdummydewar = False
 istestcirc   = False
