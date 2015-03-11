@@ -9,11 +9,13 @@ from operator import itemgetter
 
 def windir(filepath):
     if platform == 'win32':
-        try:
-            tempfilepath = filepath.replace('/Users/chw3k5/Documents/Grad_School/', 'C:\\Users\\chwheele\\Documents\\')
-        except:
+        # the old filing system
+        tempfilepath = filepath.replace('/Users/chw3k5/Documents/Grad_School/', 'C:\\Users\\chwheele\\Documents\\')
+        # my new system using Google Drive
+        if tempfilepath == filepath:
             tempfilepath = filepath.replace('/Users/chw3k5/','C:\\Users\\chwheele\\')
-        tempfilepath = tempfilepath.replace('IVsweep','sweep')
+            #print tempfilepath
+        #tempfilepath = tempfilepath.replace('IVsweep','sweep')
         winfilepath  = tempfilepath.replace('/','\\')
     else:
         winfilepath = filepath

@@ -23,15 +23,15 @@ do_magcalsweep = False
 do_makeoffsets = True
 
 def fetchoffset(filename,path=''):
-    defult_path = windir('/Users/chw3k5/Google Drive/Kappa/NA38/calibration/mag/')
+    default_path = windir('/Users/chw3k5/Google Drive/Kappa/NA38/calibration/mag/')
     fullname = None
     local_filename = path+filename
-    defult_filename = defult_path+filename
+    default_filename = default_path+filename
     if os.path.isfile(local_filename):
         fullname = local_filename
-    elif os.path.isfile(defult_filename):
-        fullname = defult_filename
-        copyfile(defult_filename, local_filename)
+    elif os.path.isfile(default_filename):
+        fullname = default_filename
+        copyfile(default_filename, local_filename)
     if fullname is None:
         m = 1.
         b = 0.

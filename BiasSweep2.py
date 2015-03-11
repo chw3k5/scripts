@@ -1,7 +1,7 @@
 import os, sys, numpy, time
 from sys import platform
 # Caleb's Programs
-from profunc import windir
+from profunc import windir, getYnums, getSnums
 from LabJack_control import LabJackU3_DAQ0, LJ_streamTP
 from control import  opentelnet, closetelnet, measmag, setmagI, setmag_highlow, setfeedback, \
     setSIS_only, setSIS_Volt, setLOI, measSIS_TP, zeropots, mag_channel
@@ -235,7 +235,7 @@ def resetLoopBias(testmode, verbose, verboseSet, careful, magpot_thisloop, sisPo
 
 
 def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=False,
-              sweepNstart=0, Ynum=0, testmode=False, warmmode=False,
+              testmode=False, warmmode=False,
               do_fastsweep=False, do_unpumpedsweep=False, fastsweep_feedback=False,
               SweepStart_feedTrue=65000, SweepStop_feedTrue=52000, SweepStep_feedTrue=100,
               SweepStart_feedFalse=65100, SweepStop_feedFalse=57000, SweepStep_feedFalse=100,
@@ -307,7 +307,6 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
     magV_actual     = None
     magmA_actual    = None
     EmailTrigger    = False
-    sweepN          = sweepNstart
 
     ##########################
     ###### START SCRIPT ######
@@ -594,7 +593,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
                         Kmsg(K_actual)
                 else:
                     print "Testmode is 'True', pretending to move the chopper"
-        first_loop = False
+
 
 
         # Set UCA Voltage for the LO (if needed)
@@ -718,10 +717,23 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
 
         ### make directories
         if do_Ynum:
+            if first_loop:
+                # find the higher integer Y number in this directory and set the new sweep to Ynum+1
+                Ynums = getYnums(rawdir)
+                # name this new data something different
+                Ynum = 1
+                while True:
+                    format_Ynum = str('%05.f' % Ynum)
+                    if format_Ynum in Ynums:
+                        Ynum += 1
+                    else:
+                        break
+
             if sisVsweep_trigger == sisPot_thisloop:
                 # change the Y number if this is a new hot-cold pair
                 if Y_trigger == K_thisloop:
-                    Ynum     = Ynum + 1
+                    if not first_loop:
+                        Ynum     = Ynum + 1
                     Ynum_str = 'Y' + str('%04.f' % Ynum)
                 # make a new directory for the Y data
                 Ypath = rawdir + Ynum_str + '/'
@@ -736,8 +748,20 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
                 filepath = Ypath + 'cold/'
         else:
             # each sweep gets it own folder if there is no Y factors to consider
+            if first_loop:
+                Snums = getSnums(rawdir)
+                # name this new data something different
+                sweepN = 1
+                while True:
+                    format_sweepN = str('%05.f' % sweepN)
+                    if format_sweepN in Snums:
+                        sweepN += 1
+                    else:
+                        break
+
             if sisVsweep_trigger == sisPot_thisloop:
-                sweepN = sweepN + 1
+                if not first_loop:
+                    sweepN = sweepN + 1
             filepath = rawdir + str('%05.f' % sweepN) + '/'
         # Convert to window file path is using windows
         if platform == 'win32':
@@ -1078,6 +1102,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
 
                 EmailTrigger = False
                 EmailTime = NowTime
+        first_loop = False
 
     # turn things off after a run
     if ((not testmode) and (not chopper_off)):

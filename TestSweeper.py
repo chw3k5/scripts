@@ -32,9 +32,7 @@ def testsweeps(datadir, do_SISsweep=True, do_MAGsweep=True, iscold=True,
     feedback = True
 
     ### Set directory information
-    rawdatadir = datadir + 'rawdata/'
-    if platform == 'win32':
-        rawdatadir = windir(rawdatadir)
+    rawdatadir = windir(datadir + 'rawdata/')
     if not os.path.isdir(rawdatadir):
         os.makedirs(rawdatadir)
 
@@ -48,7 +46,7 @@ def testsweeps(datadir, do_SISsweep=True, do_MAGsweep=True, iscold=True,
             Snum += 1
         else:
             break
-    sweepdir = rawdatadir + format_Snum + '/sweep/'
+    sweepdir = windir(rawdatadir + format_Snum + '/sweep/')
     if not os.path.isdir(sweepdir):
         os.makedirs(sweepdir)
 
@@ -148,11 +146,11 @@ def protestsweeps(datadir, mono_switcher=True, do_regrid=True, do_conv=False,
                  verbose=False):
 
     # get the names raw data directories
-    rawdatadir = datadir + 'rawdata/'
+    rawdatadir = windir(datadir + 'rawdata/')
     Snums = getSnums(rawdatadir)
 
     # make a new processed data directory or delete the old data
-    prodatadir = datadir + "prodata/"
+    prodatadir = windir(datadir + "prodata/")
     if platform == 'win32':
         prodatadir = windir(prodatadir)
     if os.path.isdir(prodatadir):
@@ -165,8 +163,8 @@ def protestsweeps(datadir, mono_switcher=True, do_regrid=True, do_conv=False,
         os.makedirs(prodatadir)
 
     for Snum in Snums:
-        sweepdir = rawdatadir + Snum + '/sweep/'
-        Snumdir = prodatadir + Snum + '/'
+        sweepdir = windir(rawdatadir + Snum + '/sweep/')
+        Snumdir = windir(prodatadir + Snum + '/')
         if not os.path.isdir(Snumdir):
             os.makedirs(Snumdir)
         SISprodataname = Snumdir + 'SISdata.csv'
@@ -202,13 +200,11 @@ def plottestsweeps(datadir, plot_SIS=True, plot_MAG=True,
     legendsize = 8
     legendloc  = 4
 
-    prodatadir = datadir + "prodata/"
+    prodatadir = windir(datadir + "prodata/")
     Snums = getSnums(prodatadir)
 
 
-    plotdir = datadir + "plots/"
-    if platform == 'win32':
-        plotdir = windir(plotdir)
+    plotdir = windir(datadir + "plots/")
     if os.path.isdir(plotdir):
         # remove old plots data
         shutil.rmtree(plotdir)
@@ -220,7 +216,7 @@ def plottestsweeps(datadir, plot_SIS=True, plot_MAG=True,
 
 
     for Snum in Snums:
-        Snumdir = prodatadir + Snum + '/'
+        Snumdir = windir(prodatadir + Snum + '/')
         SISdatafile = Snumdir + 'SIS'
         MAGdatafile = Snumdir + 'MAG'
 

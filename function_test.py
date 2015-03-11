@@ -13,7 +13,7 @@ do_LabJackU3_AIN0 = False # True or False
 do_LJ_streamTP    = False # True or False
 
 do_measmag     = False # True or False
-do_setmag      = False # True or False
+do_setmag      = True # True or False
 do_setmag_only = False # True or False
 do_setmagI     = False # True or False
 
@@ -30,7 +30,7 @@ do_measSIS_TP  = False # True or False
 do_setSIS_Volt = False # True or False
 
 do_setLOI      = False# True or False
-do_zeropots    = True # True of False
+do_zeropots    = False # True of False
 
 
 ############################
@@ -81,7 +81,7 @@ if do_measmag:
 
 if do_setmag:
     from control import setmag
-    magpot = 12000 # electromagnet potentiometer position
+    magpot = 30000 # electromagnet potentiometer position
     verbose = True  # True or False
     V_mag, mA_mag, pot_mag = setmag(magpot, verbose)
 

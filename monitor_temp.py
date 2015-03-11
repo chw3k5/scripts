@@ -107,9 +107,7 @@ if serial_port == '':
     
 verbose = True
 # Data Folder
-folder ='/Users/chw3k5/Documents/Grad_School/Kappa/temperatureData/Mar04_15/'
-if platform == 'win32':
-    folder = windir(folder)
+folder =windir('/Users/chw3k5/Google Drive/Kappa/temperatureData/Mar04_15/')
 
 do_emailgroppi = False
 
