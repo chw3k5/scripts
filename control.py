@@ -752,7 +752,7 @@ def attempt_measTP(sleep_time, sispot, channel):
 ###### setSIS_TP ######
 #######################
 
-def setSIS_TP(sispot, feedback, verbose, careful):
+def setSIS_TP(sispot, feedback, verbose=False, careful=False):
     from sisbias_config import SleepPerMes, sleep_list
     channel = '0'
 
@@ -1285,7 +1285,7 @@ def setLOI(uA_user, verbose=False, careful=False):
             print "is less than the user specified value of " + str(uA_user) + " uA."
             print " careful is off, I will allow the script to attempt to set the current anyway"
 
-    # here we do a simpy binary search to find the region wear the uA_user is near        
+    # here we do a simple binary search to find the region wear the uA_user is near
     Vfrac = 2.5 # Votage range of search (This is the initial range that is cut in half each loop)
     UCA_current = float(2.5) # first guess in sweep
     status = LabJackU3_DAQ0(UCA_current)

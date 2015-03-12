@@ -11,15 +11,16 @@ verbose = True
 careful = True
 feedback = True
 
-start_stats =   10 # after x loops
-total_loops =  20
+start_stats =  5 # after x loops
+total_loops = 100
 sleep_time  =  1.0
 
-reset       = True # there is no need to keep ajusting the magnet, sis voltage, and UCA votage if you are doing multiple runs
-magpot      = 10000 # pot position
-pot_sis     =  55500 # pot position
-UCA_voltage =   2 # in Volts
-RFin        =   654 # in GHz
+reset       = True # there is no need to keep adjusting the magnet, sis voltage, and UCA voltage if you are doing multiple runs
+turn_off    = False
+magpot      = 90000 # pot position
+pot_sis     =  56500 # pot position
+UCA_voltage =  0 # in Volts
+RFin        =   680 # in GHz
 
 uA_list  = []
 mV_list  = []
@@ -171,6 +172,9 @@ for n in range(total_loops):
     print " "
     time.sleep(sleep_time)
 closetelnet()
-RFoff()
+
+if turn_off:
+    RFoff()
+    zeropots()
 print("End of script reached")
 # zeropots()

@@ -937,7 +937,7 @@ def GetProDirsNames(datadir, search_4nums, nums):
 
 
 
-def ProcessMatrix(raw_matrix, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose):
+def ProcessMatrix(raw_matrix, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose=False):
     matrix        = raw_matrix
     mono_matrix   = False
     regrid_matrix = False

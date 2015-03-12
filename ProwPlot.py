@@ -8,7 +8,7 @@ from profunc import windir
 all_Single_Sweeps = False
 all_Ydata         = False
 all_testsweeps    = False
-do_email = False
+do_email = True
 warning = True
 start_num = 1
 
@@ -43,13 +43,13 @@ if all_Single_Sweeps:
     do_SingeSpectraPlotter = True
 
 # The directory what the data is kept
-datadir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar04_15/magtest/')
+datadir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar04_15/mag_wLO_wTP/')
 if do_sweeps:
     for repeat_num in range(repeat):
         sweep_num = repeat_num+start_num
         BiasSweep(datadir, verbose=False, verboseTop=True, verboseSet=True, careful=False,
               testmode=False, warmmode=False,
-              do_fastsweep=True, do_unpumpedsweep=False, fastsweep_feedback=False,
+              do_fastsweep=True, do_unpumpedsweep=True, fastsweep_feedback=False,
               SweepStart_feedTrue=64000, SweepStop_feedTrue=52000, SweepStep_feedTrue=500,
               SweepStart_feedFalse=73000, SweepStop_feedFalse=57000, SweepStep_feedFalse=100,
               sisV_feedback=True, do_sisVsweep=False, high_res_meas=8,
@@ -62,18 +62,18 @@ if do_sweeps:
               spec_attenu=0, lin_ref_lev=500, aveNum=32,
               Kaxis=0, sisVaxis=1, magaxis=2, LOpowaxis=3, LOfreqaxis=4, IFbandaxis=5,
               K_list=[296],
-              LOfreq_start=672, LOfreq_stop=672, LOfreq_step=0.25,
+              LOfreq_start=680, LOfreq_stop=680, LOfreq_step=0.25,
               IFband_start=1.42, IFband_stop=1.42, IFband_step=0.10,
               do_magisweep=False, mag_meas=10,
-              magisweep_start=40, magisweep_stop=29, magisweep_step=1,
-              magpotsweep_start=22000, magpotsweep_stop=110001, magpotsweep_step=2000,
-              do_LOuAsearch=True, UCA_meas=10,
-              LOuAsearch_start=12, LOuAsearch_stop=12, LOuAsearch_step=-1,
+              magisweep_start=40, magisweep_stop=41,magisweep_step=1,
+              magpotsweep_start=110000, magpotsweep_stop=70000-1, magpotsweep_step=-200,
+              do_LOuAsearch=False, UCA_meas=10,
+              LOuAsearch_start=20, LOuAsearch_stop=20, LOuAsearch_step=1,
               LOuA_magpot=1000, LOuA_set_pot=56800,
               UCAsweep_min=0.00, UCAsweep_max=0.00, UCAsweep_step=0.05,
               sweepShape="rectangular",
               FinishedEmail=do_email, FiveMinEmail=do_email, PeriodicEmail=do_email,
-              seconds_per_email=3600, chopper_off=False, do_LOuApresearch=False, biastestmode=True,
+              seconds_per_email=2*3600, chopper_off=True, do_LOuApresearch=False, biastestmode=False,
               warning=warning)
 
 

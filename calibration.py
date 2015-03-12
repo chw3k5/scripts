@@ -1,6 +1,6 @@
 __author__ = 'chw3k5'
 from control import opentelnet, closetelnet, setmag_only, measmag, mag_channel
-from profunc import windir
+from profunc import windir, ProcessMatrix
 from agilent34410A import Agilent34410ADriver
 
 from sys import exit
@@ -40,6 +40,55 @@ def fetchoffset(filename,path=''):
         m = float(offsets.m)
         b = float(offsets.b)
     return m, b
+
+
+def make_magpot_function(mag_channel, filepath):
+    pot_function_filename = "channel"+str(mag_channel)+"_magpot2mA.csv"
+
+    lookup_filename = filepath+'channel'+str(mag_channel)+'.csv'
+    lookup_file = Table(lookup_filename, type="ascii", delimiter=",")
+    magpot = lookup_file.pot
+    mA     = lookup_file.mA_meas
+
+    raw_matrix = np.zeros((len(magpot), 2))
+    raw_matrix[:,0] = magpot
+    raw_matrix[:,1] = mA
+    pro_matrix, raw_matrix, mono_matrix, regrid_matrix, conv_matrix \
+        = ProcessMatrix(raw_matrix, mono_switcher=True, do_regrid=True, do_conv=False,
+                        regrid_mesh=1., min_cdf=0.9, sigma=5, verbose=False)
+
+    pro_magpot = pro_matrix[:,0]
+    pro_mA     = pro_matrix[:,1]
+
+    pot_file = open(pot_function_filename, 'w')
+    pot_file.write('pot,mA_meas\n')
+    for n in range(len(pro_magpot)):
+        pot_file.write(str('%6f' % pro_magpot[n])+','+str(pro_mA[n])+'\n')
+    pot_file.close()
+
+
+
+    return
+
+def magpot_lookup(mA_to_find, mag_channel, lookup_filepath=None):
+    if not os.path.isfile(lookup_filepath):
+        lookup_filepath = '/Users/chw3k5/Google Drive/Kappa/NA38/calibration/mag/'
+    lookup_filepath = windir(lookup_filepath)
+
+    pot_function_filename = "channel"+str(mag_channel)+"_magpot2mA.csv"
+    if not os.path.isfile(lookup_filepath+pot_function_filename):
+        make_magpot_function(mag_channel, lookup_filepath)
+
+    pot_function = Table(pot_function_filename, type="ascii", delimiter=",")
+    magpot = pot_function.pot
+    mA     = pot_function.mA_meas
+
+
+
+    mA_diff = abs(mA - mA_to_find)
+    found_pot = np.round(magpot(mA_diff.index(min(mA_diff))))
+
+    return found_pot
 
 
 #####################
