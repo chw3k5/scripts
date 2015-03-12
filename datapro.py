@@ -47,7 +47,7 @@ def ParamsProcessing(dirnames, proparamsfile, verbose):
             n.write('magpot,' +  str(magpot) + '\n')
     if standmagdata_found:
         ########
-        m_magoffset, b_magoffset = fetchoffset(filename=str(mag_chan)+'mA_biascom-mA_meas.csv',path=dirnames)
+        m_magoffset, b_magoffset = fetchoffset(filename=str(mag_chan)+'mA_biascom-mA_meas.csv', mag_channel=mag_chan, path=dirnames)
         n.write('mag_chan,'   + str(mag_chan)                    + '\n')
         n.write('meanmag_V,'  + str((numpy.mean(standmagdata_V)*m_magoffset)+b_magoffset) + '\n')
         n.write('stdmag_V,'   + str((numpy.std(standmagdata_V)*m_magoffset)+b_magoffset)   + '\n')

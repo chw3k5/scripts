@@ -22,16 +22,19 @@ offset_channel = '10' # string number
 do_magcalsweep = False
 do_makeoffsets = True
 
-def fetchoffset(filename,path=''):
-    default_path = windir('/Users/chw3k5/Google Drive/Kappa/NA38/calibration/mag/')
+default_path = windir('/Users/chw3k5/Google Drive/Kappa/NA38/calibration/mag/')
+
+def fetchoffset(filename, mag_channel, path=''):
     fullname = None
     local_filename = path+filename
     default_filename = default_path+filename
     if os.path.isfile(local_filename):
         fullname = local_filename
     elif os.path.isfile(default_filename):
+        calfile_shortname = 'channel'+str(mag_channel)+'.csv'
         fullname = default_filename
         copyfile(default_filename, local_filename)
+        copyfile(default_path+calfile_shortname, path+calfile_shortname)
     if fullname is None:
         m = 1.
         b = 0.
@@ -42,8 +45,8 @@ def fetchoffset(filename,path=''):
     return m, b
 
 
-def make_magpot_function(mag_channel, filepath):
-    pot_function_filename = "channel"+str(mag_channel)+"_magpot2mA.csv"
+def make_magpot_function(mag_channel, filepath, pot_function_filename):
+
 
     lookup_filename = filepath+'channel'+str(mag_channel)+'.csv'
     lookup_file = Table(lookup_filename, type="ascii", delimiter=",")
@@ -70,19 +73,25 @@ def make_magpot_function(mag_channel, filepath):
 
     return
 
-def magpot_lookup(mA_to_find, mag_channel, lookup_filepath=None):
-    if not os.path.isfile(lookup_filepath):
-        lookup_filepath = '/Users/chw3k5/Google Drive/Kappa/NA38/calibration/mag/'
-    lookup_filepath = windir(lookup_filepath)
-
+def magpot_lookup(mA_to_find, mag_channel, local_lookup_filepath):
+    local_lookup_filepath = windir(local_lookup_filepath)
     pot_function_filename = "channel"+str(mag_channel)+"_magpot2mA.csv"
-    if not os.path.isfile(lookup_filepath+pot_function_filename):
-        make_magpot_function(mag_channel, lookup_filepath)
+    calsweep_shortname = 'channel'+str(mag_channel)+'.csv'
+
+    # this gets the sweep data and puts it in the local directory if it is not there already
+    if not os.path.isfile(local_lookup_filepath+calsweep_shortname):
+        copyfile(default_path+calsweep_shortname,local_lookup_filepath+calsweep_shortname)
+
+    # this is the filename that contains the formatted magpot lookup data
+    local_lookup_filename = local_lookup_filepath+pot_function_filename
+
+    if not os.path.isfile(local_lookup_filename):
+        make_magpot_function(mag_channel, local_lookup_filepath, pot_function_filename)
+
 
     pot_function = Table(pot_function_filename, type="ascii", delimiter=",")
     magpot = pot_function.pot
     mA     = pot_function.mA_meas
-
 
 
     mA_diff = abs(mA - mA_to_find)
@@ -132,12 +141,13 @@ def magnet_cal_sweep(filename, test_pots=range(0,129001,1000),sleep_after_set=1,
 
 
 def magnet_find_offset(path,mag_channel,caltype=('V_biascom','mA_biascom')):
-    defult_calfilename = windir('/Users/chw3k5/Google Drive/Kappa/NA38/calibration/mag/channel'+str(mag_channel)+'.csv')
+    cal_shortname = 'channel'+str(mag_channel)+'.csv'
+    default_calfilename = windir(default_path+cal_shortname)
+    calfilename = path+cal_shortname
 
-    calfilename = path+'channel'+mag_channel+'.csv'
-    if (os.path.isfile(defult_calfilename) or os.path.isfile(calfilename)):
+    if (os.path.isfile(default_calfilename) or os.path.isfile(calfilename)):
         if not os.path.isfile(calfilename):
-            calfilename = defult_calfilename
+            calfilename = default_calfilename
         calfile = Table(calfilename, type="ascii", delimiter=",")
         keys = calfile.keys()
         from_type=str(caltype[0])
