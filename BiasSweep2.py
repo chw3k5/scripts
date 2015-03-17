@@ -255,7 +255,6 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
               magpotsweep_start=40000, magpotsweep_stop=40000, magpotsweep_step=5000,
               do_LOuAsearch=True, UCA_meas=10,
               LOuAsearch_start=12, LOuAsearch_stop=12, LOuAsearch_step=1,
-              LOuA_magpot=103323, LOuA_set_pot=56800,
               UCAsweep_min=3.45, UCAsweep_max=3.45, UCAsweep_step=0.05,
               sweepShape="rectangular",
               FinishedEmail=False, FiveMinEmail=False, PeriodicEmail=False,
@@ -270,6 +269,10 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
     stepper_accel = 1
     forth_dist = 0.25
     back_dist = 0.25
+
+    from control import default_magpot, default_sispot
+    LOuA_magpot  = default_magpot
+    LOuA_set_pot = default_sispot
 
 
     ##############################################

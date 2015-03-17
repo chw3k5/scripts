@@ -11,6 +11,17 @@ sis_channel = '0'
 mag_channel = '10'
 
 sleep_list = [0.3, 0.7, 2, 5, 10, 30, 60, 120]
+sleep_per_meas          = sleep_list[0]
+sleep_per_meas_feedback = 0.5
+
+SIS_feedon_low  = 30000
+SIS_feedon_high = 100000
+# feedback = False (off)
+SIS_feedoff_low = 53000
+SIS_feedoff_high = 77000
+
+default_magpot = 89179 # 45 mA
+default_sispot = 56800 # 1.8 mV
 
 
 def opentelnet():
@@ -199,7 +210,7 @@ def setmag(magpot, verbose=False):
         
     #set the pot position of the magnet and recound the current and volage
     thzbiascomputer.write("setbias "+mag_channel+" "+str(numpy.round(magpot)) + " \n")
-    # time.sleep(SleepPerMes)     
+    # time.sleep(sleep_per_meas)     
 
     
     V_mag, mA_mag, pot_mag = measmag(verbose)
@@ -230,7 +241,7 @@ def setmag_only(magpot):
         
     #set the pot position of the magnet and record the current and voltage
     thzbiascomputer.write("setbias "+mag_channel+" "+str(numpy.round(magpot)) + " \n")
-    # time.sleep(SleepPerMes)     
+    # time.sleep(sleep_per_meas)     
 
     return
 
@@ -265,7 +276,7 @@ def setmag_highlow(magpot):
     sleep(0.5)
     #set the pot position of the magnet and record the current and voltage
     thzbiascomputer.write("setbias "+mag_channel+" "+str(numpy.round(magpot)) + " \n")
-    # time.sleep(SleepPerMes)     
+    # time.sleep(sleep_per_meas)     
 
     return
   
@@ -281,10 +292,7 @@ def setmag_highlow(magpot):
 #####################
 
 def measSIS(verbose=False):
-    from sisbias_config import sleep_list
-    
     channel = sis_channel
-    
     message_list = []
     message_list.append("Had to wait extra time for the measurement to be returned")
     message_list.append("Had to wait extra time for the measurement to be returned again")
@@ -319,7 +327,7 @@ def measSIS(verbose=False):
         print "pot_sis = " + str(pot_sis)
         print " "
         sys.exit()
-    #time.sleep(SleepPerMes)
+    #time.sleep(sleep_per_meas)
     return mV_sis, uA_sis, pot_sis
     
     
@@ -328,15 +336,13 @@ def measSIS(verbose=False):
 #########################
 
 def setfeedback(feedback):
-    from sisbias_config import SleepPerMes_feedback
-    
     status=False
     if feedback:
         thzbiascomputer.write("feedback 1 \n")
-        time.sleep(SleepPerMes_feedback)
+        time.sleep(sleep_per_meas_feedback)
     else:
         thzbiascomputer.write("feedback 0 \n")
-        time.sleep(SleepPerMes_feedback)
+        time.sleep(sleep_per_meas_feedback)
     out1 = thzbiascomputer.read_very_eager()
     if feedback:
         if out1 == 'Enabling SIS feedback loop (V-mode)\n':
@@ -362,8 +368,6 @@ def setfeedback(feedback):
 ####################  
 
 def setSIS(sispot, feedback, verbose=False, careful=False):
-    from sisbias_config import SleepPerMes, feedon_low, feedon_high, feedoff_low, feedoff_high
-
     uA_sis  = -999998
     mV_sis  = -999998
     pot_sis = -999998
@@ -377,10 +381,10 @@ def setSIS(sispot, feedback, verbose=False, careful=False):
      
     # safty catches, to keep the SIS bias within nominal ranges   
     if feedback:
-        if ((feedon_low < sispot) and (sispot < feedon_high)):
+        if ((SIS_feedon_low < sispot) and (sispot < SIS_feedon_high)):
             None
         else:
-            print "sispot value was not in the set [" + str(feedon_low) + " to " + str(feedon_high) + "]"
+            print "sispot value was not in the set [" + str(SIS_feedon_low) + " to " + str(SIS_feedon_high) + "]"
             print "~[7.5V to -7.5V] for feedback 'ON', try again"
             print "sispot = " + str(sispot)
             print "in function setSIS, near safety catches"
@@ -388,19 +392,19 @@ def setSIS(sispot, feedback, verbose=False, careful=False):
             if careful:
                 print "killing script"
                 sys.exit()
-            elif feedon_high < sispot:
-                sispot = feedon_high - 1000
-            elif sispot < feedon_low:
-                sispot = feedon_low + 1000
+            elif SIS_feedon_high < sispot:
+                sispot = SIS_feedon_high - 1000
+            elif sispot < SIS_feedon_low:
+                sispot = SIS_feedon_low + 1000
             else:
                 sispot = 65100
             print "careful is off, so the show must go on"
             print "reseting pot to safe value: " + str(sispot)
     else:
-        if ((feedoff_low < sispot) and (sispot < feedoff_high)):
+        if ((SIS_feedoff_low < sispot) and (sispot < SIS_feedoff_high)):
             None
         else:
-            print "sispot value was not in the set [" + str(feedoff_low) + " to " + str(feedoff_high) + "]"
+            print "sispot value was not in the set [" + str(SIS_feedoff_low) + " to " + str(SIS_feedoff_high) + "]"
             print "~[7.9V to -8.1V] for feedback 'OFF', try again"
             print "sispot = " + str(sispot)
             print "in function setSIS, near safety catches"
@@ -408,10 +412,10 @@ def setSIS(sispot, feedback, verbose=False, careful=False):
             if careful:
                 print "killing script"
                 sys.exit()
-            elif feedoff_high < sispot:
-                sispot = feedoff_high - 1000
-            elif sispot < feedoff_low:
-                sispot = feedoff_low + 1000
+            elif SIS_feedoff_high < sispot:
+                sispot = SIS_feedoff_high - 1000
+            elif sispot < SIS_feedoff_low:
+                sispot = SIS_feedoff_low + 1000
             else:
                 sispot = 65100
             print "careful is off, so the show must go on"
@@ -419,7 +423,7 @@ def setSIS(sispot, feedback, verbose=False, careful=False):
 
     #set the pot position of the magnet and record the current and voltage
     thzbiascomputer.write("setbias " + sis_channel + " "+str(numpy.round(sispot)) + " \n")
-    #time.sleep(SleepPerMes)     
+    #time.sleep(sleep_per_meas)     
 
     
     mV_sis, uA_sis, pot_sis = measSIS(verbose)
@@ -432,15 +436,14 @@ def setSIS(sispot, feedback, verbose=False, careful=False):
 ###### setSIS_only ######
 #########################
 
-def setSIS_only(sispot, feedback, verbose=False, careful=False):
-    from sisbias_config import SleepPerMes, feedon_low, feedon_high, feedoff_low, feedoff_high    
+def setSIS_only(sispot, feedback, verbose=False, careful=False):  
     
     # safty catches, to keep the SIS bias within nominal ranges   
     if feedback:
-        if ((feedon_low < sispot) and (sispot < feedon_high)):
+        if ((SIS_feedon_low < sispot) and (sispot < SIS_feedon_high)):
             None
         else:
-            print "sispot value was not in the set [" + str(feedon_low) + " to " + str(feedon_high) + "]"
+            print "sispot value was not in the set [" + str(SIS_feedon_low) + " to " + str(SIS_feedon_high) + "]"
             print "~[7.5V to -7.5V] for feedback 'ON', try again"
             print "sispot = " + str(sispot)
             print "in function setSIS_only, near safety catches"
@@ -448,20 +451,20 @@ def setSIS_only(sispot, feedback, verbose=False, careful=False):
             if careful:
                 print "killing script"
                 sys.exit()
-            elif feedon_high < sispot:
-                sispot = feedon_high - 1000
-            elif sispot < feedon_low:
-                sispot = feedon_low + 1000
+            elif SIS_feedon_high < sispot:
+                sispot = SIS_feedon_high - 1000
+            elif sispot < SIS_feedon_low:
+                sispot = SIS_feedon_low + 1000
             else:
                 sispot = 65100
             print "careful is off, so the show must go on"
             print "resetting pot to safe value: " + str(sispot)
                 
     else:
-        if ((feedoff_low < sispot) and (sispot < feedoff_high)):
+        if ((SIS_feedoff_low < sispot) and (sispot < SIS_feedoff_high)):
             None
         else:
-            print "sispot value was not in the set [" + str(feedoff_low) + " to " + str(feedoff_high) + "]"
+            print "sispot value was not in the set [" + str(SIS_feedoff_low) + " to " + str(SIS_feedoff_high) + "]"
             print "~[7.9V to -8.1V] for feedback 'OFF', try again"
             print "sispot = " + str(sispot)
             print "in function setSIS_only, near safety catches"
@@ -469,17 +472,17 @@ def setSIS_only(sispot, feedback, verbose=False, careful=False):
             if careful:
                 print "killing script"
                 sys.exit()
-            elif feedoff_high < sispot:
-                sispot = feedoff_high - 1000
-            elif sispot < feedoff_low:
-                sispot = feedoff_low + 1000
+            elif SIS_feedoff_high < sispot:
+                sispot = SIS_feedoff_high - 1000
+            elif sispot < SIS_feedoff_low:
+                sispot = SIS_feedoff_low + 1000
             else:
                 sispot = 65100
             print "careful is off, so the show must go on"
             print "reseting pot to safe value: " + str(sispot)
     #set the pot position of the magnet and record the current and voltage
     thzbiascomputer.write("setbias "+sis_channel+" "+str(numpy.round(sispot)) + " \n")
-    time.sleep(SleepPerMes)
+    time.sleep(sleep_per_meas)
     return
 
 ##############################
@@ -568,8 +571,7 @@ def attempt_measTP(sleep_time, sispot, channel):
 #######################
 
 def setSIS_TP(sispot, feedback, verbose=False, careful=False):
-    from sisbias_config import SleepPerMes, sleep_list
-    channel = '0'
+    channel = sis_channel
 
     message_list = []
     message_list.append("Had to wait extra time for the measurement to be returned")
@@ -599,7 +601,7 @@ def setSIS_TP(sispot, feedback, verbose=False, careful=False):
     
     # we need to set the pot before measuring Total Power
     setSIS_only(sispot, feedback, verbose, careful)
-    time.sleep(SleepPerMes)
+    time.sleep(sleep_per_meas)
     
     for loop_index in range(len(sleep_list)):
         redo, mV_sis, uA_sis, tp_sis, pot_sis, time_stamp = \
@@ -624,8 +626,7 @@ def setSIS_TP(sispot, feedback, verbose=False, careful=False):
 ###### measSIS_TP ######
 ########################
 def measSIS_TP(sispot, feedback, verbose=False, careful=False):
-    from sisbias_config import SleepPerMes, sleep_list
-    channel = '0'
+    channel = sis_channel
     message_list = []
     message_list.append("Had to wait extra time for the measurment to be returned")
     message_list.append("Had to wait extra time for the measurment to be returned again")

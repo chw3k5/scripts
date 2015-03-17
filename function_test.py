@@ -12,11 +12,11 @@ do_LabJackU3_DAQ0 = False # True or False
 do_LabJackU3_AIN0 = False # True or False
 do_LJ_streamTP    = False # True or False
 
-do_measmag          = True # True or False
-do_measmag_w_offset = True # True or False
+do_measmag          = False # True or False
+do_measmag_w_offset = False # True or False
 do_setmag           = False # True or False
 do_setmag_only      = False # True or False
-do_Emag_PID         = False # True or False
+do_Emag_PID         = True # True or False
 
 do_RFfreqset   = False # True or False
 do_RFon        = False # True or False
@@ -93,7 +93,6 @@ if do_setmag:
     magpot = 30000 # electromagnet potentiometer position
     verbose = True  # True or False
     V_mag, mA_mag, pot_mag = setmag(magpot, verbose)
-
     print str(V_mag) + "=V_mag, " + str(mA_mag) + "=mA_mag, " + str(pot_mag) + "=pot_mag"
 
 if do_setmag_only:
@@ -103,13 +102,13 @@ if do_setmag_only:
 
 if do_Emag_PID:
     from PID import Emag_PID
-    from control import measmag
+    from control import measmag_w_offset
     mA_user = 20 # mA in [-80,78]
     verbose = True  # True or False
     test_path = 'C:\\Users\\chwheele\\Google Drive\\Kappa\\NA38\\IVsweep\\Mar04_15\\LO_stability_test\\rawdata\\00001\\'
-    Emag_PID(local_path=test_path, mA_set=24.0, verbose=verbose)
-    V_mag, mA_mag, pot_mag = measmag()
-    print str(V_mag) + "=V_mag, " + str(mA_mag) + "=mA_mag, " + str(pot_mag) + "=pot_mag"
+    Emag_PID(local_path=test_path, mA_set=45.0, verbose=verbose)
+    offset_mA, magpot = measmag_w_offset(verbose=verbose)
+    print "offset_mA:", offset_mA, '  magpot:', magpot
 
 #############################
 ###### From LOinput.py ######

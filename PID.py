@@ -3,7 +3,15 @@ from LabJack_control import LabJackU3_DAQ0
 from calibration import magpot_lookup, default_path, fetchoffset
 from time import sleep
 import numpy as np
-from control import mag_channel, measSIS, measmag, setSIS_only, setmag_only, opentelnet, closetelnet
+from control import mag_channel, measSIS, measmag, setSIS_only, setmag_only, opentelnet, closetelnet, \
+    default_magpot, default_sispot, setfeedback
+
+
+##########################
+##########################
+######## Emag_PID ########
+##########################
+##########################
 
 def Emag_PID(local_path=default_path, mA_set=35.0, mA_set_max=78, mA_set_min=-80,
              max_adjust_attempt=20, min_adjust_attempt=5,
@@ -107,7 +115,35 @@ def Emag_PID(local_path=default_path, mA_set=35.0, mA_set_max=78, mA_set_min=-80
     return
 
 
-def SIS_mV_PID():
+
+
+############################
+############################
+######## SIS_mV_PID ########
+############################
+############################
+
+
+def SIS_mV_PID(mV_set=1.8, mV_set_max=10, mV_set_min=-10,
+               feedback=True,max_adjust_attempt=20, min_adjust_attempt=5,
+               sleep_per_set=2, meas_number=5,
+               min_diff_magpot=3, Kp=1.0, Ki=1.0, Kd=1.0, verbose=False):
+    def measloop(sispot, magpot=None, meas_number=1):
+
+        setSIS_only(sispot)
+        sleep(sleep_per_set)
+        mV_list = []
+        for n in range(meas_number):
+            mV_temp, uA_temp, pot_temp = measSIS(verbose)
+            mV_list.append(mV_temp)
+        mA = np.mean(mA_list)
+        return mA, magpot
+
+    setSIS_only(65100,feedback=feedback,verbose=verbose)
+    status = setfeedback(feedback)
+    setmag_only(default_magpot)
+    sleep(sleep_per_set)
+
 
 
     return

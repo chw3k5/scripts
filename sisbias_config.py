@@ -1,29 +1,3 @@
-########################################################
-###### measSIS # setSIS # setSIS_only # setSIS_TP ######
-########################################################
-
-SleepPerMes  = 0.3 # in seconds
-# the below are not needed in setSIS_only
-sleep_list = [0.3, 0.7, 2, 5, 10, 30, 60, 120]
-
-#########################
-###### setfeedback ######
-#########################
-
-SleepPerMes_feedback = 0.5 # in seconds
-
-
-##################################
-###### setSIS # setSIS_only ######
-##################################
-
-## Pot positions not to exceed
-#feedback = True (on)
-feedon_low  = 30000
-feedon_high = 100000
-# feedback = False (off)
-feedoff_low = 53000
-feedoff_high = 77000
 
 
 #########################

@@ -43,6 +43,7 @@ if all_Single_Sweeps:
 
 # The directory what the data is kept
 datadir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar04_15/LO_stability_test/')
+start_num = 0
 if do_sweeps:
     for repeat_num in range(repeat):
         sweep_num = repeat_num+start_num
@@ -68,7 +69,6 @@ if do_sweeps:
               magpotsweep_start=100000, magpotsweep_stop=100000, magpotsweep_step=-200,
               do_LOuAsearch=False, UCA_meas=10,
               LOuAsearch_start=20, LOuAsearch_stop=20, LOuAsearch_step=1,
-              LOuA_magpot=1000, LOuA_set_pot=56800,
               UCAsweep_min=0.00, UCAsweep_max=0.00, UCAsweep_step=0.05,
               sweepShape="rectangular",
               FinishedEmail=do_email, FiveMinEmail=do_email, PeriodicEmail=do_email,
@@ -141,7 +141,6 @@ if do_Ysweeps:
               do_magisweep=False, mag_meas=10,
               magisweep_start=40, magisweep_stop=30, magisweep_step=-2,
               do_LOuAsearch=False, UCA_meas=10,
-              LOuA_magpot=1000, LOuA_set_pot=56800,
               UCAsweep_min=0.00, UCAsweep_max=0.00, UCAsweep_step=0.05,
               sweepShape="rectangular",
               warning=warning)
