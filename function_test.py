@@ -16,7 +16,7 @@ do_measmag          = False # True or False
 do_measmag_w_offset = False # True or False
 do_setmag           = False # True or False
 do_setmag_only      = False # True or False
-do_Emag_PID         = True # True or False
+do_Emag_PID         = False # True or False
 
 do_RFfreqset   = False # True or False
 do_RFon        = False # True or False
@@ -31,7 +31,7 @@ do_measSIS_TP  = False # True or False
 do_setSIS_Volt = False # True or False
 
 do_setLOI      = False# True or False
-do_zeropots    = False # True of False
+do_zeropots    = True # True of False
 
 
 ############################
