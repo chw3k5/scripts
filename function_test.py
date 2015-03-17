@@ -12,10 +12,11 @@ do_LabJackU3_DAQ0 = False # True or False
 do_LabJackU3_AIN0 = False # True or False
 do_LJ_streamTP    = False # True or False
 
-do_measmag     = False # True or False
-do_setmag      = False # True or False
-do_setmag_only = False # True or False
-do_setmagI     = False # True or False
+do_measmag          = True # True or False
+do_measmag_w_offset = True # True or False
+do_setmag           = False # True or False
+do_setmag_only      = False # True or False
+do_Emag_PID         = False # True or False
 
 do_RFfreqset   = False # True or False
 do_RFon        = False # True or False
@@ -30,7 +31,7 @@ do_measSIS_TP  = False # True or False
 do_setSIS_Volt = False # True or False
 
 do_setLOI      = False# True or False
-do_zeropots    = True # True of False
+do_zeropots    = False # True of False
 
 
 ############################
@@ -79,6 +80,14 @@ if do_measmag:
     V_mag, mA_mag, pot_mag = measmag(verbose)
     print str(V_mag) + "=V_mag, " + str(mA_mag) + "=mA_mag, " + str(pot_mag) + "=pot_mag"
 
+if do_measmag_w_offset:
+    from control import measmag_w_offset
+    verbose = True
+    #offset_mA, magpot = measmag_w_offset(filename='', path='', verbose=verbose)
+    offset_mA, magpot = measmag_w_offset(verbose=verbose)
+    print "offset_mA:", offset_mA, '  magpot:', magpot
+
+
 if do_setmag:
     from control import setmag
     magpot = 30000 # electromagnet potentiometer position
@@ -92,12 +101,14 @@ if do_setmag_only:
     magpot = 64000 # electromagnet potentiometer position
     setmag_only(magpot)
 
-if do_setmagI:
-    from control import setmagI
-    mA_user = 20 # mA in (-44,42)
+if do_Emag_PID:
+    from PID import Emag_PID
+    from control import measmag
+    mA_user = 20 # mA in [-80,78]
     verbose = True  # True or False
-    careful = False # True or False
-    V_mag, mA_mag, pot_mag = setmagI(mA_user, verbose, careful)
+    test_path = 'C:\\Users\\chwheele\\Google Drive\\Kappa\\NA38\\IVsweep\\Mar04_15\\LO_stability_test\\rawdata\\00001\\'
+    Emag_PID(local_path=test_path, mA_set=24.0, verbose=verbose)
+    V_mag, mA_mag, pot_mag = measmag()
     print str(V_mag) + "=V_mag, " + str(mA_mag) + "=mA_mag, " + str(pot_mag) + "=pot_mag"
 
 #############################

@@ -834,7 +834,7 @@ def getproYdata(datadir):
            hot_time_mean, cold_time_mean, hot_pot, cold_pot,\
            hotdatafound, colddatafound, Ydatafound
     
-def getYnums(datadir, search_str):
+def getYnums(datadir, search_str='Y'):
     if platform == 'win32':
         datadir = windir(datadir)
 

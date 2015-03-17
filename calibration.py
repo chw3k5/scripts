@@ -33,9 +33,11 @@ def fetchoffset(filename, mag_channel, path=''):
     elif os.path.isfile(default_filename):
         calfile_shortname = 'channel'+str(mag_channel)+'.csv'
         fullname = default_filename
-        copyfile(default_filename, local_filename)
-        copyfile(default_path+calfile_shortname, path+calfile_shortname)
+        if not path == '':
+            copyfile(default_filename, local_filename)
+            copyfile(default_path+calfile_shortname, path+calfile_shortname)
     if fullname is None:
+        print "offset data not found in:", fullname
         m = 1.
         b = 0.
     else:
@@ -63,7 +65,7 @@ def make_magpot_function(mag_channel, filepath, pot_function_filename):
     pro_magpot = pro_matrix[:,0]
     pro_mA     = pro_matrix[:,1]
 
-    pot_file = open(pot_function_filename, 'w')
+    pot_file = open(filepath+pot_function_filename, 'w')
     pot_file.write('pot,mA_meas\n')
     for n in range(len(pro_magpot)):
         pot_file.write(str('%6f' % pro_magpot[n])+','+str(pro_mA[n])+'\n')
@@ -86,17 +88,18 @@ def magpot_lookup(mA_to_find, mag_channel, local_lookup_filepath):
     local_lookup_filename = local_lookup_filepath+pot_function_filename
 
     if not os.path.isfile(local_lookup_filename):
-        make_magpot_function(mag_channel, local_lookup_filepath, pot_function_filename)
+        make_magpot_function(mag_channel=mag_channel, filepath=local_lookup_filepath, pot_function_filename=pot_function_filename)
 
 
-    pot_function = Table(pot_function_filename, type="ascii", delimiter=",")
+    pot_function = Table(local_lookup_filename, type="ascii", delimiter=",")
     magpot = pot_function.pot
     mA     = pot_function.mA_meas
 
 
-    mA_diff = abs(mA - mA_to_find)
-    found_pot = np.round(magpot(mA_diff.index(min(mA_diff))))
-
+    mA_diff = list(abs(mA - mA_to_find))
+    min_value = min(mA_diff)
+    found_pot = np.round(magpot[mA_diff.index(min_value)])
+    #print 'found_pot:', found_pot, 'mA_to_find:', mA_to_find
     return found_pot
 
 
