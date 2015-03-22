@@ -1,7 +1,4 @@
-__author__ = 'chwheele'
-
-
-
+__author__ = 'Caleb Wheeler'
 # ### Example PID code
 #
 # (y_set,y_current, y_last, x_last, x_current, error_sum, error_last) = (1,1,1,1,1,1,1)
@@ -23,18 +20,13 @@ __author__ = 'chwheele'
 # pid_function_x = pid_function_y/der_error
 
 
-
-
-
 from LabJack_control import LabJackU3_DAQ0
 from calibration import magpot_lookup, default_path, fetchoffset
-from time import sleep
-import numpy as np
 from control import mag_channel, measSIS, measmag, setSIS_only, setmag_only, opentelnet, closetelnet, \
     default_magpot, default_sispot, setfeedback
 
-
-
+from time import sleep
+import numpy as np
 
 
 
@@ -69,7 +61,6 @@ def measloop_SIS(feedback,sispot=65100, sleep_per_set=1, meas_number=1, verbose=
     mV = np.mean(mV_list)
     uA = np.mean(uA_list)
     return mV, uA
-
 
 
 ##########################
@@ -155,8 +146,8 @@ def Emag_PID(local_path=default_path, mA_set=35.0, mA_set_max=78, mA_set_min=-80
                       "is less than the minimum value of min_diff_magpot: "+str(min_diff_magpot)
             break
 
-
-    return
+    deriv = (mA_current-mA_last)/(magpot_current-magpot_last)
+    return magpot_current, deriv
 
 
 
@@ -173,7 +164,7 @@ def SIS_mV_PID(mV_set=1.8, mV_set_max=10, mV_set_min=-10,
                sleep_per_set=2, meas_number=5,
                min_diff_sispot=3,
                first_pot=65100, second_pot=56800,
-               Kp=1.0, Ki=1.0, Kd=1.0, verbose=False):
+               Kp=1.0, Ki=0.0, Kd=0.05, verbose=False):
 
     if verbose:
         print "The SIS mV PID function"
@@ -191,6 +182,7 @@ def SIS_mV_PID(mV_set=1.8, mV_set_max=10, mV_set_min=-10,
     error_sum = 0
     pid_function_sispot = first_pot - second_pot
 
+    deriv = 1
     for adjust_attempt in range(max_adjust_attempt):
         error_last  = error
         sispot_last = sispot_current
@@ -201,6 +193,7 @@ def SIS_mV_PID(mV_set=1.8, mV_set_max=10, mV_set_min=-10,
         pid_function_sispot, pid_function_mV, error, error_sum \
                     = PID_function(mV_set, mV_current, mV_last, sispot_last, sispot_current,
                                    error_sum, error_last, Ki, Kp, Kd)
+        deriv = (mV_current-mV_last)/(sispot_current-sispot_last)
 
         if verbose:
             print str(adjust_attempt+1)+" measurment error:", error, 'mV_set:', mV_set, 'mV_current:', mV_current, 'sispot_current:', sispot_current
@@ -211,18 +204,19 @@ def SIS_mV_PID(mV_set=1.8, mV_set_max=10, mV_set_min=-10,
                       "is less than the minimum value of min_diff_magpot: "+str(min_diff_sispot)
             break
 
-    return
+    return sispot_current, deriv
 
 
 
 
 
-def LO_PID_firstsearch(uA_set=20.0, uA_set_max=50.0, uA_set_min=5.0,
+def LO_PID(uA_set=20.0, uA_set_max=50.0, uA_set_min=5.0,
            feedback=True, max_adjust_attempt=20, min_adjust_attempt=5,
            sleep_per_set=3, meas_number=5,
+           uA_search_res = 5,
            min_diff_V=0.0005,
-           V_list=[0.0, 0.5, 1.0, 1.5, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4, 3,6, 3.8, 4.0, 4.5, 5.0],
-           Kp=1.0, Ki=1.0, Kd=1.0, verbose=False):
+           V_min=0,V_max=5,
+           Kp=1.0, Ki=0.0, Kd=0.05, verbose=False):
     if verbose:
         print "The SIS uA-LO power PID function"
     if uA_set < uA_set_min:
@@ -230,24 +224,35 @@ def LO_PID_firstsearch(uA_set=20.0, uA_set_max=50.0, uA_set_min=5.0,
     elif uA_set_max < uA_set:
         uA_set = uA_set_max
 
+
+
     # turn on the standard settings
     status = setfeedback(feedback)
     setmag_only(magpot=default_magpot)
     setSIS_only(sispot=default_sispot,feedback=feedback)
     sleep(sleep_per_set)
 
-    uA_list = []
-    for Voltage in V_list:
-        status = LabJackU3_DAQ0(UCA_voltage=Voltage)
-        sleep(sleep_per_set)
-        mV, uA = measloop_SIS(feedback,sispot=default_sispot, sleep_per_set=sleep_per_set,
+    # measure the range of LO pump power (uA)
+    V_list=[V_min,V_max] # This is the range of the LO UCA Voltage
+    status = LabJackU3_DAQ0(UCA_voltage=V_list[0])
+    sleep(sleep_per_set)
+    mV, uA = measloop_SIS(feedback,sispot=default_sispot, sleep_per_set=sleep_per_set,
                               meas_number=meas_number, verbose=verbose)
-        uA_list.append(uA)
+    uA_list = [uA]
+    if verbose: print "UCA Voltage:", V_list[0], "    SIS current (uA):", uA_list[0]
 
+    status = LabJackU3_DAQ0(UCA_voltage=V_list[-1])
+    sleep(sleep_per_set)
+    mV, uA = measloop_SIS(feedback,sispot=default_sispot, sleep_per_set=sleep_per_set,
+                              meas_number=meas_number, verbose=verbose)
+    uA_list.append(uA)
+    if verbose: print "UCA Voltage:", V_list[-1], "    SIS current (uA):", uA_list[-1]
+
+    # set range variables
     uA_min = uA_list[-1]
     uA_max = uA_list[0]
-    V_max  = V_list[-1]
-    V_min  = V_list[0]
+
+    final_deriv = 1
     if uA_set < uA_min:
         print "The LO is set to it max UCA voltage of "+str(V_max) +" Volts (max attenuation)"
         print "giving a minimum uA value:"+str(uA_min)+" which is bigger than the user specified"
@@ -262,6 +267,31 @@ def LO_PID_firstsearch(uA_set=20.0, uA_set_max=50.0, uA_set_min=5.0,
         print " Setting the UCA voltage to min attenuation:"+str(V_min)
         final_V = V_min
     else:
+        finished = False
+        voltage_index = 0
+        # Find the Voltages so that difference in uA power is less than the function variable 'uA_search_res'
+        while not finished:
+            finished_index = len(V_list)
+            if finished_index <= voltage_index:
+                finished = True
+            else:
+                uA_high = uA_list[voltage_index]
+                uA_low = uA_list[voltage_index+1]
+                if uA_search_res < abs(uA_high - uA_low):
+                    V_low = V_list[voltage_index]
+                    V_high = V_list[voltage_index+1]
+                    voltage = (V_low+V_high)/2.0
+                    status = LabJackU3_DAQ0(UCA_voltage=voltage)
+                    V_list.insert(voltage_index+1)
+                    sleep(sleep_per_set)
+                    mV, uA = measloop_SIS(feedback,sispot=default_sispot, sleep_per_set=sleep_per_set,
+                                          meas_number=meas_number, verbose=verbose)
+                    uA_list.insert(voltage_index+1,uA)
+                    if verbose: print "UCA Voltage:", V_list[voltage_index], "    SIS current (uA):", uA_list[voltage_index]
+                else:
+                    voltage_index += 1
+
+
         # first find the uA_list value closest to uA_set
         diff_uA_list = list(abs(np.array(uA_list)-float(uA_set)))
         min_diff_uA_list = min(diff_uA_list)
@@ -275,7 +305,6 @@ def LO_PID_firstsearch(uA_set=20.0, uA_set_max=50.0, uA_set_min=5.0,
         V_second = V_list[min_diff_uA_index]
 
         # Start the PID adjustment sequence
-
         V_current = V_first
         status = LabJackU3_DAQ0(UCA_voltage=V_current)
         mV_current, uA_current \
@@ -308,15 +337,11 @@ def LO_PID_firstsearch(uA_set=20.0, uA_set_max=50.0, uA_set_min=5.0,
                           "is less than the minimum value of min_diff_V: "+str(min_diff_V)
                 break
         final_V = V_current
-
+        final_deriv = (uA_current-uA_last)/(V_current-V_last)
 
     status = LabJackU3_DAQ0(UCA_voltage=final_V)
-    return final_V
+    return final_V, final_deriv
 
-
-def LO_PID_small_adjust():
-
-    return
 
 
 if __name__ == "__main__":
