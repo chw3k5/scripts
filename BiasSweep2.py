@@ -345,18 +345,17 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
     # Electromagnet
     if do_magisweep:
         if verboseTop:
-            print "Finding Electromagnet pot positions for each magnet current \
-            in 'magi_list'."
+            print "Finding Electromagnet pot positions for each magnet current in 'magi_list'."
         magi_list = makeLists(magisweep_start, magisweep_stop, magisweep_step)
         magpot_list = []
         
         for magi in magi_list:
             magpot_actual, deriv_mA_magpot = Emag_PID(mA_set=magi,verbose=verbose)
-            magpot_list.append(magpot_actual)
+            magpot_list.append(numpy.round(magpot_actual))
             if verboseSet:magmsg(magpot_actual)
         # arrange value from biggest to smallest 
-        magpot_list = magpot_list.sort
-        if magpot_list[-1] < magpot_list[0]: magpot_list = magpot_list.reverse()
+        magpot_list.sort()
+        if magpot_list[-1] < magpot_list[0]: magpot_list = reversed(magpot_list)
 
     else:
         magi_list = None
@@ -538,7 +537,6 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
     ####################################################
     ###### Start of Receiver Setting Control Loop ######
     ####################################################
-
     for param_index in range(list_len):
 
     ###########################
@@ -583,6 +581,35 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
                     print "Testmode is 'True', pretending to move the chopper"
 
 
+            # measure the LO power at default magnet and SISpot positions
+            # set the bias system to measure relative LO power
+            if not testmode:
+                if do_set_mag_highlow:setmag_highlow(default_magpot)
+                else: setmag_only(default_magpot)
+                magpot_actual = default_magpot
+                if verboseSet:magmsg(magpot_actual)
+
+                setSIS_only(default_sispot, feedback_actual, verbose, careful)
+                sisPot_actual = default_sispot
+                if verboseSet:
+                    sismsg(sisPot_actual)
+
+                mV_LO_list     = []
+                uA_LO_list     = []
+                tp_LO_list     = []
+                pot_LO_list    = []
+                time_stamp_LO_list = []
+                for meas_index in range(UCA_meas):
+                    sismV_actual, sisuA_actual, sistp, sisPot_actual, time_stamp = measSIS_TP(default_sispot, feedback_actual, verbose, careful)
+                    mV_LO_list.append(sismV_actual)
+                    uA_LO_list.append(sisuA_actual)
+                    tp_LO_list.append(sistp)
+                    pot_LO_list.append(sisPot_actual)
+                    time_stamp_LO_list.append(time_stamp)
+            else:
+                print "testmode on, pretending to measure the SIS bias to determine LO power"
+
+
 
         # Set UCA Voltage for the LO (if needed)
         if doing_UCA_list: # UCA values are set
@@ -613,17 +640,17 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
                         UCAmsg(UCA_actual)
                         LOuAmsg(LOuA_actual)
 
-                    if verboseTop:
-                        print "Using the LO power setting algorithm 'setLOI' the LO power has been set."
-                        print "LO uA set value:" + str('%2.4f' % LOuA_thisloop) + "uA  LO actual value:" + str('%2.4f' % sisuA_actual) + "uA"
-                        print "at " + str('%2.4f' % sismV_actual) + "mV and a pot of " + str(sisPot_actual)
-                        print "The user controlled attenuation is now set to " + str(UCA_actual) + "."
-                        print "Resetting the sis bias and magnet potentiometers."
+                    #if verboseTop:
+                    #    print "Using the LO power setting algorithm 'setLOI' the LO power has been set."
+                    #    print "LO uA set value:" + str('%2.4f' % LOuA_thisloop) + "uA  LO actual value:" + str('%2.4f' % sisuA_actual) + "uA"
+                    #    print "at " + str('%2.4f' % sismV_actual) + "mV and a pot of " + str(sisPot_actual)
+                    #    print "The user controlled attenuation is now set to " + str(UCA_actual) + "."
+                    #    print "Resetting the sis bias and magnet potentiometers."
 
 
 
         # Set the LO frequency (if needed)
-        if not (LOfreq_thisloop == LOfreq_actual):
+        if (not (LOfreq_thisloop == LOfreq_actual)):
             if ((not testmode) and (not biastestmode)):
                 setfreq(LOfreq_thisloop)
             else:
@@ -788,45 +815,6 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
             else:
                 print "testmode on, pretending to measure the magnet"
 
-            # measure the LO power
-            # set the bias system to measure relative LO power
-            if not testmode:
-                
-                if do_set_mag_highlow:setmag_highlow(default_magpot)
-                else: setmag_only(default_magpot)
-                magpot_actual = default_magpot
-                if verboseSet:magmsg(magpot_actual)
-
-                setSIS_only(default_sispot, feedback_actual, verbose, careful)
-                sisPot_actual = default_sispot
-                if verboseSet:
-                    sismsg(sisPot_actual)
-
-                mV_LO_list     = []
-                uA_LO_list     = []
-                tp_LO_list     = []
-                pot_LO_list    = []
-                time_stamp_LO_list = []
-                for meas_index in range(UCA_meas):
-                    sismV_actual, sisuA_actual, sistp, sisPot_actual, time_stamp = measSIS_TP(default_sispot, feedback_actual, verbose, careful)
-                    mV_LO_list.append(sismV_actual)
-                    uA_LO_list.append(sisuA_actual)
-                    tp_LO_list.append(sistp)
-                    pot_LO_list.append(sisPot_actual)
-                    time_stamp_LO_list.append(time_stamp)
-
-                # reset the bias system
-                if do_set_mag_highlow: setmag_highlow(magpot_thisloop)
-                else: setmag_only(magpot_thisloop)
-                magpot_actual = magpot_thisloop
-                if verboseSet: magmsg(magpot_actual)
-
-                setSIS_only(sisPot_thisloop, feedback_actual, verbose, careful)
-                sisPot_actual = sisPot_thisloop
-                if verboseSet: sismsg(sisPot_actual)
-
-            else:
-                print "testmode on, pretending to measure the SIS bias to determine LO power"
 
             # the fast bias sweep
             if do_fastsweep:

@@ -16,14 +16,14 @@ do_measmag          = False # True or False
 do_measmag_w_offset = False # True or False
 do_setmag           = False # True or False
 do_setmag_only      = False # True or False
-do_Emag_PID         = False # True or False
+do_Emag_PID         = True # True or False
 
 do_RFfreqset   = False # True or False
 do_RFon        = False # True or False
 do_RFoff       = False # True or False
 
 do_measSIS     = False # True or False
-do_setfeedback = False# True or False
+do_setfeedback = False # True or False
 do_setSIS      = False # True or False
 do_setSIS_only = False # True or False
 do_setSIS_TP   = False # True or False

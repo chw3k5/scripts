@@ -1,4 +1,7 @@
 __author__ = 'Caleb Wheeler'
+
+
+
 # ### Example PID code
 #
 # (y_set,y_current, y_last, x_last, x_current, error_sum, error_last) = (1,1,1,1,1,1,1)
@@ -20,13 +23,18 @@ __author__ = 'Caleb Wheeler'
 # pid_function_x = pid_function_y/der_error
 
 
+
+
+
 from LabJack_control import LabJackU3_DAQ0
 from calibration import magpot_lookup, default_path, fetchoffset
+from time import sleep
+import numpy as np
 from control import mag_channel, measSIS, measmag, setSIS_only, setmag_only, opentelnet, closetelnet, \
     default_magpot, default_sispot, setfeedback
 
-from time import sleep
-import numpy as np
+
+
 
 
 
@@ -44,6 +52,7 @@ def PID_function(y_set,y_current, y_last, x_last, x_current, error_sum, error_la
     pterm = Kp*error
     iterm = error_sum
     dterm = Kd*der_error_simple
+    # print "pterm:",pterm,'   iterm:',iterm,'   dterm:',dterm
     pid_function_y = pterm + iterm + dterm
     pid_function_x = pid_function_y/der_error
     return pid_function_x, pid_function_y, error, error_sum
@@ -61,6 +70,7 @@ def measloop_SIS(feedback,sispot=65100, sleep_per_set=1, meas_number=1, verbose=
     mV = np.mean(mV_list)
     uA = np.mean(uA_list)
     return mV, uA
+
 
 
 ##########################
@@ -121,23 +131,24 @@ def Emag_PID(local_path=default_path, mA_set=35.0, mA_set_max=78, mA_set_min=-80
 
     # initial error function
     error_sum = 0.
-    pid_function_mA, pid_function_magpot, error, error_sum \
-        = PID_function(mA_current, mA_last, magpot_last, magpot_current,
+    pid_function_magpot, pid_function_mA, error, error_sum \
+        = PID_function(mA_set, mA_current, mA_last, magpot_last, magpot_current,
                        error_sum, error_last, Ki, Kp, Kd)
 
 
     for adjust_attempt in range(max_adjust_attempt):
-        if not adjust_attempt+1 == max_adjust_attempt:
-            mA_last     = mA_current
-            magpot_last = magpot_current
-            error_last  = error
-            mA_current, magpot_current = measloop(magpot=magpot_current-pid_function_magpot, meas_number=meas_number)
-            pid_function_mA, pid_function_magpot, error, error_sum \
-                = PID_function(mA_current, mA_last, magpot_last, magpot_current,
-                               error_sum, error_last, Ki, Kp, Kd)
-        else:
+        mA_last     = mA_current
+        magpot_last = magpot_current
+        error_last  = error
+        magpot_current -= pid_function_magpot
+        if adjust_attempt+1 == max_adjust_attempt:
             mA_current, magpot_current = measloop(magpot=magpot_current-pid_function_magpot, meas_number=meas_number)
             error = mA_set - mA_current
+        else:
+            mA_current, magpot_current = measloop(magpot=magpot_current, meas_number=meas_number)
+            pid_function_magpot, pid_function_mA, error, error_sum \
+                = PID_function(mA_set, mA_current, mA_last, magpot_last, magpot_current,
+                               error_sum, error_last, Ki, Kp, Kd)
         if verbose:
             print str(adjust_attempt+3)+" measurment error:", error, 'mA_set:', mA_set, 'mA_current:', mA_current, 'magpot_current:', magpot_current
         if ((abs(pid_function_magpot) <= min_diff_magpot) and (min_adjust_attempt < adjust_attempt)):
@@ -146,8 +157,8 @@ def Emag_PID(local_path=default_path, mA_set=35.0, mA_set_max=78, mA_set_min=-80
                       "is less than the minimum value of min_diff_magpot: "+str(min_diff_magpot)
             break
 
-    deriv = (mA_current-mA_last)/(magpot_current-magpot_last)
-    return magpot_current, deriv
+    final_deriv = (mA_current-mA_last)/(magpot_current-magpot_last)
+    return magpot_current, final_deriv
 
 
 
@@ -182,7 +193,6 @@ def SIS_mV_PID(mV_set=1.8, mV_set_max=10, mV_set_min=-10,
     error_sum = 0
     pid_function_sispot = first_pot - second_pot
 
-    deriv = 1
     for adjust_attempt in range(max_adjust_attempt):
         error_last  = error
         sispot_last = sispot_current
@@ -193,7 +203,6 @@ def SIS_mV_PID(mV_set=1.8, mV_set_max=10, mV_set_min=-10,
         pid_function_sispot, pid_function_mV, error, error_sum \
                     = PID_function(mV_set, mV_current, mV_last, sispot_last, sispot_current,
                                    error_sum, error_last, Ki, Kp, Kd)
-        deriv = (mV_current-mV_last)/(sispot_current-sispot_last)
 
         if verbose:
             print str(adjust_attempt+1)+" measurment error:", error, 'mV_set:', mV_set, 'mV_current:', mV_current, 'sispot_current:', sispot_current
@@ -203,18 +212,15 @@ def SIS_mV_PID(mV_set=1.8, mV_set_max=10, mV_set_min=-10,
                 print "Set point reached, the change in pot position,"+ str(pid_function_sispot)+", " \
                       "is less than the minimum value of min_diff_magpot: "+str(min_diff_sispot)
             break
-
-    return sispot_current, deriv
-
-
-
+    final_deriv = (mV_current-mV_last)/(sispot_current-sispot_last)
+    return sispot_current, final_deriv
 
 
 def LO_PID(uA_set=20.0, uA_set_max=50.0, uA_set_min=5.0,
            feedback=True, max_adjust_attempt=20, min_adjust_attempt=5,
            sleep_per_set=3, meas_number=5,
-           uA_search_res = 5,
-           min_diff_V=0.0005,
+           uA_search_res = 10,
+           min_diff_V=0.001,
            V_min=0,V_max=5,
            Kp=1.0, Ki=0.0, Kd=0.05, verbose=False):
     if verbose:
@@ -223,8 +229,6 @@ def LO_PID(uA_set=20.0, uA_set_max=50.0, uA_set_min=5.0,
         uA_set = uA_set_min
     elif uA_set_max < uA_set:
         uA_set = uA_set_max
-
-
 
     # turn on the standard settings
     status = setfeedback(feedback)
@@ -271,7 +275,7 @@ def LO_PID(uA_set=20.0, uA_set_max=50.0, uA_set_min=5.0,
         voltage_index = 0
         # Find the Voltages so that difference in uA power is less than the function variable 'uA_search_res'
         while not finished:
-            finished_index = len(V_list)
+            finished_index = len(V_list)-1
             if finished_index <= voltage_index:
                 finished = True
             else:
@@ -282,14 +286,16 @@ def LO_PID(uA_set=20.0, uA_set_max=50.0, uA_set_min=5.0,
                     V_high = V_list[voltage_index+1]
                     voltage = (V_low+V_high)/2.0
                     status = LabJackU3_DAQ0(UCA_voltage=voltage)
-                    V_list.insert(voltage_index+1)
+                    V_list.insert(voltage_index+1, voltage)
                     sleep(sleep_per_set)
-                    mV, uA = measloop_SIS(feedback,sispot=default_sispot, sleep_per_set=sleep_per_set,
-                                          meas_number=meas_number, verbose=verbose)
+                    mV, uA = measloop_SIS(feedback,sispot=default_sispot, sleep_per_set=1,
+                                          meas_number=1, verbose=verbose)
                     uA_list.insert(voltage_index+1,uA)
-                    if verbose: print "UCA Voltage:", V_list[voltage_index], "    SIS current (uA):", uA_list[voltage_index]
+
                 else:
+                    if verbose: print "UCA Voltage:", V_list[voltage_index], "    SIS current (uA):", uA_list[voltage_index]
                     voltage_index += 1
+
 
 
         # first find the uA_list value closest to uA_set
@@ -318,7 +324,8 @@ def LO_PID(uA_set=20.0, uA_set_max=50.0, uA_set_min=5.0,
             error_last = error
             V_last     = V_current
             uA_last    = uA_current
-            V_current = V_last-pid_function_V
+            V_current  = V_last-pid_function_V
+            status = LabJackU3_DAQ0(UCA_voltage=V_current)
 
             mV_current, uA_current \
             = measloop_SIS(feedback=feedback, sispot=default_sispot, sleep_per_set=sleep_per_set,
@@ -338,8 +345,6 @@ def LO_PID(uA_set=20.0, uA_set_max=50.0, uA_set_min=5.0,
                 break
         final_V = V_current
         final_deriv = (uA_current-uA_last)/(V_current-V_last)
-
-    status = LabJackU3_DAQ0(UCA_voltage=final_V)
     return final_V, final_deriv
 
 
@@ -348,9 +353,11 @@ if __name__ == "__main__":
     test_path = 'C:\\Users\\chwheele\\Google Drive\\Kappa\\NA38\\IVsweep\\Mar04_15\\LO_stability_test\\rawdata\\00001\\'
     opentelnet()
     #Emag_PID(local_path=test_path, mA_set=24.0, verbose=True)
-    SIS_mV_PID(mV_set=1.8,
-               feedback=True, max_adjust_attempt=40, min_adjust_attempt=5,
-               sleep_per_set=3, meas_number=5,
-               min_diff_sispot=100,
-               Kp=1.0, Ki=0.0, Kd=0.05, verbose=True)
+    #SIS_mV_PID(mV_set=1.8,
+    #           feedback=True, max_adjust_attempt=40, min_adjust_attempt=5,
+    #           sleep_per_set=3, meas_number=5,
+    #           min_diff_sispot=100,
+    #           Kp=1.0, Ki=0.0, Kd=0.05, verbose=True)
+    final_V, final_deriv = LO_PID(uA_set=20.0,feedback=True, verbose=True)
+    print final_V
     closetelnet()

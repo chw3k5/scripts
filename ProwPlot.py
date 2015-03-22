@@ -13,9 +13,9 @@ warning = True
 
 
 ### For Single Sweep ###
-do_sweeps              = False
-do_SweepDataPro        = False
-do_SimpleSweepPlot     = False
+do_sweeps              = True
+do_SweepDataPro        = True
+do_SimpleSweepPlot     = True
 do_SingeSpectraPlotter = False
 repeat  = 1
 
@@ -24,7 +24,7 @@ repeat  = 1
 ### For Y-factor data and Sweeps ###
 do_Ysweeps              = False
 do_YdataPro             = False
-do_YfactotSweepsPlotter = True
+do_YfactotSweepsPlotter = False
 do_YSpectra_Plotter     = False
 
 
@@ -42,19 +42,19 @@ if all_Single_Sweeps:
     do_SingeSpectraPlotter = True
 
 # The directory what the data is kept
-datadir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar04_15/LO_stability_test/')
+datadir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar04_15/LO_PID_test/')
 start_num = 0
 if do_sweeps:
     for repeat_num in range(repeat):
         sweep_num = repeat_num+start_num
-        BiasSweep(datadir, verbose=False, verboseTop=True, verboseSet=True, careful=False,
-              testmode=False, warmmode=False,
-              do_fastsweep=True, do_unpumpedsweep=False, fastsweep_feedback=False,
+        BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=False,
+              testmode=False, warmmode=False, do_set_mag_highlow=True,
+              do_fastsweep=True, do_unpumpedsweep=True, fastsweep_feedback=False,
               SweepStart_feedTrue=64000, SweepStop_feedTrue=52000, SweepStep_feedTrue=500,
               SweepStart_feedFalse=73000, SweepStop_feedFalse=57000, SweepStep_feedFalse=100,
-              sisV_feedback=True, do_sisVsweep=False, high_res_meas=8,
+              sisV_feedback=True, do_sisVsweep=True, high_res_meas=8,
               TPSampleFrequency=100, TPSampleTime=2,
-              sisVsweep_start=-0.1, sisVsweep_stop=2.5, sisVsweep_step=0.1,
+              sisVsweep_start=1.5, sisVsweep_stop=2.6, sisVsweep_step=0.5,
               sisPot_feedFalse_start=65100, sisPot_feedFalse_stop=57000, sisPot_feedFalse_step=100,
               sisPot_feedTrue_start=60000, sisPot_feedTrue_stop=49000, sisPot_feedTrue_step=200,
               getspecs=False, spec_linear_sc=True, spec_freq_start=0, spec_freq_stop=10,
@@ -64,10 +64,10 @@ if do_sweeps:
               K_list=[296],
               LOfreq_start=680, LOfreq_stop=680, LOfreq_step=0.25,
               IFband_start=1.42, IFband_stop=1.42, IFband_step=0.10,
-              do_magisweep=False, mag_meas=10,
-              magisweep_start=40, magisweep_stop=41,magisweep_step=1,
+              do_magisweep=True, mag_meas=10,
+              magisweep_start=46, magisweep_stop=43,magisweep_step=-2,
               magpotsweep_start=100000, magpotsweep_stop=100000, magpotsweep_step=-200,
-              do_LOuAsearch=False, UCA_meas=10,
+              do_LOuAsearch=True, UCA_meas=10,
               LOuAsearch_start=20, LOuAsearch_stop=20, LOuAsearch_step=1,
               UCAsweep_min=0.00, UCAsweep_max=0.00, UCAsweep_step=0.05,
               sweepShape="rectangular",

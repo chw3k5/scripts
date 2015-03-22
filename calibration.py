@@ -96,7 +96,7 @@ def magpot_lookup(mA_to_find, mag_channel, local_lookup_filepath):
     mA     = pot_function.mA_meas
 
 
-    mA_diff = list(abs(mA - mA_to_find))
+    mA_diff = list(abs(np.array(mA)-mA_to_find))
     min_value = min(mA_diff)
     found_pot = np.round(magpot[mA_diff.index(min_value)])
     #print 'found_pot:', found_pot, 'mA_to_find:', mA_to_find
