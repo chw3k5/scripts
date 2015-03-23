@@ -1,10 +1,10 @@
 import telnetlib
 import time
-import numpy
 import sys
+
+import numpy
+
 from LabJack_control import LabJackU3_DAQ0
-
-
 
 
 sis_channel = '0'
@@ -222,7 +222,6 @@ def setmag(magpot, verbose=False):
 #########################
              
 def setmag_only(magpot):
-    import telnetlib
     import numpy
     import sys
 
@@ -250,7 +249,6 @@ def setmag_only(magpot):
 ############################
              
 def setmag_highlow(magpot):
-    import telnetlib
     import numpy
     import sys
     from time import sleep
@@ -707,7 +705,7 @@ def measloop_SIS_TP(feedback,sispot=65100, sleep_per_set=1, meas_number=1, verbo
 ######################
   
 def zeropots(verbose=True):
-    from sisbias_config import zeropots_center_pos, zeropots_feedback, zeropots_careful, zeropots_max_count,\
+    from oldscripts.sisbias_config import zeropots_center_pos, zeropots_feedback, zeropots_careful, zeropots_max_count,\
         zeropots_do_mag, zeropots_do_sis, zeropots_do_LO, UCA_voltage
     # from LOinput import RFoff
     status   = False
@@ -810,7 +808,7 @@ def zeropots(verbose=True):
     return status
 
 def zeroSISpot(verbose=True):
-    from sisbias_config import zeropots_center_pos, zeropots_feedback, zeropots_careful, zeropots_max_count
+    from oldscripts.sisbias_config import zeropots_center_pos, zeropots_feedback, zeropots_careful, zeropots_max_count
     finished = False
     count = 0
     status = False
@@ -834,7 +832,7 @@ def zeroSISpot(verbose=True):
 
 
 def zeroMAGpot(verbose=True):
-    from sisbias_config import zeropots_center_pos, zeropots_feedback, zeropots_careful, zeropots_max_count
+    from oldscripts.sisbias_config import zeropots_center_pos, zeropots_max_count
     finished = False
     count = 0
     status = False

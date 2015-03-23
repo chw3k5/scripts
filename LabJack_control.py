@@ -35,9 +35,17 @@
 import u3, time
 from sys import platform
 # Caleb's programs
-from LabJack_config import NumChannels, Resolution, wavenames, loop_max
 from profunc import windir
+#########################
+###### LJ_streamTP ######
+#########################
 
+NumChannels = 1
+# The number of times each second that each channel will be sampled
+#SampleFrequency = 5000
+Resolution = 0 # 0,1,2, or 3 () is highest resolution, 3 is the lowest)
+# max measurments
+loop_max = 3600 # in loop number, big sets of data have to be broken into several packets per time
 
 ############################
 ###### LabJackU3_DAQ0 ######
