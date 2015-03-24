@@ -1,5 +1,6 @@
+from oldscripts import SCPI
+
 __author__ = 'chwheele'
-from SCPI import SCPI
 import time
 serial_port = 'COM9'
 

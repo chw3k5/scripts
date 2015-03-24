@@ -325,8 +325,9 @@ def LO_PID(uA_set=20.0, uA_set_max=50.0, uA_set_min=5.0,
             V_last     = V_current
             uA_last    = uA_current
             V_current  = V_last-pid_function_V
+            if V_current == V_last:
+                V_last -= 0.0001
             status = LabJackU3_DAQ0(UCA_voltage=V_current)
-
             mV_current, uA_current \
             = measloop_SIS(feedback=feedback, sispot=default_sispot, sleep_per_set=sleep_per_set,
                            meas_number=meas_number, verbose=verbose)

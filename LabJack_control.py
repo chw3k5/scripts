@@ -32,8 +32,11 @@
 ########## Local Oscillator Control ##########
 ##############################################
 ##############################################
-import u3, time
+import time
 from sys import platform
+
+import u3
+
 # Caleb's programs
 from profunc import windir
 #########################
@@ -91,7 +94,7 @@ def LJ_streamTP(filename, SampleFrequency, SampleTime, verbose):
     # sets the accuracy of the data. The smaller the number, the better
     # the accuracy, but the slower the sampling rate must be. See
     # http://labjack.com/support/u3/users-guide/3.2 for details.
-    from LabJack_config import wavenames
+    from oldscripts.LabJack_config import wavenames
     if platform == 'win32':
         filename = windir(filename)
     # Prepare the u3 interface for streaming

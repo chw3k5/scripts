@@ -1,7 +1,7 @@
 __author__ = 'chw3k5'
 from control import opentelnet, closetelnet, setmag_only, measmag, mag_channel
 from profunc import windir, ProcessMatrix
-from agilent34410A import Agilent34410ADriver
+
 
 from sys import exit
 from time import sleep
@@ -108,6 +108,7 @@ def magpot_lookup(mA_to_find, mag_channel, local_lookup_filepath):
 #####################
 
 def magnet_cal_sweep(filename, test_pots=range(0,129001,1000),sleep_after_set=1, meas_per_pos=10,verbose=True):
+    from agilent34410A import Agilent34410ADriver
     filename = windir(filename)
     opentelnet()
     multimeter = Agilent34410ADriver()
