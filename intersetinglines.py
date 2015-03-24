@@ -16,10 +16,10 @@ verbose       = True
 show_plots    = False
 save_plots    = True
 do_eps        = True
-plotdir       = '/Users/chw3k5/Documents/Grad_School/Kappa/intersecting_lines/'
+plotdir       = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/intersecting_lines/'
 
 # data processing
-process_data  = True
+process_data  = False
 Ynums         = None
 search_str    = 'Y'
 search_4Ynums = True
@@ -52,31 +52,12 @@ maxdiff_LOuA = 2 # None is any
 ###############################################################
 ### All the sets of data to collect the processed data from ###
 ###############################################################
-setnames = ['set4','set5','set6','set7','LOfreq','LOfreq2']
+setnames = ['set4','set5','set6']
 
 
-parent_folder = '/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/'
-if platform == 'win32':
-    parent_folder = windir(parent_folder)
+parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
+parent_folder = windir(parent_folder)
 fullpaths = [parent_folder + setname + '/' for setname in setnames]
-
-Ysweeps = getYsweeps(fullpaths, Ynums=Ynums, verbose=verbose)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # clear out the old plots if you are going to make new ones in an old directory
@@ -101,6 +82,10 @@ if process_data:
                  do_normspectra=do_normspectra, norm_freq=norm_freq, norm_band=norm_band,
                  do_freq_conv=do_freq_conv, min_cdf_freq=min_cdf_freq, sigma_GHz=sigma_GHz)
 
+
+Ysweeps = getYsweeps(fullpaths, Ynums=Ynums, verbose=verbose)
+
+
 if ((min_tp_int is not None) and (max_tp_int is not None)):
     Ysweeps = tp_int_cut(Ysweeps, min_tp_int=min_tp_int, max_tp_int=max_tp_int, verbose=verbose)
 
@@ -113,57 +98,57 @@ if (maxdiff_LOuA is not None):
 
 
 
-# with the mask made above we can plot the data
-intlindata2plot = []
-m_list          = []
-b_list          = []
-index_list = numpy.transpose(numpy.where((intlindata2plot_mask == True)))
-matplotlib.rcParams['legend.fontsize'] = 12.0
-fig, ax1 = plt.subplots()
-temperature_axis = numpy.arange(-300, 301,1)
-for n in index_list:# range(len(index_list)):
-    single_line = intlindata[n]
-    intlindata2plot.append(single_line)
-
-intlindata2plot_array = numpy.array(intlindata2plot)
-intlindata2plot_array = numpy.asarray(sorted(intlindata2plot_array,  key=itemgetter(4)))
-intlindata2plot = list(intlindata2plot_array)
-for single_line in intlindata2plot:
-    hot_temp  = single_line[0]
-    cold_temp = single_line[1]
-    hot_pwr   = single_line[2]
-    cold_pwr  = single_line[3]
-    m = (hot_pwr-cold_pwr)/(hot_temp-cold_temp)
-    m_list.append(m)
-    b = hot_pwr-m*hot_temp
-    b_list.append(b)
-    pwr_axis = m*temperature_axis + b
-    if (LO_current_min <= single_line[4] and single_line[4] <= LO_current_max and single_line[4] != 7.0):
-        ax1.plot(temperature_axis, pwr_axis, label = str(single_line[4]) + ' $\mu$A')
-
-
-ax1.set_ylim([-0.1, .25])
-plt.xlabel('temperature (K)')
-plt.ylabel('receiver power')
-
-plt.legend(loc=2)
-temper= -44
-plt.text(-20, 0.22, "$44 K = T^\prime$", fontsize=16, color="firebrick")
-ax1.plot([temper, temper],[-0.1, .25], color="firebrick")
-
-if show_plots:
-    plt.ylabel('Current ($\mu$A)')
-    plt.show()
-    plt.draw()
-if save_plots:
-
-    plotfilename = plotdir+'intersecting_lines'
-    if ((do_eps) and (not platform == 'win32')):
-        if verbose:
-            print 'saving EPS file'
-        plt.savefig(plotfilename+'.eps')
-    else:
-        if verbose:
-            print 'saving PNG file'
-        plt.savefig(plotfilename+'.png')
-    plt.close("all")
+#
+# intlindata2plot = []
+# m_list          = []
+# b_list          = []
+# index_list = numpy.transpose(numpy.where((intlindata2plot_mask == True)))
+# matplotlib.rcParams['legend.fontsize'] = 12.0
+# fig, ax1 = plt.subplots()
+# temperature_axis = numpy.arange(-300, 301,1)
+# for n in index_list:# range(len(index_list)):
+#     single_line = intlindata[n]
+#     intlindata2plot.append(single_line)
+#
+# intlindata2plot_array = numpy.array(intlindata2plot)
+# intlindata2plot_array = numpy.asarray(sorted(intlindata2plot_array,  key=itemgetter(4)))
+# intlindata2plot = list(intlindata2plot_array)
+# for single_line in intlindata2plot:
+#     hot_temp  = single_line[0]
+#     cold_temp = single_line[1]
+#     hot_pwr   = single_line[2]
+#     cold_pwr  = single_line[3]
+#     m = (hot_pwr-cold_pwr)/(hot_temp-cold_temp)
+#     m_list.append(m)
+#     b = hot_pwr-m*hot_temp
+#     b_list.append(b)
+#     pwr_axis = m*temperature_axis + b
+#     if (LO_current_min <= single_line[4] and single_line[4] <= LO_current_max and single_line[4] != 7.0):
+#         ax1.plot(temperature_axis, pwr_axis, label = str(single_line[4]) + ' $\mu$A')
+#
+#
+# ax1.set_ylim([-0.1, .25])
+# plt.xlabel('temperature (K)')
+# plt.ylabel('receiver power')
+#
+# plt.legend(loc=2)
+# temper= -44
+# plt.text(-20, 0.22, "$44 K = T^\prime$", fontsize=16, color="firebrick")
+# ax1.plot([temper, temper],[-0.1, .25], color="firebrick")
+#
+# if show_plots:
+#     plt.ylabel('Current ($\mu$A)')
+#     plt.show()
+#     plt.draw()
+# if save_plots:
+#
+#     plotfilename = plotdir+'intersecting_lines'
+#     if ((do_eps) and (not platform == 'win32')):
+#         if verbose:
+#             print 'saving EPS file'
+#         plt.savefig(plotfilename+'.eps')
+#     else:
+#         if verbose:
+#             print 'saving PNG file'
+#         plt.savefig(plotfilename+'.png')
+#     plt.close("all")

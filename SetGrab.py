@@ -1,4 +1,4 @@
-import sys
+import numpy as np
 from sys import platform
 from datapro import YdataPro
 from profunc import getproYdata, GetProDirsNames, getproparams, getmultiParams, getproSweep, windir
@@ -22,8 +22,9 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
             self.stdmag_mA, self.LOuAsearch, self.LOuAset, self.UCA_volt, self.LOuA_set_pot, self.LOuA_magpot, \
             self.meanSIS_mV, self.stdSIS_mV, self.meanSIS_uA, self.stdSIS_uA, self.meanSIS_tp, self.stdSIS_tp, \
             self.SIS_pot, self.del_time, self.LOfreq, self.IFband, self.meas_num, self.tp_int_time, \
-            self.tp_num, self.tp_freq \
+            self.tp_num, self.tp_freq, self.mag_chan\
                 = getmultiParams(paramsfile_list)
+
 
             # Astro Processed Data
             self.Yfactor, self.mV_Yfactor, self.hot_mV_mean, self.cold_mV_mean, self.mV, \
@@ -54,6 +55,44 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
             return description
 
 
+        def intersecting_line(self,mV_center=2.0,mV_plus_minus=0.5):
+            def find_ave_Y4X(y_list,x_list,x_center,x_plus_minus):
+                y_to_average = []
+                diff_min = 999999999999999.0
+                y_closest = None
+                x_closest = None
+                for index in range(len(x_list)):
+                    x = x_list[index]
+                    x_diff = abs(x-x_center)
+                    if x_diff < diff_min:
+                        diff_min = x_diff
+                        y_closest = y_list[index]
+                        x_closest = x_list[index]
+                    if x_diff <= x_plus_minus:
+                        y_to_average.append(y_list[index])
+                if y_to_average == []:
+                    y_to_average = [y_closest]
+                y_average = np.mean(y_to_average)
+                return y_average, x_closest
+
+            hot_mV_list = self.hot_mV_mean
+            hot_tp_list = self.hot_tp_mean
+            tp_hot, mV_hot = find_ave_Y4X(y_list=hot_tp_list,x_list=hot_mV_list,x_center=mV_center,x_plus_minus=mV_plus_minus)
+
+            cold_mV_list = self.cold_mV_mean
+            cold_tp_list = self.cold_tp_mean
+            tp_cold, mV_cold = find_ave_Y4X(y_list=cold_tp_list,x_list=cold_mV_list,x_center=mV_center,x_plus_minus=mV_plus_minus)
+
+            temperatures = self.K_val
+            temp_cold = min(temperatures)
+            temp_hot  = max(temperatures)
+
+            m = (tp_hot-tp_cold)/(temp_hot-temp_cold)
+            self.intersectingL_m = m
+            self.intersectingL_b = tp_hot-m*temp_hot
+            return
+
+
     allYsweeps = []
     search_4Ynums = True
     Ynums = None
@@ -78,7 +117,7 @@ def getSweeps(fullpaths, verbose=False):
             self.meanmag_mA, self.stdmag_mA, self.LOuAsearch, self.LOuAset, self.UCA_volt,\
             self.LOuA_set_pot, self.LOuA_magpot, self.meanSIS_mV, self.stdSIS_mV, self.meanSIS_uA, self.stdSIS_uA, \
             self.meanSIS_tp, self.stdSIS_tp, self.SIS_pot, self.del_time, self.LOfreq, self.IFband, self.meas_num, \
-            self.tp_int_time, self.tp_num, self.tp_freq \
+            self.tp_int_time, self.tp_num, self.tp_freq, self.mag_chan \
                 = getproparams(fullpath + 'proparams.csv')
 
             ### Get The Astronomy Quality Processed Sweep Data

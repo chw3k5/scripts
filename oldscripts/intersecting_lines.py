@@ -45,10 +45,10 @@ mV_arange = numpy.array(range(int(numpy.round(mV_min/mV_step)), int(numpy.round(
 hot_temp  = 295 # kelvin
 cold_temp =  80 # Kelvin
 
-sisbias2plot = 'set' # the exect number ie 1.92, 'set' for the all the avaliable values on different plots, 'all' for all the value on the same plot
-magi2plot    = 30.0 # the exect number ie 30.0, 'set' for the all the avaliable values on different plots, 'all' for all the value on the same plot
-LOfreq2plot  = 672  # the exect number ie  672, 'set' for the all the avaliable values on different plots, 'all' for all the value on the same plot
-IFband2plot  = 1.42 # the exect number ie 1.42, 'set' for the all the avaliable values on different plots, 'all' for all the value on the same plot
+sisbias2plot = 'set' # the exact number ie 1.92, 'set' for the all the avaliable values on different plots, 'all' for all the value on the same plot
+magi2plot    = 30.0 # the exact number ie 30.0, 'set' for the all the avaliable values on different plots, 'all' for all the value on the same plot
+LOfreq2plot  = 672  # the exact number ie  672, 'set' for the all the avaliable values on different plots, 'all' for all the value on the same plot
+IFband2plot  = 1.42 # the exact number ie 1.42, 'set' for the all the avaliable values on different plots, 'all' for all the value on the same plot
 
 ### Plot options
 show_plot = False
@@ -146,7 +146,7 @@ def LOpowseries(sisbias2plot, magi2plot, LOfreq2plot, IFband2plot, plotdir):
     if sisbias2plot == 'all':
         sisbias_index = list(range(len(sisbias_type)))
     else:
-	min_diff = 999999
+        min_diff = 999999
         for sisbias_test_index in range(len(sisbias_type)):
             diff = abs(sisbias_type[sisbias_test_index] - sisbias2plot)
             if diff < min_diff:
