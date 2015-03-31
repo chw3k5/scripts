@@ -58,7 +58,7 @@ def PID_function(y_set,y_current, y_last, x_last, x_current, error_sum, error_la
     return pid_function_x, pid_function_y, error, error_sum
 
 
-def measloop_SIS(feedback,sispot=65100, sleep_per_set=1, meas_number=1, verbose=False):
+def measloop_SIS(feedback,sispot=65100, sleep_per_set=1., meas_number=1, verbose=False):
     setSIS_only(sispot,feedback=feedback)
     sleep(sleep_per_set)
     mV_list = []
@@ -172,7 +172,7 @@ def Emag_PID(local_path=default_path, mA_set=35.0, mA_set_max=78, mA_set_min=-80
 
 def SIS_mV_PID(mV_set=1.8, mV_set_max=10, mV_set_min=-10,
                feedback=True, max_adjust_attempt=20, min_adjust_attempt=5,
-               sleep_per_set=2, meas_number=5,
+               sleep_per_set=2, meas_number=5, high_meas_after_diff=0.2,
                min_diff_sispot=3,
                first_pot=65100, second_pot=56800,
                Kp=1.0, Ki=0.0, Kd=0.05, verbose=False):
@@ -184,22 +184,25 @@ def SIS_mV_PID(mV_set=1.8, mV_set_max=10, mV_set_min=-10,
     elif mV_set_max < mV_set:
         mV_set = mV_set_max
 
+
     status = setfeedback(feedback)
     setmag_only(default_magpot)
     sispot_current = first_pot
     mV_current, uA_current \
-        = measloop_SIS(feedback=feedback, sispot=sispot_current, sleep_per_set=sleep_per_set, meas_number=meas_number, verbose=verbose)
+        = measloop_SIS(feedback=feedback, sispot=sispot_current, sleep_per_set=sleep_per_set, meas_number=1, verbose=verbose)
     error = mV_set - mV_current
     error_sum = 0
     pid_function_sispot = first_pot - second_pot
-
+    number_of_measures = 1
     for adjust_attempt in range(max_adjust_attempt):
         error_last  = error
         sispot_last = sispot_current
         mV_last     = mV_current
         sispot_current = sispot_last-pid_function_sispot
+        if error < high_meas_after_diff:
+            number_of_measures = meas_number
         mV_current, uA_current \
-            = measloop_SIS(feedback=feedback, sispot=sispot_current, sleep_per_set=sleep_per_set, meas_number=meas_number, verbose=verbose)
+            = measloop_SIS(feedback=feedback, sispot=sispot_current, sleep_per_set=sleep_per_set, meas_number=number_of_measures, verbose=verbose)
         pid_function_sispot, pid_function_mV, error, error_sum \
                     = PID_function(mV_set, mV_current, mV_last, sispot_last, sispot_current,
                                    error_sum, error_last, Ki, Kp, Kd)
@@ -210,7 +213,7 @@ def SIS_mV_PID(mV_set=1.8, mV_set_max=10, mV_set_min=-10,
         if ((abs(pid_function_sispot) <= min_diff_sispot) and (min_adjust_attempt < adjust_attempt)):
             if verbose:
                 print "Set point reached, the change in pot position,"+ str(pid_function_sispot)+", " \
-                      "is less than the minimum value of min_diff_magpot: "+str(min_diff_sispot)
+                      "is less than the minimum value of min_diff_sispot: "+str(min_diff_sispot)
             break
     final_deriv = (mV_current-mV_last)/(sispot_current-sispot_last)
     return sispot_current, final_deriv
@@ -218,11 +221,15 @@ def SIS_mV_PID(mV_set=1.8, mV_set_max=10, mV_set_min=-10,
 
 def LO_PID(uA_set=20.0, uA_set_max=50.0, uA_set_min=5.0,
            feedback=True, max_adjust_attempt=20, min_adjust_attempt=5,
-           sleep_per_set=3, meas_number=5,
+           highres_meas_after_diff=0.2,
+           lowres_sleep_per_set=0.5, highres_sleep_per_set=3,
+           lowres_measnumber=1, highres_meas_number=5,
            uA_search_res = 10,
            min_diff_V=0.001,
            V_min=0,V_max=5,
            Kp=1.0, Ki=0.0, Kd=0.05, verbose=False):
+    sleep_per_set=lowres_sleep_per_set
+    meas_number=lowres_measnumber
     if verbose:
         print "The SIS uA-LO power PID function"
     if uA_set < uA_set_min:
@@ -288,7 +295,7 @@ def LO_PID(uA_set=20.0, uA_set_max=50.0, uA_set_min=5.0,
                     status = LabJackU3_DAQ0(UCA_voltage=voltage)
                     V_list.insert(voltage_index+1, voltage)
                     sleep(sleep_per_set)
-                    mV, uA = measloop_SIS(feedback,sispot=default_sispot, sleep_per_set=1,
+                    mV, uA = measloop_SIS(feedback,sispot=default_sispot, sleep_per_set=sleep_per_set,
                                           meas_number=1, verbose=verbose)
                     uA_list.insert(voltage_index+1,uA)
 
@@ -321,12 +328,21 @@ def LO_PID(uA_set=20.0, uA_set_max=50.0, uA_set_min=5.0,
         pid_function_V = V_first - V_second
 
         for adjust_attempt in range(max_adjust_attempt):
+
+
+
             error_last = error
             V_last     = V_current
             uA_last    = uA_current
             V_current  = V_last-pid_function_V
+
+            # stuff that I put in to keep the algorithm from periodically going crazy
+            if V_current < 0:
+                V_current = 0.0
+            elif 5 < V_current:
+                V_current = 5.0
             if V_current == V_last:
-                V_last -= 0.0001
+                V_last -= 0.01
             status = LabJackU3_DAQ0(UCA_voltage=V_current)
             mV_current, uA_current \
             = measloop_SIS(feedback=feedback, sispot=default_sispot, sleep_per_set=sleep_per_set,
@@ -339,11 +355,15 @@ def LO_PID(uA_set=20.0, uA_set_max=50.0, uA_set_min=5.0,
             if verbose:
                 print str(adjust_attempt+1)+" measurment error:", error, 'uA_set:', uA_set, 'uA_current:', uA_current, 'V_current:', V_current
 
-            if ((abs(pid_function_V) <= min_diff_V) and (min_adjust_attempt < adjust_attempt)):
+            pid_diff = abs(pid_function_V)
+            if ((pid_diff <= min_diff_V) and (min_adjust_attempt < adjust_attempt)):
                 if verbose:
                     print "Set point reached, the change in Voltage ,"+ str(pid_function_V)+", " \
                           "is less than the minimum value of min_diff_V: "+str(min_diff_V)
                 break
+            elif pid_diff <= highres_meas_after_diff:
+                sleep_per_set = highres_sleep_per_set
+                meas_number = highres_meas_number
         final_V = V_current
         final_deriv = (uA_current-uA_last)/(V_current-V_last)
     return final_V, final_deriv

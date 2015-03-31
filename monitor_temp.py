@@ -107,7 +107,7 @@ if serial_port == '':
     
 verbose = True
 # Data Folder
-folder =windir('/Users/chw3k5/Google Drive/Kappa/temperatureData/Mar04_15/')
+folder =windir('/Users/chw3k5/Google Drive/Kappa/temperatureData/Mar27_15/')
 
 do_emailgroppi = False
 
@@ -185,7 +185,7 @@ elif monitor_type == 'almostcold':
     PeriodicEmail = True
     seconds_per_email      = 1*30*60 #12*60*60 # in seconds
     alarm_channel          = 4
-    high_alarm_temperature = 4.50 # in Kelvin
+    high_alarm_temperature = 5.000 # in Kelvin
     low_alarm_temperature  = 3. # in Kelvin
 elif monitor_type == 'cold':
     filename      = monitor_type+'.csv'
@@ -225,10 +225,10 @@ elif monitor_type == 'slowwarm':
     Nsecs         = 1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
     start_email   = True
     PeriodicEmail = True
-    seconds_per_email      = 8*60*60 #12*60*60 # in seconds
+    seconds_per_email      = 2*60*60 #12*60*60 # in seconds
     alarm_channel          = 4
     high_alarm_temperature = 300. # in Kelvin
-    low_alarm_temperature  =  80. # in Kelvin
+    low_alarm_temperature  =  50. # in Kelvin
 
 
 

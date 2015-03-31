@@ -20,7 +20,7 @@ do_Emag_PID         = False # True or False
 
 do_RFfreqset   = False # True or False
 do_RFon        = False # True or False
-do_RFoff       = False # True or False
+do_RFoff       = True # True or False
 
 do_measSIS     = False # True or False
 do_setfeedback = False # True or False
@@ -44,7 +44,7 @@ do_AllanVar    = False # True or False
 ###### From StepperControl.py ######
 ####################################
 
-do_stepperTest = False
+do_stepperTest = True
  # True or False
 
 #####################################

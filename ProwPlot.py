@@ -8,8 +8,8 @@ from profunc import windir
 all_Single_Sweeps = False
 all_Ydata         = False
 all_testsweeps    = False
-do_email = True
-warning = True
+do_email = False
+warning = False
 
 ### For Single Sweep ###
 do_sweeps              = False
@@ -19,7 +19,7 @@ do_SingeSpectraPlotter = False
 repeat  = 1
 
 ### For Y-factor data and Sweeps ###
-do_Ysweeps              = True
+do_Ysweeps              = False
 do_YdataPro             = True
 do_YfactotSweepsPlotter = True
 do_YSpectra_Plotter     = False
@@ -49,9 +49,10 @@ if do_sweeps:
               do_fastsweep=True, do_unpumpedsweep=True, fastsweep_feedback=False,
               SweepStart_feedTrue=64000, SweepStop_feedTrue=52000, SweepStep_feedTrue=500,
               SweepStart_feedFalse=73000, SweepStop_feedFalse=57000, SweepStep_feedFalse=100,
-              sisV_feedback=True, do_sisVsweep=True, high_res_meas=8,
+              sisV_feedback=True, do_sisVsweep=True, high_res_meas=5,
               TPSampleFrequency=100, TPSampleTime=2,
               sisVsweep_start=1.5, sisVsweep_stop=2.25, sisVsweep_step=0.1,
+              sisVsweep_list=[-.1, -0.05, 0.0, 0.05, 0.1, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4],
               sisPot_feedFalse_start=65100, sisPot_feedFalse_stop=57000, sisPot_feedFalse_step=100,
               sisPot_feedTrue_start=60000, sisPot_feedTrue_stop=49000, sisPot_feedTrue_step=200,
               getspecs=False, spec_linear_sc=True, spec_freq_start=0, spec_freq_stop=10,
@@ -59,13 +60,13 @@ if do_sweeps:
               spec_attenu=0, lin_ref_lev=500, aveNum=32,
               Kaxis=0, sisVaxis=1, magaxis=2, LOpowaxis=3, LOfreqaxis=4, IFbandaxis=5,
               K_list=[296],
-              LOfreq_start=680, LOfreq_stop=680, LOfreq_step=0.25,
+              LOfreq_start=672, LOfreq_stop=672, LOfreq_step=0.25,
               IFband_start=1.42, IFband_stop=1.42, IFband_step=0.10,
-              do_magisweep=True, mag_meas=10,
+              do_magisweep=False, mag_meas=10,
               magisweep_start=46, magisweep_stop=43,magisweep_step=-2,
-              magpotsweep_start=100000, magpotsweep_stop=100000, magpotsweep_step=-200,
+              magpotsweep_start=100000, magpotsweep_stop=70000, magpotsweep_step=-1250,
               do_LOuAsearch=True, UCA_meas=10,
-              LOuAsearch_start=20, LOuAsearch_stop=20, LOuAsearch_step=1,
+              LOuAsearch_start=14, LOuAsearch_stop=9, LOuAsearch_step=-2,
               UCAsweep_min=0.00, UCAsweep_max=0.00, UCAsweep_step=0.05,
               sweepShape="rectangular",
               FinishedEmail=do_email, FiveMinEmail=do_email, PeriodicEmail=do_email,
@@ -107,13 +108,13 @@ if all_Ydata:
 # The directory what the data is kept
 start_num = 0
 #datadir   = '/Users/chw3k5/Google Drive/Kappa_preGoogleDrive/NA38/IVsweep/LO_PID_test'
-datadir = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/LO_PID_test2/'
+datadir = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LO_opt/'
 
 if do_Ysweeps:
     sweep_num = start_num
     BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=False,
               FinishedEmail=do_email, FiveMinEmail=do_email, PeriodicEmail=do_email,
-              seconds_per_email=1800, chopper_off=False, biastestmode=False,
+              seconds_per_email=60*20, chopper_off=False, biastestmode=False,
               testmode=False, warmmode=False,sweepShape="rectangular",warning=warning,
               Kaxis=0, sisVaxis=1, magaxis=3, LOpowaxis=2, LOfreqaxis=4, IFbandaxis=5,
 
@@ -121,9 +122,13 @@ if do_Ysweeps:
               SweepStart_feedTrue=65000, SweepStop_feedTrue=52000, SweepStep_feedTrue=500,
               SweepStart_feedFalse=66100, SweepStop_feedFalse=57000, SweepStep_feedFalse=100,
 
-              do_sisVsweep=False, sisV_feedback=True, high_res_meas=8,
+              do_sisVsweep=True, sisV_feedback=True, high_res_meas=5,
               sisVsweep_start=1.5, sisVsweep_stop=2.25, sisVsweep_step=0.1,
+              sisVsweep_list=[-.100,-0.075 -0.050, -0.025, 0.00, 0.025, 0.05, 0.075, 0.100,
+                              1.200, 1.250, 1.300, 1.350, 1.400, 1.450, 1.500, 1.550, 1.600, 1.650, 1.700, 1.750,
+                              1.800, 1.850, 1.900, 1.950, 2.000, 2.050, 2.100, 2.150, 2.200, 2.250, 2.300, 2.3500, 2.400],
               sisPot_feedTrue_start=58000, sisPot_feedTrue_stop=54000, sisPot_feedTrue_step=200,
+              sisPot_feedTrue_list=[65345,65150,64954,64687,64477,58107,57644,57253,56774,56295,55823,55357,54938,54463,54009],
               sisPot_feedFalse_start=65100, sisPot_feedFalse_stop=57000, sisPot_feedFalse_step=100,
 
               TPSampleFrequency=100, TPSampleTime=2,
@@ -131,15 +136,16 @@ if do_Ysweeps:
               spec_sweep_time='AUTO', spec_video_band=100, spec_resol_band=100,
               spec_attenu=0, lin_ref_lev=500, aveNum=8,
 
-              LOfreq_start=680, LOfreq_stop=680, LOfreq_step=2,
+              LOfreq_start=672, LOfreq_stop=672, LOfreq_step=2,
 
-              do_magisweep=True, mag_meas=10,
+              do_magisweep=False, mag_meas=10,
               magisweep_start=50, magisweep_stop=45, magisweep_step=-2,
-              magpotsweep_start=110000, magpotsweep_stop=70000-1, magpotsweep_step=-500,
+              magi,
+              magpotsweep_start=100000, magpotsweep_stop=70000-1, magpotsweep_step=-1250,
 
               do_LOuAsearch=True, do_LOuApresearch=False, UCA_meas=10,
               UCAsweep_min=0.00, UCAsweep_max=0.00, UCAsweep_step=0.05,
-              LOuAsearch_start=18, LOuAsearch_stop=16, LOuAsearch_step=-1,
+              LOuAsearch_start=14, LOuAsearch_stop=9, LOuAsearch_step=-2,
 
               K_list=[296, 77],
               IFband_start=1.42, IFband_stop=1.42, IFband_step=0.10
@@ -154,7 +160,7 @@ if do_YdataPro:
 
 if do_YfactotSweepsPlotter:
     YfactorSweepsPlotter(datadir, search_4Ynums=True, Ynums=[], verbose=True, mV_min=0, mV_max=5,
-                         Y_mV_min=1.8, Y_mV_max=2.2,
+                         Y_mV_min=1.5, Y_mV_max=2.2,
                          plot_rawhot_mVuA=False, plot_rawhot_mVtp=True,
                          plot_rawcold_mVuA=False, plot_rawcold_mVtp=True,
                          show_standdev=False, std_num=1,

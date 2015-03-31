@@ -223,9 +223,11 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
               SweepStart_feedFalse=65100, SweepStop_feedFalse=57000, SweepStep_feedFalse=100,
               sisV_feedback=True, do_sisVsweep=True, high_res_meas=5,
               TPSampleFrequency=100, TPSampleTime=2,
-              sisVsweep_start=-0.1, sisVsweep_stop=2.5, sisVsweep_step=0.1,
+              sisVsweep_start=-0.1, sisVsweep_stop=2.5, sisVsweep_step=0.1, sisVsweep_list=None,
               sisPot_feedFalse_start=65100, sisPot_feedFalse_stop=57000, sisPot_feedFalse_step=100,
+              sisPot_feedTrue_list=None,
               sisPot_feedTrue_start=65000, sisPot_feedTrue_stop=52000, sisPot_feedTrue_step=100,
+              sisPot_feedFalse_list=None,
               getspecs=False, spec_linear_sc=True, spec_freq_start=0, spec_freq_stop=6,
               spec_sweep_time='AUTO', spec_video_band=10, spec_resol_band=30,
               spec_attenu=0, lin_ref_lev=300, aveNum=1,
@@ -233,8 +235,11 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
               K_list=[296],
               LOfreq_start=672, LOfreq_stop=672, LOfreq_step=1,
               IFband_start=1.42, IFband_stop=1.42, IFband_step=0.10,
-              do_magisweep=True, mag_meas=10, magisweep_start=32, magisweep_stop=32, magisweep_step=1,
+              do_magisweep=True, mag_meas=10,
+              magisweep_start=32, magisweep_stop=32, magisweep_step=1,
+              magisweep_list=None,
               magpotsweep_start=40000, magpotsweep_stop=40000, magpotsweep_step=5000,
+              magpotsweep_list=None,
               do_LOuAsearch=True, UCA_meas=10,
               LOuAsearch_start=12, LOuAsearch_stop=12, LOuAsearch_step=1,
               UCAsweep_min=3.45, UCAsweep_max=3.45, UCAsweep_step=0.05,
@@ -311,20 +316,25 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
 
     if do_sisVsweep:
         if verboseTop: print "Finding SIS pot positions for each magnet Voltage in 'sisV_list'."
-        sisV_list = makeLists(sisVsweep_start, sisVsweep_stop, sisVsweep_step)
+        if sisVsweep_list is not None:
+            sisV_list = sisVsweep_list
+        else:
+            sisV_list = makeLists(sisVsweep_start, sisVsweep_stop, sisVsweep_step)
         sisPot_list = []
         
         first_pot=65100
         deriv_mV_sispot = 1
         mV_first = 0
         sismV_first = sisV_list[0]
+        len_sisV_list_str = str(len(sisV_list))
         for sismV in sisV_list:
             if sismV_first == sismV:
                 second_pot=56800
             else:
                 mV_diff = mV_first-sismV
                 second_pot = first_pot + mV_diff/deriv_mV_sispot            
-            if verboseTop: print "Finding the potentiometer position for the sis bias voltage of " + str('%1.3f' % sismV) + 'mV'
+            if verboseTop:
+                print str(sisV_list.index(sismV)+1)+" of "+len_sisV_list_str+"  Finding the potentiometer position for the sis bias voltage of " + str('%1.3f' % sismV) + 'mV'
             sisPot_actual, deriv_mV_sispot = SIS_mV_PID(mV_set=sismV,
                                                         feedback=feedback_actual,
                                                         sleep_per_set=2, meas_number=5,
@@ -338,9 +348,15 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
     else:
         sisV_list = None
         if sisV_feedback:
-            sisPot_list = makeLists(sisPot_feedTrue_start, sisPot_feedTrue_stop, sisPot_feedTrue_step)
+            if sisPot_feedTrue_list is not None:
+                sisPot_list = sisPot_feedTrue_list
+            else:
+                sisPot_list = makeLists(sisPot_feedTrue_start, sisPot_feedTrue_stop, sisPot_feedTrue_step)
         elif sisV_feedback == False:
-            sisPot_list = makeLists(sisPot_feedFalse_start, sisPot_feedFalse_stop, sisPot_feedFalse_step)
+            if sisPot_feedFalse_list is not None:
+                sisPot_list=sisPot_feedFalse_list
+            else:
+                sisPot_list = makeLists(sisPot_feedFalse_start, sisPot_feedFalse_stop, sisPot_feedFalse_step)
     # round the sisPot list to integers, this is needed comparisons to triggers later on in the script
     for Pot_index in range(len(sisPot_list)):
         sisPot_list[Pot_index] = int(round(sisPot_list[Pot_index]))
@@ -349,7 +365,10 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
     if do_magisweep:
         if verboseTop:
             print "Finding Electromagnet pot positions for each magnet current in 'magi_list'."
-        magi_list = makeLists(magisweep_start, magisweep_stop, magisweep_step)
+        if magisweep_list is None:
+            magi_list = makeLists(magisweep_start, magisweep_stop, magisweep_step)
+        else:
+            magi_list = magisweep_list
         magpot_list = []
         
         for magi in magi_list:
@@ -362,7 +381,10 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
 
     else:
         magi_list = None
-        magpot_list = makeLists(magpotsweep_start, magpotsweep_stop, magpotsweep_step)
+        if magpotsweep_list is None:
+            magpot_list = makeLists(magpotsweep_start, magpotsweep_stop, magpotsweep_step)
+        else:
+            magpot_list = magpotsweep_list
 
     # LO Frequency
     if biastestmode:
