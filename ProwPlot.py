@@ -8,7 +8,7 @@ from profunc import windir
 all_Single_Sweeps = False
 all_Ydata         = False
 all_testsweeps    = False
-do_email = False
+do_email = True
 warning = False
 
 ### For Single Sweep ###
@@ -19,7 +19,7 @@ do_SingeSpectraPlotter = False
 repeat  = 1
 
 ### For Y-factor data and Sweeps ###
-do_Ysweeps              = False
+do_Ysweeps              = True
 do_YdataPro             = True
 do_YfactotSweepsPlotter = True
 do_YSpectra_Plotter     = False
@@ -106,9 +106,9 @@ if all_Ydata:
 
 
 # The directory what the data is kept
-start_num = 0
-#datadir   = '/Users/chw3k5/Google Drive/Kappa_preGoogleDrive/NA38/IVsweep/LO_PID_test'
-datadir = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LO_opt/'
+start_num = 1
+#datadir   = '/Users/chw3k5/Google Drive/Kappa_preGoogleDrive/NA38/IVsweep/LO_freq/'
+datadir = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq/'
 
 if do_Ysweeps:
     sweep_num = start_num
@@ -122,13 +122,20 @@ if do_Ysweeps:
               SweepStart_feedTrue=65000, SweepStop_feedTrue=52000, SweepStep_feedTrue=500,
               SweepStart_feedFalse=66100, SweepStop_feedFalse=57000, SweepStep_feedFalse=100,
 
-              do_sisVsweep=True, sisV_feedback=True, high_res_meas=5,
+              do_sisVsweep=False, sisV_feedback=True, high_res_meas=5,
               sisVsweep_start=1.5, sisVsweep_stop=2.25, sisVsweep_step=0.1,
-              sisVsweep_list=[-.100,-0.075 -0.050, -0.025, 0.00, 0.025, 0.05, 0.075, 0.100,
-                              1.200, 1.250, 1.300, 1.350, 1.400, 1.450, 1.500, 1.550, 1.600, 1.650, 1.700, 1.750,
-                              1.800, 1.850, 1.900, 1.950, 2.000, 2.050, 2.100, 2.150, 2.200, 2.250, 2.300, 2.3500, 2.400],
+              sisVsweep_list=[0.5,0.55,0.6,0.65,0.7,0.75],
               sisPot_feedTrue_start=58000, sisPot_feedTrue_stop=54000, sisPot_feedTrue_step=200,
-              sisPot_feedTrue_list=[65345,65150,64954,64687,64477,58107,57644,57253,56774,56295,55823,55357,54938,54463,54009],
+              sisPot_feedTrue_list=[65430, 65491, 65037, 64949, 64774, 64697, 64571, 64480,
+                                    62671, 62456, 62226, 61966, 61745, 61541,
+                                    61250, 61127, 60872, 60581, 60393, 60125, 59924, 59684,
+                                    59461, 59223, 59039, 58831, 58549, 58345, 58111, 57879, 57638, 57418, 57173, 56987],
+
+              # [65430, 65491, 65037, 64949, 64774, 64697, 64571, 64480,
+              #                       61250, 61127, 60872, 60581, 60393, 60125, 59924, 59684,
+              #                       59461, 59223, 59039, 58831, 58549, 58345, 58111, 57879, 57638, 57418, 57173, 56987,
+              #                       56775, 56525, 56299, 56052, 55826, 55582, 55369, 55123, 54955, 54732, 54471, 54247, 54013]
+
               sisPot_feedFalse_start=65100, sisPot_feedFalse_stop=57000, sisPot_feedFalse_step=100,
 
               TPSampleFrequency=100, TPSampleTime=2,
@@ -136,16 +143,21 @@ if do_Ysweeps:
               spec_sweep_time='AUTO', spec_video_band=100, spec_resol_band=100,
               spec_attenu=0, lin_ref_lev=500, aveNum=8,
 
-              LOfreq_start=672, LOfreq_stop=672, LOfreq_step=2,
+              LOfreq_start=650, LOfreq_stop=692, LOfreq_step=1,
+              LOfreqs_list=None,
 
               do_magisweep=False, mag_meas=10,
-              magisweep_start=50, magisweep_stop=45, magisweep_step=-2,
-              magi,
-              magpotsweep_start=100000, magpotsweep_stop=70000-1, magpotsweep_step=-1250,
+              magisweep_start=50, magisweep_stop=39, magisweep_step=-1,
+              magisweep_list=[55],
+              magpotsweep_start=100000, magpotsweep_stop=70000-1, magpotsweep_step=-500,
+              magpotsweep_list=None,#[100020, 94637, 89198, 83723],
 
-              do_LOuAsearch=True, do_LOuApresearch=False, UCA_meas=10,
+              do_LOuAsearch=True, do_LOuApresearch=False, LOuA_search_every_sweep=True,
+              UCA_meas=10,
               UCAsweep_min=0.00, UCAsweep_max=0.00, UCAsweep_step=0.05,
+              UCAsweep_list=None,
               LOuAsearch_start=14, LOuAsearch_stop=9, LOuAsearch_step=-2,
+              LOuAsearch_list=[16],
 
               K_list=[296, 77],
               IFband_start=1.42, IFband_stop=1.42, IFband_step=0.10
@@ -160,7 +172,7 @@ if do_YdataPro:
 
 if do_YfactotSweepsPlotter:
     YfactorSweepsPlotter(datadir, search_4Ynums=True, Ynums=[], verbose=True, mV_min=0, mV_max=5,
-                         Y_mV_min=1.5, Y_mV_max=2.2,
+                         Y_mV_min=0.8, Y_mV_max=2.5,
                          plot_rawhot_mVuA=False, plot_rawhot_mVtp=True,
                          plot_rawcold_mVuA=False, plot_rawcold_mVtp=True,
                          show_standdev=False, std_num=1,

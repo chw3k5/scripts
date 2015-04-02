@@ -233,16 +233,26 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
               spec_attenu=0, lin_ref_lev=300, aveNum=1,
               Kaxis=0, sisVaxis=1, magaxis=2, LOpowaxis=3, LOfreqaxis=4, IFbandaxis=5,
               K_list=[296],
+
               LOfreq_start=672, LOfreq_stop=672, LOfreq_step=1,
+              LOfreqs_list=None,
+
               IFband_start=1.42, IFband_stop=1.42, IFband_step=0.10,
+
               do_magisweep=True, mag_meas=10,
               magisweep_start=32, magisweep_stop=32, magisweep_step=1,
               magisweep_list=None,
               magpotsweep_start=40000, magpotsweep_stop=40000, magpotsweep_step=5000,
               magpotsweep_list=None,
-              do_LOuAsearch=True, UCA_meas=10,
-              LOuAsearch_start=12, LOuAsearch_stop=12, LOuAsearch_step=1,
+
+
+              do_LOuAsearch=True, UCA_meas=10, LOuA_search_every_sweep=False,
               UCAsweep_min=3.45, UCAsweep_max=3.45, UCAsweep_step=0.05,
+              UCAsweep_list=None,
+              LOuAsearch_start=14, LOuAsearch_stop=14, LOuAsearch_step=1,
+              LOuAsearch_list=None,
+
+
               sweepShape="rectangular",
               FinishedEmail=False, FiveMinEmail=False, PeriodicEmail=False,
               seconds_per_email=1200, chopper_off=False, do_LOuApresearch=True, biastestmode=False,
@@ -390,7 +400,10 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
     if biastestmode:
         LOfreq_list = ['biastestmode']
     else:
-        LOfreq_list = list(makeLists(LOfreq_start, LOfreq_stop, LOfreq_step))
+        if LOfreqs_list is None:
+            LOfreq_list = list(makeLists(LOfreq_start, LOfreq_stop, LOfreq_step))
+        else:
+            LOfreq_list = LOfreqs_list
         # this a catch for if the value of presearch needed to be changed
         # presearch is not an effective tool if both the LO frequency and LO power are being changed in single run
         if ((1 < len(LOfreq_list)) and do_LOuApresearch):
@@ -406,7 +419,10 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
             print "Finding SIS pot positions for each SIS current in 'LOuA_list'."
             print "This option is found when do_LOuAsearch and do_LOuApresearch are both True."
             print "This list is discarded if both LO power (LOuA) and LO frequency are both changing in a single run"
-        LOuA_list = makeLists(LOuAsearch_start, LOuAsearch_stop, LOuAsearch_step)
+        if LOuAsearch_list is None:
+            LOuA_list = makeLists(LOuAsearch_start, LOuAsearch_stop, LOuAsearch_step)
+        else:
+            LOuA_list = LOuAsearch_list
 
         # set the Electromagnet to a known position
         if do_set_mag_highlow: setmag_highlow(default_magpot)
@@ -428,12 +444,17 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
                 UCAmsg(UCA_actual)
 
     elif (do_LOuAsearch and (do_LOuApresearch == False)):
-        LOuA_list = makeLists(LOuAsearch_start, LOuAsearch_stop, LOuAsearch_step)
+        if LOuAsearch_list is None:
+            LOuA_list = makeLists(LOuAsearch_start, LOuAsearch_stop, LOuAsearch_step)
+        else:
+            LOuA_list = LOuAsearch_list
         UCA_list  = None
     else:
         LOuA_list = None
-        UCA_list  = makeLists(UCAsweep_min, UCAsweep_max, UCAsweep_step)
-
+        if UCAsweep_list is None:
+            UCA_list  = makeLists(UCAsweep_min, UCAsweep_max, UCAsweep_step)
+        else:
+            UCA_list = UCAsweep_list
     if ((1 < len(LOfreq_list)) and (do_LOuAsearch == False) and (1 < len(UCA_list))):
         print "It is not recommended to step LO frequency and UCA voltage with in the same run."
         print "LO power can change as a function of frequency"
@@ -620,9 +641,9 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
                 if verboseTop:
                     print "UCA voltage set to ", UCA_thisloop
         else:
-            if not (LOuA_thisloop == LOuA_actual):
+            if ((not (LOuA_thisloop == LOuA_actual)) or ((LOuA_search_every_sweep) and (sisVsweep_trigger == sisPot_thisloop) and (K_actual>200))):
                 # if this if statement is true that the LO power will get set at the Set LO frequency below
-                if LOfreq_thisloop == LOfreq_actual:
+                if ((LOfreq_thisloop == LOfreq_actual)):
                     if ((not testmode) and (not biastestmode)):
                         UCA_thisloop, deriv_uA_UCAvoltage = LO_PID(uA_set=LOuA_thisloop, feedback=feedback_actual, verbose=verbose)
                         magpot_actual = default_magpot
@@ -771,7 +792,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
                 # name this new data something different
                 Ynum = 1
                 while True:
-                    format_Ynum = str('%05.f' % Ynum)
+                    format_Ynum = 'Y'+str('%04.f' % Ynum)
                     if format_Ynum in Ynums:
                         Ynum += 1
                     else:

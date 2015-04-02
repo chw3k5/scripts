@@ -3,7 +3,7 @@
 
 # Import this is the directory that has my scripts
 import sys
-from control import opentelnet, closetelnet
+from control import opentelnet, closetelnet, default_sispot, default_magpot
 
 #############################
 ###### From control.py ######
@@ -14,13 +14,13 @@ do_LJ_streamTP    = False # True or False
 
 do_measmag          = False # True or False
 do_measmag_w_offset = False # True or False
-do_setmag           = False # True or False
+do_setmag           = True # True or False
 do_setmag_only      = False # True or False
 do_Emag_PID         = False # True or False
 
-do_RFfreqset   = False # True or False
-do_RFon        = False # True or False
-do_RFoff       = True # True or False
+do_RFfreqset   = True # True or False
+do_RFon        = True # True or False
+do_RFoff       = False # True or False
 
 do_measSIS     = False # True or False
 do_setfeedback = False # True or False
@@ -28,10 +28,12 @@ do_setSIS      = False # True or False
 do_setSIS_only = False # True or False
 do_setSIS_TP   = False # True or False
 do_measSIS_TP  = False # True or False
-do_setSIS_Volt = False # True or False
 
-do_setLOI      = False# True or False
-do_zeropots    = True # True of False
+do_setLOI      = True# True or False
+
+do_setSIS_Volt = True # True or False
+
+do_zeropots    = False # True of False
 
 
 ############################
@@ -44,7 +46,7 @@ do_AllanVar    = False # True or False
 ###### From StepperControl.py ######
 ####################################
 
-do_stepperTest = True
+do_stepperTest = False
  # True or False
 
 #####################################
@@ -90,20 +92,20 @@ if do_measmag_w_offset:
 
 if do_setmag:
     from control import setmag
-    magpot = 30000 # electromagnet potentiometer position
+    magpot = default_magpot # electromagnet potentiometer position
     verbose = True  # True or False
     V_mag, mA_mag, pot_mag = setmag(magpot, verbose)
     print str(V_mag) + "=V_mag, " + str(mA_mag) + "=mA_mag, " + str(pot_mag) + "=pot_mag"
 
 if do_setmag_only:
     from control import setmag_only
-    magpot = 64000 # electromagnet potentiometer position
+    magpot = default_magpot # electromagnet potentiometer position
     setmag_only(magpot)
 
 if do_Emag_PID:
     from PID import Emag_PID
     from control import measmag_w_offset
-    mA_user = 20 # mA in [-80,78]
+    mA_user = 45 # mA in [-80,78]
     verbose = True  # True or False
     test_path = 'C:\\Users\\chwheele\\Google Drive\\Kappa\\NA38\\IVsweep\\Mar04_15\\LO_stability_test\\rawdata\\00001\\'
     Emag_PID(local_path=test_path, mA_set=45.0, verbose=verbose)
@@ -175,21 +177,28 @@ if do_measSIS_TP:
     mV_sis, uA_sis, tp_sis, pot_sis, time_stamp = measSIS_TP(sispot, feedback, verbose, careful)
     print str(mV_sis) + "=mV_sis, " + str(uA_sis) + "=uA_sis, " + str(tp_sis) + "=tp_sis, " + str(pot_sis) + "=pot_sis, " + str(time_stamp) + "=time_stamp"
 
-if do_setSIS_Volt:
-    from control import setSIS_Volt
-    mV_user   = 2.2   # mV
-    verbose   = True  # True or False
-    careful   = False # True or False
-    cheat_num = 56666 # This is a guess at what the potentiometer position is at mV_user
-    mV_sis, uA_sis, pot_sis = setSIS_Volt(mV_user, verbose, careful, cheat_num)
-    print 'mV_sis =' ,mV_sis, 'uA_sis =', uA_sis, 'pot_sis =', pot_sis
 
 if do_setLOI:
-    from control import setLOI
-    uA_user = 12 # uA (1,40)
-    verbose   = True  # True or False
-    careful   = False # True or False
-    mV_sis, uA_sis, pot_sis, UCA_val = setLOI(uA_user, verbose, careful)
+    from PID import LO_PID
+    final_V, final_deriv = LO_PID(uA_set=16.0,
+           feedback=True, max_adjust_attempt=20, min_adjust_attempt=5,
+           highres_meas_after_diff=0.2,
+           lowres_sleep_per_set=0.5, highres_sleep_per_set=3,
+           lowres_measnumber=1, highres_meas_number=5,
+           uA_search_res = 10,
+           min_diff_V=0.001,
+           V_min=0,V_max=5,
+           Kp=1.0, Ki=0.0, Kd=0.05, verbose=True)
+
+
+if do_setSIS_Volt:
+    from PID import SIS_mV_PID
+    sispot_current, final_deriv = SIS_mV_PID(mV_set=1.2, mV_set_max=10, mV_set_min=-10,
+                feedback=True, max_adjust_attempt=20, min_adjust_attempt=5,
+                sleep_per_set=2, meas_number=5, high_meas_after_diff=0.2,
+                min_diff_sispot=3,
+                first_pot=65100, second_pot=56800,
+                Kp=1.0, Ki=0.0, Kd=0.05, verbose=True)
 
 if do_zeropots:
     from control import zeropots

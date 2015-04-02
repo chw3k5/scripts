@@ -1,0 +1,26 @@
+##################################
+## Error on March 31 about 7 am ##
+##################################
+57879  sisPot_thisloop
+Had to wait extra time for the measurment to be returned
+Had to wait extra time for the measurment to be returned again
+Traceback (most recent call last):
+  File "C:/Users/chwheele/Documents/Kappa/scripts/ProwPlot.py", line 161, in <module>
+    IFband_start=1.42, IFband_stop=1.42, IFband_step=0.10
+  File "C:\Users\chwheele\Documents\Kappa\scripts\BiasSweep2.py", line 938, in BiasSweep
+    = measSIS_TP(sisPot_thisloop, sisV_feedback, verbose, careful)
+  File "C:\Users\chwheele\Documents\Kappa\scripts\control.py", line 649, in measSIS_TP
+    attempt_measTP(sleep_list[loop_index], sispot, channel)
+  File "C:\Users\chwheele\Documents\Kappa\scripts\control.py", line 534, in attempt_measTP
+    out = CommandOutput_TP(sleep_time, sispot, channel)
+  File "C:\Users\chwheele\Documents\Kappa\scripts\control.py", line 504, in CommandOutput_TP
+    line = thzbiascomputer.read_until('\n', float(sleep_time))
+  File "C:\Program Files\Enthought\Canopy\App\appdata\canopy-1.4.1.1975.win-x86_64\lib\telnetlib.py", line 295, in read_until
+    return self._read_until_with_select(match, timeout)
+  File "C:\Program Files\Enthought\Canopy\App\appdata\canopy-1.4.1.1975.win-x86_64\lib\telnetlib.py", line 363, in _read_until_with_select
+    self.fill_rawq()
+  File "C:\Program Files\Enthought\Canopy\App\appdata\canopy-1.4.1.1975.win-x86_64\lib\telnetlib.py", line 573, in fill_rawq
+    buf = self.sock.recv(50)
+socket.error: [Errno 10053] An established connection was aborted by the software in your host machine
+
+Process finished with exit code 1
