@@ -132,8 +132,8 @@ def getSweeps(fullpaths, verbose=False):
                 = GetAllTheProFastSweepData(fullpath)
 
         def longDescription(self):
-            description = "name = %s\n" % self.name
-            description += ("K_val = %.2f \n" % self.K_val )
+            description = "name = %s" % self.name
+            description += ("K_val = %.2f" % self.K_val )
             return description
 
 
@@ -189,9 +189,14 @@ def LOuAdiff_cut(sweeps, max_diff=1.0, verbose=False):
         print 'cutting sweep with the difference of measured LO pump power and attempted setting of LO power greater then', max_diff, 'uA'
     for sweep in sweeps:
         LOuAset    = sweep.LOuAset
-        meanSIS_uA = sweep.meanSIS_uA
-        diff = abs(LOuAset - meanSIS_uA)
-        if diff <= max_diff:
+        meanSIS_uAs = sweep.meanSIS_uA
+        over_max_diff = False
+        for meanSIS_uA in meanSIS_uAs:
+            diff = abs(LOuAset - meanSIS_uA)
+            if max_diff <= diff:
+                over_max_diff = True
+                break
+        if not over_max_diff:
             LOuAdiff_cut_sweeps.append(sweep)
             if verbose:
                 print sweep.longDescription()
