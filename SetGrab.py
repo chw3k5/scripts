@@ -1,7 +1,8 @@
 import numpy as np
+import os
 from sys import platform
-from datapro import YdataPro
-from profunc import getproYdata, GetProDirsNames, getproparams, getmultiParams, getproSweep, windir
+from datapro import YdataPro, getrawdata, get_fastIV
+from profunc import getproYdata, GetProDirsNames, getproparams, getmultiParams, getproSweep, windir, ProcessMatrix
 from Plotting import GetAllTheProFastSweepData
 
 
@@ -10,7 +11,6 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
     class Ysweeps():
         def __init__(self,fullpath,Ynum):  #You must always define the self, here with
             proYdatadir = fullpath + 'prodata/' + Ynum + '/'
-
             self.name = fullpath + Ynum # This is a unique identifier for each sweep
             self.fullpath = fullpath
 
@@ -24,7 +24,6 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
             self.SIS_pot, self.del_time, self.LOfreq, self.IFband, self.meas_num, self.tp_int_time, \
             self.tp_num, self.tp_freq, self.mag_chan\
                 = getmultiParams(paramsfile_list)
-
 
             # Astro Processed Data
             self.Yfactor, self.mV_Yfactor, self.hot_mV_mean, self.cold_mV_mean, self.mV, \
@@ -46,8 +45,56 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
             self.cold_mV_fast, self.cold_uA_fast, self.cold_tp_fast, self.cold_pot_fast, \
             self.cold_mV_unpumped, self.cold_uA_unpumped, self.cold_tp_unpumped, self.cold_pot_unpumped \
                 = GetAllTheProFastSweepData(proYdatadir+'cold')
-            #self.abundances = []   #A call to a smaller class, used as a sub-class
 
+        def get_raw_data(self):
+            ### Get the raw data
+            rawdatadir  = self.fullpath + 'rawdata/' + Ynum + '/'
+            hot_dir = rawdatadir + 'hot/'
+            cold_dir = rawdatadir + 'cold/'
+
+            ### Hot ###
+            self.hot_raw_astros_found, self.hot_raw_pot, self.hot_raw_mV_mean, self.hot_raw_mV_std,\
+            self.hot_raw_uA_mean, self.hot_raw_uA_std, self.hot_raw_TP_mean, self.hot_raw_TP_std, self.hot_raw_time_mean,\
+            hot_raw_TP_int_time, hot_raw_meas_num, hot_raw_TP_num, hot_raw_TP_freq\
+                = getrawdata(hot_dir+'sweep/', verbose=verbose)
+
+            fast_file = hot_dir+"fastsweep.csv"
+            if os.path.isfile(fast_file):
+                self.raw_hot_fast_found=True
+                self.hot_raw_fast_mV, self.hot_raw_fast_uA, self.hot_raw_fast_tp, self.hot_raw_fast_pot \
+                    = get_fastIV(fast_file)
+            else:
+                self.raw_hot_fast_found=False
+
+            unpumped_file = hot_dir+"unpumpedsweep.csv"
+            if os.path.isfile(fast_file):
+                self.raw_hot_unpumped_found=True
+                self.hot_raw_unpumped_mV, self.hot_raw_unpumped_uA, self.hot_raw_unpumped_tp, self.hot_raw_unpumped_pot \
+                    = get_fastIV(unpumped_file)
+            else:
+                self.raw_hot_unpumped_found=False
+
+            ### Cold ###
+            self.cold_raw_astros_found, self.cold_raw_pot, self.cold_raw_mV_mean, self.cold_raw_mV_std,\
+            self.cold_raw_uA_mean, self.cold_raw_uA_std, self.cold_raw_TP_mean, self.cold_raw_TP_std, self.cold_raw_time_mean,\
+            cold_raw_TP_int_time, cold_raw_meas_num, cold_raw_TP_num, cold_raw_TP_freq\
+                = getrawdata(cold_dir+'sweep/', verbose=verbose)
+
+            fast_file = cold_dir+"fastsweep.csv"
+            if os.path.isfile(fast_file):
+                self.raw_cold_fast_found=True
+                self.cold_raw_fast_mV, self.cold_raw_fast_uA, self.cold_raw_fast_tp, self.cold_raw_fast_pot \
+                    = get_fastIV(fast_file)
+            else:
+                self.raw_cold_fast_found=False
+
+            unpumped_file = cold_dir+"unpumpedsweep.csv"
+            if os.path.isfile(fast_file):
+                self.raw_cold_unpumped_found=True
+                self.cold_raw_unpumped_mV, self.cold_raw_unpumped_uA, self.cold_raw_unpumped_tp, self.cold_raw_unpumped_pot \
+                    = get_fastIV(unpumped_file)
+            else:
+                self.raw_cold_unpumped_found=False
 
         def longDescription(self):
             description = "name = %s\n" % self.name
@@ -90,6 +137,78 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
             m = (tp_hot-tp_cold)/(temp_hot-temp_cold)
             self.intersectingL_m = m
             self.intersectingL_b = tp_hot-m*temp_hot
+            return
+
+        def shotnoise_test(self, min_uA=80,max_uA=None, mono_switcher=True, do_regrid=True, do_conv=True, regrid_mesh=0.1, min_cdf=0.95, sigma=5, verbose=False):
+            self.get_raw_data()
+            hot_gain, hot_noise_power = None, None
+            uA_shot, TP_shot = [],[]
+            shotnoise_test_failed = False
+            unpumped_found = self.raw_hot_unpumped_found
+            if unpumped_found:
+                unpumped_uA = self.hot_raw_unpumped_uA
+                unpumped_tp = self.hot_raw_unpumped_tp
+            if self.hot_raw_astros_found:
+                uAs=self.hot_raw_uA_mean
+                TPs=self.hot_raw_TP_mean
+                for index in range(len(uAs)):
+                    uA = uAs[index]
+                    TP = TPs[index]
+                    if ((min_uA is None) or (min_uA <= uA)):
+                        if ((max_uA is None) or (uA <= max_uA)):
+                            uA_shot.append(uA)
+                            TP_shot.append(TP)
+            if ((uA_shot == []) or (len(uA_shot)<=1)):
+                if verbose:
+                    print 'The astro data does not contain enough current measurements in the range (',min_uA,',',max_uA,')'
+                    print 'checking to to if unpumped data is available.'
+                if not unpumped_found:
+                    print 'no data was found in for the unpumped measurement'
+                    shotnoise_test_failed = True
+                else:
+                    for index in range(len(unpumped_uA)):
+                        uA = unpumped_uA[index]
+                        TP = unpumped_tp[index]
+                        if ((min_uA is None) or (min_uA <= uA)):
+                            if ((max_uA is None) or (uA <= max_uA)):
+                                uA_shot.append(uA)
+                                TP_shot.append(TP)
+                    if ((uA_shot == []) or (len(uA_shot)<=1)):
+                        print 'The unpumped data does not contain enough current measurements in the range (',min_uA,',',max_uA,')'
+                        print 'The shot noise function has failed.'
+                        shotnoise_test_failed = True
+
+            if shotnoise_test_failed:
+                gain = None
+                input_noise = None
+                T = None
+            else:
+                raw_matrix = np.zeros((len(uA_shot),2))
+                raw_matrix[:,0]=uA_shot
+                raw_matrix[:,1]=TP_shot
+                matrix, raw_matrix, mono_matrix, regrid_matrix, conv_matrix\
+                    = ProcessMatrix(raw_matrix, mono_switcher=mono_switcher, do_regrid=do_regrid,
+                                    do_conv=do_conv, regrid_mesh=regrid_mesh, min_cdf=min_cdf,
+                                    sigma=sigma, verbose=verbose)
+
+                pro_uA = matrix[:,0]
+                pro_TP = matrix[:,1]
+                z = np.polyfit(pro_uA, pro_TP, 1)
+                gain = z[0]
+                noise_power = z[1] # power in recorder output in volts
+                input_noise = noise_power/gain # power in uA
+
+                e = 1.60217657e-19 # Columbs (electron charge)
+                I = input_noise*1.0e-6 # dark current in Amps
+                kT = 2.0*e*I
+                #plt.text(-1*dark_current*0.9, max(tp_unpumpedhot)*0.7, str('%2.2f' % fP) + " $fW = 2eI_0$$B = P_0$", fontsize=16, color="firebrick")
+
+                kb = 1.3806488e-23
+                T = kT/(kb)
+
+            print "Gain, input noise (uA), input noise temperature (K)"
+            print gain, input_noise, T
+
             return
 
 

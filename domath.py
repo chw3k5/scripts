@@ -595,7 +595,7 @@ def Specdata2Yfactor(prodatadir, verbose=False):
 #########################
 ###### Ydata_stats ######
 #########################
-def Ydata_stats(freq_Yfactor, Yfactor, start_Yrange, end_Yrange):
+def Ydata_stats(mV_Yfactor, Yfactor, start_Yrange, end_Yrange):
     status = True
     max_Yfactor=-1
     mV_max_Yfactor=-999999

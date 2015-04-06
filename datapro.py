@@ -84,7 +84,7 @@ def ProFastIV(fastIV_filename,  prodataname, mono_switcher, do_regrid, do_conv, 
     if os.path.isfile(fastIV_filename):
         fastIV_found = True
         # load the fast IV data
-        mV_fastIV, uA_fastIV, tp_fastIV, pot_fastIV =get_fastIV(fastIV_filename)
+        mV_fastIV, uA_fastIV, tp_fastIV, pot_fastIV = get_fastIV(fastIV_filename)
         # put the data into a matrix for processing    
         fast_matrix = numpy.zeros((len(mV_fastIV), 4))
         fast_matrix[:,0] = mV_fastIV
@@ -191,23 +191,19 @@ def BasicDataPro(sweepdir, prodataname, is_SIS_data=True, mono_switcher=True, do
                 print "No Magnet data was found in ", sweepdir
     return BasicDataFound
 
-
-def AstroDataPro(datadir, proparamsfile, rawdataname, prodataname, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose):
+def getrawdata(sweepdir, verbose=False):
     astrosweep_found = False
-    sweepdir = datadir + 'sweep/'
-    if platform == 'win32':
-        sweepdir = windir(sweepdir)
-    TP_list = glob.glob(sweepdir + "TP*.csv")
+    sweep_pot, sweep_mV_mean, sweep_mV_std,\
+    sweep_uA_mean, sweep_uA_std, sweep_TP_mean, \
+    sweep_TP_std, sweep_time_mean, \
+    TP_int_time, meas_num, TP_num, TP_freq \
+        = None, None, None, None, None, None, None, None, None, None, None, None
+    TP_list = glob.glob(windir(sweepdir) + "TP*.csv")
     if not TP_list == []:
         astrosweep_found = True
-        sweep_pot       = []
-        sweep_mV_mean   = []
-        sweep_mV_std    = []
-        sweep_uA_mean   = []
-        sweep_uA_std    = []
-        sweep_TP_mean   = []
-        sweep_TP_std    = []
-        sweep_time_mean = []
+        (sweep_pot, sweep_mV_mean, sweep_mV_std,
+        sweep_uA_mean, sweep_uA_std, sweep_TP_mean,
+        sweep_TP_std, sweep_time_mean) = ([],[],[],[],[],[],[],[])
         for sweep_index in range(len(TP_list)):
             # read in SIS data for each sweep step
             thefilename = sweepdir + str(sweep_index + 1) + '.csv'
@@ -228,14 +224,31 @@ def AstroDataPro(datadir, proparamsfile, rawdataname, prodataname, mono_switcher
                 TP_freq  = TP_freq
             sweep_TP_mean.append(numpy.mean(temp_tp))
             sweep_TP_std.append(numpy.std(temp_tp))
-        # Some Parts of the Parameter file are written here
-        n = open(proparamsfile, 'a')
-        n.write('meas_num,'    + str(meas_num)    + '\n')
-        n.write('TP_int_time,' + str(TP_int_time) + '\n')
-        n.write('TP_num,'      + str(TP_num)      + '\n')
-        n.write('TP_freq,'     + str(TP_freq)     + '\n')
-        n.close()
 
+    return astrosweep_found, sweep_pot, sweep_mV_mean, sweep_mV_std,\
+           sweep_uA_mean, sweep_uA_std, sweep_TP_mean, sweep_TP_std, sweep_time_mean,\
+           TP_int_time, meas_num, TP_num, TP_freq
+
+
+
+def AstroDataPro(datadir, proparamsfile, rawdataname, prodataname, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose):
+
+    sweepdir = datadir + 'sweep/'
+
+    astrosweep_found, sweep_pot, sweep_mV_mean, sweep_mV_std,\
+    sweep_uA_mean, sweep_uA_std, sweep_TP_mean, sweep_TP_std, sweep_time_mean,\
+    TP_int_time, meas_num, TP_num, TP_freq\
+        = getrawdata(sweepdir, verbose=verbose)
+
+    # Some Parts of the Parameter file are written here
+    n = open(proparamsfile, 'a')
+    if meas_num is not None:n.write('meas_num,' + str(meas_num) + '\n')
+    if TP_int_time is not None:n.write('TP_int_time,' + str(TP_int_time) + '\n')
+    if TP_num is not None:n.write('TP_num,' + str(TP_num) + '\n')
+    if TP_freq is not None:n.write('TP_freq,' + str(TP_freq) + '\n')
+    n.close()
+
+    if astrosweep_found:
         # Write the minimally processed data to a file
         rawfile = open(rawdataname, 'w')
         rawfile.write('mV_mean,mV_std,uA_mean,uA_std,TP_mean,TP_std\n')

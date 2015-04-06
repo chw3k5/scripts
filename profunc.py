@@ -505,8 +505,7 @@ def get_fastIV(filename):
     return mV, uA, tp, pot
   
 def getSISdata(filename):
-    if platform == 'win32':
-        filename = windir(filename)
+    filename = windir(filename)
     mV   = []
     uA   = []
     tp   = []
@@ -937,7 +936,7 @@ def GetProDirsNames(datadir, search_4nums, nums):
 
 
 
-def ProcessMatrix(raw_matrix, mono_switcher, do_regrid, do_conv, regrid_mesh, min_cdf, sigma, verbose=False):
+def ProcessMatrix(raw_matrix, mono_switcher=True, do_regrid=False, do_conv=False, regrid_mesh=0.01, min_cdf=0.9, sigma=5, verbose=False):
     matrix        = raw_matrix
     mono_matrix   = False
     regrid_matrix = False
