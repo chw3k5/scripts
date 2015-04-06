@@ -66,12 +66,13 @@ int_lines_mV_plus_minus  = 0.05
 ###### Shot Noise Parameters ######
 ###################################
 do_shot_noise = True
+shot_noise_plotdir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/shot_noise/')
 
 
 ###############################################################
 ### All the sets of data to collect the processed data from ###
 ###############################################################
-setnames = ['set4']#,'set5','set6']
+setnames = ['set5']#,'set5','set6']
 
 
 parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
@@ -160,16 +161,17 @@ if do_intersecting_lines:
             plt.show()
             plt.draw()
 
-        plotfilename = int_lines_plotdir+'intersecting_lines_'+str('%2.2f' % mV_center )
-        if ((do_eps) and (not platform == 'win32')):
-            if verbose:
-                print 'saving EPS file'
-            plt.savefig(plotfilename+'.eps')
-        else:
-            if verbose:
-                print 'saving PNG file'
-            plt.savefig(plotfilename+'.png')
-        plt.close("all")
+        if save_plots:
+            plotfilename = int_lines_plotdir+'intersecting_lines_'+str('%2.2f' % mV_center )
+            if ((do_eps) and (not platform == 'win32')):
+                if verbose:
+                    print 'saving EPS file'
+                plt.savefig(plotfilename+'.eps')
+            else:
+                if verbose:
+                    print 'saving PNG file'
+                plt.savefig(plotfilename+'.png')
+            plt.close("all")
 
 
 
@@ -180,6 +182,41 @@ if do_intersecting_lines:
 if do_shot_noise:
     for Ysweep in Ysweeps:
         Ysweep.shotnoise_test(verbose=True)
+        fig, ax1 = plt.subplots()
+
+        if Ysweep.hot_shotnoise_test:
+            gain = Ysweep.hot_shotnoise_gain
+            input_noise = Ysweep.hot_shotnoise_input_noise
+            unpumped_uA = Ysweep.hot_raw_unpumped_uA
+            unpumped_tp = Ysweep.hot_raw_unpumped_tp
+            raw_uA = Ysweep.hot_raw_uA_mean
+            raw_tp = Ysweep.hot_raw_TP_mean
+            uA = Ysweep.hot_uA_mean
+            tp = Ysweep.hot_tp_mean
+            shot_uA = Ysweep.hot_shotnoise_shot_uA
+            shot_tp = Ysweep.hot_shotnoise_shot_tp
+            ax1.plot(uA, tp)
+            ax1.plot(unpumped_uA,unpumped_tp)
+            ax1.plot(raw_uA,raw_tp)
+            ax1.plot(shot_uA,shot_tp)
+            ax1.plot(shot_uA,(shot_uA+input_noise)*gain)
+
+        if show_plots:
+            plt.show()
+            plt.draw()
+
+        if save_plots:
+            plotfilename = shot_noise_plotdir+'shotnoise_'+Ysweep.Ynum
+            if ((do_eps) and (not platform == 'win32')):
+                if verbose:
+                    print 'saving EPS file'
+                plt.savefig(plotfilename+'.eps')
+            else:
+                if verbose:
+                    print 'saving PNG file'
+                plt.savefig(plotfilename+'.png')
+            plt.close("all")
+
 
             # # do derivatives to find linear regions
             # shot_matrix = numpy.zeros((len(uA_unpumpedhot),3))

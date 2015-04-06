@@ -11,6 +11,7 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
     class Ysweeps():
         def __init__(self,fullpath,Ynum):  #You must always define the self, here with
             proYdatadir = fullpath + 'prodata/' + Ynum + '/'
+            self.Ynum = Ynum
             self.name = fullpath + Ynum # This is a unique identifier for each sweep
             self.fullpath = fullpath
 
@@ -139,7 +140,7 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
             self.intersectingL_b = tp_hot-m*temp_hot
             return
 
-        def shotnoise_test(self, min_uA=80,max_uA=None, mono_switcher=True, do_regrid=True, do_conv=True, regrid_mesh=0.1, min_cdf=0.95, sigma=5, verbose=False):
+        def shotnoise_test(self, min_uA=80,max_uA=None, mono_switcher=True, do_regrid=False, do_conv=False, regrid_mesh=0.1, min_cdf=0.95, sigma=5, verbose=False):
             self.get_raw_data()
             hot_gain, hot_noise_power = None, None
             uA_shot, TP_shot = [],[]
@@ -182,14 +183,17 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
                 gain = None
                 input_noise = None
                 T = None
+                pro_uA = None
+                pro_TP = None
             else:
                 raw_matrix = np.zeros((len(uA_shot),2))
                 raw_matrix[:,0]=uA_shot
                 raw_matrix[:,1]=TP_shot
+                #print uA_shot,TP_shot
                 matrix, raw_matrix, mono_matrix, regrid_matrix, conv_matrix\
                     = ProcessMatrix(raw_matrix, mono_switcher=mono_switcher, do_regrid=do_regrid,
                                     do_conv=do_conv, regrid_mesh=regrid_mesh, min_cdf=min_cdf,
-                                    sigma=sigma, verbose=verbose)
+                                    sigma=sigma, verbose=False)
 
                 pro_uA = matrix[:,0]
                 pro_TP = matrix[:,1]
@@ -206,8 +210,16 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
                 kb = 1.3806488e-23
                 T = kT/(kb)
 
-            print "Gain, input noise (uA), input noise temperature (K)"
-            print gain, input_noise, T
+
+            self.hot_shotnoise_test = (not shotnoise_test_failed)
+            self.hot_shotnoise_shot_uA = pro_uA
+            self.hot_shotnoise_shot_tp = pro_TP
+            self.hot_shotnoise_gain = gain
+            self.hot_shotnoise_input_noise = input_noise
+            self.hot_shotnoise_T = T
+
+            print "Gain (V/uA), noise power (V), input noise (uA), input noise temperature (K)"
+            print gain, noise_power, input_noise, T
 
             return
 
