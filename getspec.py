@@ -9,7 +9,7 @@ extra_sleep_fraction = 0.05 # fraction of the total sweep time to add to waiting
 extra_sleep_float    = 1.0  # seconds added to total sweep time, allows for IF switching in the Spectrum Analyzer
 min_sleep_time       = 2.9
 crossover_points     = [2.5] # GHz
-extra_crossover_time = 4
+extra_crossover_time = 5
 
 def is_number(value):
     try:

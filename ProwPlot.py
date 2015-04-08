@@ -19,7 +19,7 @@ do_SingeSpectraPlotter = False
 repeat  = 1
 
 ### For Y-factor data and Sweeps ###
-do_Ysweeps              = True
+do_Ysweeps              = False
 do_YdataPro             = True
 do_YfactotSweepsPlotter = True
 do_YSpectra_Plotter     = False
@@ -146,7 +146,7 @@ if do_Ysweeps:
               spec_sweep_time='AUTO', spec_video_band=300, spec_resol_band=300,
               spec_attenu=0, lin_ref_lev=1000, aveNum=16,
 
-              LOfreq_start=685, LOfreq_stop=649, LOfreq_step=1,
+              LOfreq_start=673 , LOfreq_stop=649, LOfreq_step=1,
               LOfreqs_list=None,
 
               do_magisweep=False, mag_meas=10,

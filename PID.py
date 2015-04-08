@@ -281,6 +281,7 @@ def LO_PID(uA_set=20.0, uA_set_max=50.0, uA_set_min=5.0,
         finished = False
         voltage_index = 0
         # Find the Voltages so that difference in uA power is less than the function variable 'uA_search_res'
+        count = 0
         while not finished:
             finished_index = len(V_list)-1
             if finished_index <= voltage_index:
@@ -288,7 +289,8 @@ def LO_PID(uA_set=20.0, uA_set_max=50.0, uA_set_min=5.0,
             else:
                 uA_high = uA_list[voltage_index]
                 uA_low = uA_list[voltage_index+1]
-                if uA_search_res < abs(uA_high - uA_low):
+                if ((uA_search_res < abs(uA_high - uA_low)) and (count < 20)):
+                    count += 1
                     V_low = V_list[voltage_index]
                     V_high = V_list[voltage_index+1]
                     voltage = (V_low+V_high)/2.0
