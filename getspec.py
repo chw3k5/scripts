@@ -1,8 +1,15 @@
 import numpy, time
 from sys import platform
 # Caleb's programs
+import os
 from profunc import windir
 from LabJack_control import LJ_streamTP
+
+extra_sleep_fraction = 0.05 # fraction of the total sweep time to add to waiting time for a singe sweep
+extra_sleep_float    = 1.0  # seconds added to total sweep time, allows for IF switching in the Spectrum Analyzer
+min_sleep_time       = 2.9
+crossover_points     = [2.5] # GHz
+extra_crossover_time = 4
 
 def is_number(value):
     try:
@@ -21,9 +28,8 @@ def getspec(filename, verbose=False, linear_sc=True, freq_start=0, freq_stop=6, 
     #filename = 'C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\test\\SpecTest.csv'
     
     sa = visa.instrument("GPIB0::5::INSTR")
-    extra_sleep_fraction = 0.05 # fraction of the total sweep time to add to waiting time for a singe sweep
-    extra_sleep_float    = 1.0  # seconds added to total sweep time, allows for IF switching in the Spectrum Analyzer
-    
+
+
     #verbose    = True
     #linear_sc  = False # linear of logarithmic power scaling
     #freq_start = 0 # in GHz
@@ -78,7 +84,7 @@ def getspec(filename, verbose=False, linear_sc=True, freq_start=0, freq_stop=6, 
     if linear_sc:
         sa.write("LN")
         # Reference Level
-        sa.write("RL 400 uV")
+        sa.write("RL 500 uV")
     else:
         sa.write("LG 10DB")
     # put the 'trace data format' of returned values as real numbers, option P
@@ -89,6 +95,7 @@ def getspec(filename, verbose=False, linear_sc=True, freq_start=0, freq_stop=6, 
     else:
         sa.write('ST ?')
         sweep_time_float = float(sa.read())
+
     #################
     ### The Sweep ###
     #################
@@ -156,8 +163,6 @@ def getspecPlusTP(spec_filename, TP_filename, TPSampleFrequency, verbose=False, 
     #filename = 'C:\\Users\\MtDewar\\Documents\\Kappa\0\NA38\\test\\SpecTest.csv'
 
     sa = visa.instrument("GPIB0::5::INSTR")
-    extra_sleep_fraction = 0.05 # fraction of the total sweep time to add to waiting time for a singe sweep
-    extra_sleep_float    = 1.0  # seconds added to total sweep time, allows for IF switching in the Spectrum Analyzer
 
     #verbose    = True
     #linear_sc  = False # linear of logarithmic power scaling
@@ -219,18 +224,22 @@ def getspecPlusTP(spec_filename, TP_filename, TPSampleFrequency, verbose=False, 
     # put the 'trace data format' of returned values as real numbers, option P
     sa.write('tdf P')
 
-    if is_number(sweep_time):
-        sweep_time_float = float(sweep_time)
-    else:
-        sa.write('ST ?')
-        sweep_time_float = float(sa.read())
+
+    sa.write('ST ?')
+    sweep_time_float = float(sa.read())
+    #print "sweep time float:", sweep_time_float
     #################
     ### The Sweep ###
     #################
     # trigger a new sweep to start
     sa.write('clrw tra')
-    extra_sleep = sweep_time_float*extra_sleep_fraction + extra_sleep_float
-    sweep_sleep = (sweep_time_float+extra_sleep)*aveNum
+    sweep_sleep = (sweep_time_float*aveNum)*(1+extra_sleep_fraction) + extra_sleep_float
+    if sweep_sleep < min_sleep_time:
+        sweep_sleep = min_sleep_time
+    for crossover in crossover_points:
+        if ((freq_start < crossover) and (crossover < freq_stop)):
+            sweep_sleep += extra_crossover_time
+
     if verbose:
         print "sweeping..."
         print "Getting total power from the LabJack while sweeping for " + str('%2.3f' % sweep_sleep) + "s"
@@ -254,11 +263,14 @@ def getspecPlusTP(spec_filename, TP_filename, TPSampleFrequency, verbose=False, 
     ### Save the trace data to a file ###
     #####################################
     trace_list = raw_trace.rsplit(',')
-    n = open(spec_filename, 'w')
-    if linear_sc:
-        n.write('GHz,pwr\n')
+    if not os.path.isfile(spec_filename):
+        n = open(spec_filename, 'w')
+        if linear_sc:
+            n.write('GHz,pwr\n')
+        else:
+            n.write('GHz,dB\n')
     else:
-        n.write('GHz,dB\n')
+        n = open(spec_filename, 'a')
     for freq_index in range(len(freq_list)):
         write_line = str(freq_list[freq_index]) + "," + str(trace_list[freq_index]) + "\n"
         n.write(write_line)

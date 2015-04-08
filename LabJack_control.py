@@ -32,7 +32,7 @@
 ########## Local Oscillator Control ##########
 ##############################################
 ##############################################
-import time
+import time,os
 from sys import platform
 
 import u3
@@ -133,12 +133,12 @@ def LJ_streamTP(filename, SampleFrequency, SampleTime, verbose):
         chans = [ r['AIN%d' % (n)] for n in range(NumChannels) ]
         for i in range(len(chans[0])):
             f.write( "\t".join( ['%.6f' % c[i] for c in chans] ) + '\n' )
-
-    with open(filename, 'w') as f:
-        f.write( "frequency=%d\n" % SampleFrequency)
-        if wavenames == []:
-            wavenames = ['wave%d' % n for n in range(NumChannels)]
-        f.write( '\t'.join(wavenames) + '\n')
+    if not os.path.isfile(filename):
+        with open(filename, 'w') as f:
+            f.write( "frequency=%d\n" % SampleFrequency)
+            if wavenames == []:
+                wavenames = ['wave%d' % n for n in range(NumChannels)]
+            f.write( '\t'.join(wavenames) + '\n')
 
     # start the stream
     d.streamStart()

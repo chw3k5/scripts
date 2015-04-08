@@ -14,12 +14,12 @@ do_LJ_streamTP    = False # True or False
 
 do_measmag          = False # True or False
 do_measmag_w_offset = False # True or False
-do_setmag           = True # True or False
+do_setmag           = False # True or False
 do_setmag_only      = False # True or False
 do_Emag_PID         = False # True or False
 
-do_RFfreqset   = True # True or False
-do_RFon        = True # True or False
+do_RFfreqset   = False # True or False
+do_RFon        = False # True or False
 do_RFoff       = False # True or False
 
 do_measSIS     = False # True or False
@@ -29,11 +29,10 @@ do_setSIS_only = False # True or False
 do_setSIS_TP   = False # True or False
 do_measSIS_TP  = False # True or False
 
-do_setLOI      = True# True or False
+do_setLOI      = False # True or False
+do_setSIS_Volt = False # True or False
 
-do_setSIS_Volt = True # True or False
-
-do_zeropots    = False # True of False
+do_zeropots    = True # True of False
 
 
 ############################
@@ -55,7 +54,7 @@ do_stepperTest = False
 
 if do_LabJackU3_DAQ0:
     from LabJack_control import LabJackU3_DAQ0
-    UCA_voltage = 4.3 # Volts in (0,5)
+    UCA_voltage = 0 # Volts in (0,5)
     status = LabJackU3_DAQ0(UCA_voltage)
 
 if do_LabJackU3_AIN0:
@@ -117,7 +116,7 @@ if do_Emag_PID:
 #############################
 if do_RFfreqset:
     from LOinput import  setfreq            
-    freq = 672 # in GHz
+    freq = 14.02 # in GHz
     setfreq(freq)
     
 if do_RFon:
@@ -144,7 +143,7 @@ if do_setfeedback:
 
 if do_setSIS:
     from control import setSIS
-    sispot   = 55500 # potentiometer position for the SIS bias
+    sispot   = 59493 # potentiometer position for the SIS bias
     feedback = True  # True or False, True (V mode), False (R mode)
     verbose  = True  # True or False
     careful   = False # True or False

@@ -4,7 +4,7 @@ def setfreq(freq=14):
     #freq = 0.0 # in GHz
     low_freq  = 13.541 # in GHz
     high_freq = 14.417 # in GHz
-    ampl = 14.0 # in dBm
+    ampl = 11.9 # in dBm
     
     low_LOfreq  = 650.0 # in GHz
     high_LOfreq = 692.0 # in GHz

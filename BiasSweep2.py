@@ -228,7 +228,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
               sisPot_feedTrue_list=None,
               sisPot_feedTrue_start=65000, sisPot_feedTrue_stop=52000, sisPot_feedTrue_step=100,
               sisPot_feedFalse_list=None,
-              getspecs=False, spec_linear_sc=True, spec_freq_start=0, spec_freq_stop=6,
+              getspecs=False, spec_linear_sc=True, spec_freq_start=0, spec_freq_stop=6, spec_freq_step=1,
               spec_sweep_time='AUTO', spec_video_band=10, spec_resol_band=30,
               spec_attenu=0, lin_ref_lev=300, aveNum=1,
               Kaxis=0, sisVaxis=1, magaxis=2, LOpowaxis=3, LOfreqaxis=4, IFbandaxis=5,
@@ -944,10 +944,19 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
             # total Power measured rapidly from the LabJack
             ### Note ### The LabJack and spectral data is written here, NOT below in the 'Write' section of the code
             if getspecs:
-                getspecPlusTP(spec_filename, TP_filename, TPSampleFrequency, verbose=verbose, linear_sc=spec_linear_sc,
-                  freq_start=spec_freq_start, freq_stop=spec_freq_stop, sweep_time=spec_sweep_time,
-                  video_band=spec_video_band, resol_band=spec_resol_band, attenu=spec_attenu,
-                  lin_ref_lev=lin_ref_lev, aveNum=aveNum,)
+                spectral_ranges = numpy.arange(spec_freq_start,spec_freq_stop,spec_freq_step)
+                if len(spectral_ranges) < 3:
+                    spectral_ranges = []
+                    spectral_ranges.append(spec_freq_start)
+                    spectral_ranges.append(spec_freq_stop)
+
+                for spec_index in range(len(spectral_ranges)-1):
+                    start_freq = spectral_ranges[spec_index]
+                    stop_freq  = spectral_ranges[spec_index+1]
+                    getspecPlusTP(spec_filename, TP_filename, TPSampleFrequency, verbose=verbose, linear_sc=spec_linear_sc,
+                                  freq_start=start_freq, freq_stop=stop_freq, sweep_time=spec_sweep_time,
+                                  video_band=spec_video_band, resol_band=spec_resol_band, attenu=spec_attenu,
+                                  lin_ref_lev=lin_ref_lev, aveNum=aveNum,)
             else:
                 LJ_streamTP(TP_filename, TPSampleFrequency, TPSampleTime, verbose)
         else:

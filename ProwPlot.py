@@ -108,7 +108,7 @@ if all_Ydata:
 # The directory what the data is kept
 start_num = 1
 #datadir   = '/Users/chw3k5/Google Drive/Kappa_preGoogleDrive/NA38/IVsweep/LO_freq/'
-datadir = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq/650s/653/'
+datadir = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec2/'
 
 if do_Ysweeps:
     sweep_num = start_num
@@ -142,25 +142,25 @@ if do_Ysweeps:
               sisPot_feedFalse_start=65100, sisPot_feedFalse_stop=57000, sisPot_feedFalse_step=100,
 
               TPSampleFrequency=100, TPSampleTime=2,
-              getspecs=False, spec_linear_sc=True, spec_freq_start=0, spec_freq_stop=6,
-              spec_sweep_time='AUTO', spec_video_band=100, spec_resol_band=100,
-              spec_attenu=0, lin_ref_lev=500, aveNum=8,
+              getspecs=True, spec_linear_sc=True, spec_freq_start=0.0, spec_freq_stop=5.01, spec_freq_step=1.0,
+              spec_sweep_time='AUTO', spec_video_band=300, spec_resol_band=300,
+              spec_attenu=0, lin_ref_lev=1000, aveNum=16,
 
-              LOfreq_start=650, LOfreq_stop=692, LOfreq_step=1,
-              LOfreqs_list=[653],
+              LOfreq_start=685, LOfreq_stop=649, LOfreq_step=1,
+              LOfreqs_list=None,
 
               do_magisweep=False, mag_meas=10,
               magisweep_start=50, magisweep_stop=39, magisweep_step=-1,
               magisweep_list=[55],
               magpotsweep_start=100000, magpotsweep_stop=70000-1, magpotsweep_step=-500,
-              magpotsweep_list=[82500,85000],#[100020, 94637, 89198, 83723],
+              magpotsweep_list=[85000],#[100020, 94637, 89198, 83723],
 
               do_LOuAsearch=True, do_LOuApresearch=False, LOuA_search_every_sweep=True,
               UCA_meas=10,
               UCAsweep_min=0.00, UCAsweep_max=0.00, UCAsweep_step=0.05,
               UCAsweep_list=None,
               LOuAsearch_start=30, LOuAsearch_stop=11, LOuAsearch_step=-1,
-              LOuAsearch_list=None,
+              LOuAsearch_list=[16],
 
               K_list=[296, 77],
               IFband_start=1.42, IFband_stop=1.42, IFband_step=0.10
@@ -211,7 +211,7 @@ if all_testsweeps:
     do_protestsweeps  = True
     do_plottestsweeps = True
 
-datadir='/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar04_15/'
+datadir='/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/'
 if istester:
     datadir += 'test/'
 elif isdummydewar:
@@ -227,7 +227,7 @@ else:
 
 datadir = windir(datadir)
 if do_testsweeps:
-    testsweeps(datadir, do_SISsweep=True, do_MAGsweep=False, iscold=iscold, verbose=True,
+    testsweeps(datadir, do_SISsweep=False, do_MAGsweep=True, iscold=iscold, verbose=True,
                numofmeas=10)
 
 if do_protestsweeps:
