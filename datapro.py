@@ -1,5 +1,5 @@
 from profunc import getparams, getSISdata, getmagdata, get_fastIV, ProcessMatrix, getLJdata, readspec, renamespec, windir
-from domath import conv
+from domath import conv, spike_removal
 from calibration import fetchoffset
 import os, numpy, sys, glob, shutil
 from sys import platform
@@ -308,8 +308,8 @@ def AstroDataPro(datadir, proparamsfile, rawdataname, prodataname, mono_switcher
 
     return astrosweep_found, sweep_mV_mean, sweep_TP_mean, TP_int_time
 
-def GetSpecData(datadir, specdataname, do_norm=True,  norm_freq=1.42, norm_band=0.060,  mono_switcher_mV=True,
-                do_regrid_mV=True, do_conv_mV=False, regrid_mesh_mV=0.01, min_cdf_mV=0.90, sigma_mV=0.03,
+def GetSpecData(datadir, specdataname, remove_spikes=True, do_norm=True,  norm_freq=1.42, norm_band=0.060,  mono_switcher_mV=True,
+                do_regrid_mV=True, do_conv_mV=False, regrid_mesh_mV_spec=None, min_cdf_mV=0.90, sigma_mV=0.03,
                 do_freq_conv=False, min_cdf_freq=0.90, sigma_GHz=0.05, verbose=False):
     do_renamespec = False
     specsweep_found = False
@@ -364,6 +364,11 @@ def GetSpecData(datadir, specdataname, do_norm=True,  norm_freq=1.42, norm_band=
                 print "Killing script"
                 sys.exit()
 
+
+            # spike removal
+            if remove_spikes:
+                temp_pwr = spike_removal(temp_pwr,verbose=verbose)
+
             # Normalization
             if do_norm:
                 inband_spec_pwr = []
@@ -374,23 +379,26 @@ def GetSpecData(datadir, specdataname, do_norm=True,  norm_freq=1.42, norm_band=
                 sweep_pwr.append(temp_pwr*norm_scale)
             else:
                  sweep_pwr.append(temp_pwr)
+        if regrid_mesh_mV_spec is not None:
+            ### Process the array that the spectra so the the there are regularly spaced units of mV, and convolved
+            spec_mV_array = numpy.array(sweep_pwr)
+            # put the mV data on the 2D array of pwr(mV,freq) so that it can be sorted
+            mV_len   = len(spec_mV_array[:,0])
+            freq_len = len(spec_mV_array[0,:])
+            data_matrix = numpy.zeros((mV_len,freq_len+1))
+            data_matrix[:,0]  = sweep_mV_mean
+            data_matrix[:,1:] = spec_mV_array
 
-        ### Process the array that the spectra so the the there are regularly spaced units of mV, and convolved
-        spec_mV_array = numpy.array(sweep_pwr)
-        # put the mV data on the 2D array of pwr(mV,freq) so that it can be sorted
-        mV_len   = len(spec_mV_array[:,0])
-        freq_len = len(spec_mV_array[0,:])
-        data_matrix = numpy.zeros((mV_len,freq_len+1))
-        data_matrix[:,0]  = sweep_mV_mean
-        data_matrix[:,1:] = spec_mV_array
+            # Process the matrix in mV
+            data_matrix, raw_matrix, mono_matrix, regrid_matrix, conv_matrix \
+                = ProcessMatrix(data_matrix, mono_switcher_mV, do_regrid_mV, do_conv_mV, regrid_mesh_mV,
+                                min_cdf_mV, sigma_mV, verbose)
+            new_mV_list   = list(data_matrix[:,0])
+            new_mV_len    = len(new_mV_list)
+            spec_mV_array = data_matrix[:,1:]
+        else:
+            spec_mV_array = sweep_pwr
 
-        # Process the matrix in mV
-        data_matrix, raw_matrix, mono_matrix, regrid_matrix, conv_matrix \
-            = ProcessMatrix(data_matrix, mono_switcher_mV, do_regrid_mV, do_conv_mV, regrid_mesh_mV,
-                            min_cdf_mV, sigma_mV, verbose)
-        new_mV_list   = list(data_matrix[:,0])
-        new_mV_len    = len(new_mV_list)
-        spec_mV_array = data_matrix[:,1:]
         ### Do a convolution of the matrix in frequency
         if do_freq_conv:
             spec_mV_array_transpose = numpy.matrix.transpose(spec_mV_array)
@@ -463,7 +471,7 @@ def SweepPro(datadir, proparamsfile, prodataname_fast, prodataname_unpump, rawda
     specsweep_found \
         = GetSpecData(datadir, specdataname, do_norm=do_normspectra, norm_freq=norm_freq, norm_band=norm_band,
                       mono_switcher_mV=mono_switcher_mV, do_regrid_mV=do_regrid_mV, do_conv_mV=do_conv_mV,
-                      regrid_mesh_mV=regrid_mesh_mV, min_cdf_mV=min_cdf_mV, sigma_mV=sigma_mV,
+                      regrid_mesh_mV_spec=regrid_mesh_mV_spec, min_cdf_mV=min_cdf_mV, sigma_mV=sigma_mV,
                       do_freq_conv=do_freq_conv, min_cdf_freq=min_cdf_freq, sigma_GHz=sigma_GHz, verbose=verbose)
 
     return params_found, standSISdata_found, standmagdata_found, fastIV_found, unpumped_found, astrosweep_found, \

@@ -579,7 +579,7 @@ def Specdata2Yfactor(prodatadir, verbose=False):
 
 
     if status:
-        YspecmV = hot_pwr/cold_pwr
+        YspecmV = (hot_pwr**2)/(cold_pwr**2)
         numpy.save(prodatadir + "Y.npy",YspecmV)
         numpy.save(prodatadir + "Y_freq.npy",hot_freqs)
         numpy.save(prodatadir + "Y_mV.npy",hot_mVs)
@@ -620,4 +620,26 @@ def Ydata_stats(mV_Yfactor, Yfactor, start_Yrange, end_Yrange):
     if ((mV_min_Yfactor==-999999) or (min_Yfactor==999999)):
         status=False
         print "The was a problem finding the mV of the min Yfactor"
-    return mV_max_Yfactor, max_Yfactor, mV_min_Yfactor, min_Yfactor, mean_Yfactor, status 
+    return mV_max_Yfactor, max_Yfactor, mV_min_Yfactor, min_Yfactor, mean_Yfactor, status
+
+
+def spike_removal(data_list,remove_threshold=10.0,verbose=False):
+    list_len = len(data_list)
+    data_array = numpy.array(data_list)
+    diff_array = data_array[:-1]-data_array[1:]
+    mean_diff = numpy.mean(diff_array)
+    threshold_diff = mean_diff*remove_threshold
+    try:
+        right_diff = abs(diff_array[0])
+        clean_data_list=data_list
+        for index in range(1,list_len-1):
+            left_diff  = right_diff
+            right_diff = abs(diff_array[index])
+            if ((threshold_diff < left_diff) and (threshold_diff < right_diff)):
+                if verbose:
+                    print "removing data spike, spike value:", data_list[index], "  left value:",data_list[index-1], "  rigt value:",data_list[index+1]
+                clean_data_list[index]=(data_list[index-1]+data_list[index+1])/2.0
+    except:
+        clean_data_list = None
+
+    return clean_data_list

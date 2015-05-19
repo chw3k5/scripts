@@ -82,6 +82,8 @@ def DataTrimmer(min_trim, max_trim, ordered_set, trim_list):
                                 #print ordered_set[index_min_trim]
                                 min4min_trim = min(min_trimmed)
                                 break
+                    else:
+                        min_trimmed = ordered_set
                 else:
                     min4min_trim = set_min
                     min_trimmed = ordered_set
@@ -1360,7 +1362,7 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
         ###### Analyze the scaling information ######
         #############################################
 
-        # Unify xscale string lis then compress mins and maxes to a list that size.
+        # Unify xscale string list then compress mins and maxes to a list that size.
 
 
         # Axis X scaling
@@ -1739,8 +1741,10 @@ def SingleSpectraPlotter(datadir, search_4Snums=False, Snums='', verbose=False,
     return
 
 import random
-def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[], display_params=True, verbose=False,
-                       show_plot=False, save_plot=True, do_eps=False):
+def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
+                      mV_min=None,mV_max=None,
+                      display_params=True, verbose=False,
+                      show_plot=False, save_plot=True, do_eps=False):
 
     colors = ['BlueViolet','Brown','CadetBlue','Chartreuse', 'Chocolate','Coral','CornflowerBlue','Crimson','Cyan',
               'DarkBlue','DarkCyan','DarkGoldenRod', 'DarkGreen','DarkMagenta','DarkOliveGreen','DarkOrange',
@@ -1752,19 +1756,55 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[], display_params=Tru
               'Red','RoyalBlue','SaddleBrown','Salmon','SandyBrown','Sienna','SkyBlue','SlateBlue','SlateGrey',
               'SpringGreen','SteelBlue','Teal','Tomato','Turquoise','Violet','Yellow','YellowGreen']
 
-    random.shuffle(colors)
-    print colors
+    # random.shuffle(colors)
+
+    #####################
+    ###### Options ######
+    #####################
+    # This fraction is added to the total size of the curves on the axis to make a margin
+    x_margin_right = 0.
+    x_margin_left  = 0.
+    y_margin_top   = 0.5
+    y_margin_bot   = 0.
+
+    ### Legend ###
+    legendsize = 8
+    legendloc  = 4
+
+        ### Axis Limits ###
+    # X-axis
+    if mV_min is not None:
+        xlimL = mV_min
+    else:
+        xlimL = 999999.
+    if mV_max is not None:
+        xlimR = mV_max
+    else:
+        xlimR = -999999.
+
+
+    # Y-axis
+    ylimL =   0
+    ylimR =  10
+    yscale = abs(ylimR - ylimL)
+
+    ### Parameter Colors
+    LOpwr_color       = 'dodgerblue'
+    mag_color         = 'coral'
+    LOfreq_color      = 'thistle'
+    IFband_color      = 'aquamarine'
+    TP_int_time_color = 'darkgreen'
 
 
     Ynums, proYdatadir, plotdir = GetProDirsNames(datadir, search_4Ynums, Ynums)
     for Ynum in Ynums:
         if verbose:
             print "ploting Spectra for Snum: " + str(Ynum)
-        proSdatadir  = proYdatadir + Ynum + '/'
+        prodir  = proYdatadir + Ynum + '/'
 
-        X_file = proSdatadir + "Y_freq.npy"
-        Y_file = proSdatadir + "Y_mV.npy"
-        Z_file = proSdatadir + "Y.npy"
+        X_file = prodir + "Y_freq.npy"
+        Y_file = prodir + "Y_mV.npy"
+        Z_file = prodir + "Y.npy"
 
         freq_matrix = numpy.load(X_file)
         mV_matrix   = numpy.load(Y_file)
@@ -1780,8 +1820,8 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[], display_params=Tru
 
         ### Get the Processed Parameters of the Sweep
         paramsfile_list = []
-        paramsfile_list.append(proYdatadir + 'hotproparams.csv')
-        paramsfile_list.append(proYdatadir + 'coldproparams.csv')
+        paramsfile_list.append(prodir + 'hotproparams.csv')
+        paramsfile_list.append(prodir + 'coldproparams.csv')
         K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V, meanmag_mA, stdmag_mA, LOuAsearch, LOuAset, UCA_volt,\
         LOuA_set_pot, LOuA_magpot,meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp, stdSIS_tp, SIS_pot, \
         del_time, LOfreq, IFband, meas_num, TP_int_time, TP_num, TP_freq, mag_chan \
@@ -1806,185 +1846,206 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[], display_params=Tru
                 print biaspoints, 'Bias points for Y factor spectral calculation were found'
 
         print mVs, freqs
-        plot_list = []
+        ax1_plot_list = []
         leglines  = []
         leglabels = []
         color_len = len(colors)
         for spec_index in range(biaspoints):
-            color = colors((spec_index % color_len))
+            color = colors[(spec_index % color_len)]
             mV = mVs[spec_index]
             pwrs = pwrs_matrix[spec_index,:]
-            plot_list, leglines, leglabels \
+            ax1_plot_list, leglines, leglabels \
                 = xyplotgen(freqs, pwrs, label='Bias'+str('%1.2f' % mV)+'mV',
-                            plot_list=plot_list, leglines=leglines, leglabels=leglabels,
+                            plot_list=ax1_plot_list, leglines=leglines, leglabels=leglabels,
                             color=color, linw=1, ls='-', scale_str='' )
 
 
-        ### Axis Labels ###
-        ax1.set_xlabel('Frequency (GHz)')
-        ax1.set_ylabel('Y factor')
-        ### Axis Limits
-        #ax1.set_xlim([ax1_xlim0, ax1_xlim1])
-        #ax1.set_ylim([ax1_ylim0, ax1_ylim1])
 
-        if (plot_list != []):
+
+        if (ax1_plot_list != []):
             fig, ax1 = plt.subplots()
-            for plot_obj in plot_list:
+
+            ### Axis Limits
+            #ax1.set_xlim([ax1_xlim0, ax1_xlim1])
+            #ax1.set_ylim([ax1_ylim0, ax1_ylim1])
+            for plot_obj in ax1_plot_list:
                 (x_vector, y_vector, color, linw, ls, scale_str) = plot_obj
                 ax1.plot(x_vector, y_vector, color=color, linewidth=linw, ls=ls)
 
-        ###############################################
-        ###### Things to Make the Plot Look Good ######
-        ###############################################
 
-        ### Legend ###
-        final_leglines  = []
-        final_leglabels = []
-        for indexer in range(len(leglines)):
-            if ((leglines[indexer] != None) and (leglabels[indexer] != None)):
-                final_leglabels.append(leglabels[indexer])
-                legline_data = leglines[indexer]
-                color = legline_data[0]
-                ls    = legline_data[1]
-                linw  = legline_data[2]
-                final_leglines.append(plt.Line2D(range(10), range(10), color=color, ls=ls, linewidth=linw))
-        matplotlib.rcParams['legend.fontsize'] = legendsize
-        plt.legend(tuple(final_leglines),tuple(final_leglabels), numpoints=1, loc=legendloc)
+            ##############
+            ### AXIS 1 ###
+            ##############
+            if (ax1_plot_list != []):
+                fig, ax1 = plt.subplots()
+                for plot_obj in ax1_plot_list:
+                    (x_vector, y_vector, color, linw, ls, scale_str) = plot_obj
+                    # scale_factor = findscaling(scale_str,ax1_yscales)
+                    scale_factor = 1.0
+                    scale_x_vector = numpy.array(x_vector)
+                    scale_y_vector = numpy.array(y_vector)*scale_factor
 
+                    if verbose:
+                        print 'ax1', scale_str, scale_factor, color, linw, ls, numpy.shape(scale_x_vector), numpy.shape(scale_y_vector)
+                    ax1.plot(scale_x_vector, scale_y_vector, color=color, linewidth=linw, ls=ls)
 
 
 
-        ######################################################
-        ###### Put Sweep ParameterS on the Plot as Text ######
-        ######################################################
-        if display_params:
-            ################
-            ### Column 1 ###
-            ################
-            xpos = xlimL + (4.0/18.0)*xsize
-            yincrement = (y2size*(1+(y_margin_top+y_margin_bot)))/25.0
-            if ax2_plot_list != []:
-                ypos = ylimR2+y_margin_top*y2size - yincrement
+                xsize = abs(xlimL-xlimR)
+                ysize = abs(ylimL-ylimR)
+
+
+            ###############################################
+            ###### Things to Make the Plot Look Good ######
+            ###############################################
+            ### Legend ###
+            final_leglines  = []
+            final_leglabels = []
+            for indexer in range(len(leglines)):
+                if ((leglines[indexer] != None) and (leglabels[indexer] != None)):
+                    final_leglabels.append(leglabels[indexer])
+                    legline_data = leglines[indexer]
+                    color = legline_data[0]
+                    ls    = legline_data[1]
+                    linw  = legline_data[2]
+                    final_leglines.append(plt.Line2D(range(10), range(10), color=color, ls=ls, linewidth=linw))
+            matplotlib.rcParams['legend.fontsize'] = legendsize
+            plt.legend(tuple(final_leglines),tuple(final_leglabels), numpoints=1, loc=legendloc)
+
+
+
+
+            ######################################################
+            ###### Put Sweep ParameterS on the Plot as Text ######
+            ######################################################
+            if display_params:
+                ################
+                ### Column 1 ###
+                ################
+                xpos = xlimL + (4.0/18.0)*xsize
+                yincrement = (ysize*(1+(y_margin_top+y_margin_bot)))/25.0
+                ypos = ylimR+y_margin_top*ysize  - yincrement
+                if LOuAset is not None:
+                    LOuAset_str = Params_2_str(LOuAset, '%2.3f')
+                    plt.text(xpos, ypos, LOuAset_str + " uA LO", color = LOpwr_color)
+                    ypos -= yincrement
+                if UCA_volt is not None:
+                    UCA_volt_str = Params_2_str(UCA_volt, '%1.5f')
+                    plt.text(xpos, ypos, UCA_volt_str + " V  UCA", color = LOpwr_color)
+                    ypos -= yincrement
+                if meanSIS_mV is not None:
+                    meanSIS_mV_str = Params_2_str(meanSIS_mV, '%2.2f')
+                    if stdSIS_mV is not None:
+                        stdSIS_mV_str = Params_2_str(stdSIS_mV, '%2.2f', 'round')
+                        plt.text(xpos, ypos, meanSIS_mV_str + " " + stdSIS_mV_str + " mV", color = LOpwr_color)
+                    else:
+                        plt.text(xpos, ypos, str('%1.3f' % meanSIS_mV) + " mV", color = LOpwr_color)
+                    ypos -= yincrement
+                if meanSIS_uA is not None:
+                    meanSIS_uA_str = Params_2_str(meanSIS_uA, '%2.2f')
+                    if stdSIS_uA is not None:
+                        stdSIS_uA_str = Params_2_str(stdSIS_uA, '%2.2f', 'round')
+                        plt.text(xpos, ypos, meanSIS_uA_str + " " + stdSIS_uA_str+ " uA", color = LOpwr_color)
+                    else:
+                        plt.text(xpos, ypos, str('%2.2f' % meanSIS_uA) + " uA", color = LOpwr_color)
+                    ypos -= yincrement
+                if LOuA_set_pot is not None:
+                    LOuA_set_pot_str = Params_2_str(LOuA_set_pot, '%06.f')
+                    plt.text(xpos, ypos, "@" + LOuA_set_pot_str + " SIS bias pot", color = LOpwr_color)
+                    ypos -= yincrement
+                if LOuA_magpot is not None:
+                    LOuA_magpot_str = Params_2_str(LOuA_magpot, '%06f')
+                    plt.text(xpos, ypos, "@" + LOuA_magpot_str + "  Magnet pot", color = LOpwr_color)
+                    ypos -= yincrement
+                # if ((Ydatafound) and (plot_Yfactor)):
+                #     Yfactor_max_str = Params_2_str(Yfactor_max, '%1.2f')
+                #     mV_Yfactor_max_str = Params_2_str(mV_Yfactor_max, '%1.2f')
+                #     plt.text(xpos, ypos, 'max Y-factor ' +Yfactor_max_str + ' @ '+mV_Yfactor_max_str+' mV', color = Yfactor_color)
+                #     ypos -= yincrement
+                #     if Y_mV_min is None:
+                #         Y_mV_range_min = min(mV_Yfactor)
+                #     else:
+                #          Y_mV_range_min = Y_mV_min
+                #     if Y_mV_max is None:
+                #         Y_mV_range_max = max(mV_Yfactor)
+                #     else:
+                #          Y_mV_range_max = Y_mV_max
+                #     Y_mV_range_min_str = Params_2_str(Y_mV_range_min, '%1.2f')
+                #     Y_mV_range_max_str = Params_2_str(Y_mV_range_max, '%1.2f')
+                #     plt.text(xpos, ypos, 'in range [' + Y_mV_range_min_str + ',' + Y_mV_range_max_str + '] mV', color = Yfactor_color)
+                #     ax1.plot([mV_Yfactor_max, mV_Yfactor_max],[ylimL2, ylimR2], color=Yfactor_color)
+                #     ypos -= yincrement
+
+
+                ################
+                ### Column 2 ###
+                ################
+                xpos = xlimL + (12.0/18.0)*xsize
+                ypos = ylimR+y_margin_top*ysize  - yincrement
+
+                if magiset is not None:
+                    plt.text(xpos, ypos,"magnet set value", color = mag_color)
+                    ypos -= yincrement
+                    magiset_str = Params_2_str(magiset, '%2.4f')
+                    plt.text(xpos, ypos, magiset_str + " mA" , color=mag_color)
+                    ypos -= yincrement
+                if meanmag_mA is not None:
+                    plt.text(xpos, ypos,"magnet meas value", color = mag_color)
+                    ypos -= yincrement
+                    meanmag_mA_str = Params_2_str(meanmag_mA, '%2.4f')
+                    stdmag_mA_str = Params_2_str(stdmag_mA, '%2.4f', 'round')
+                    plt.text(xpos, ypos, meanmag_mA_str +  " " + stdmag_mA_str + " mA", color = mag_color)
+                    ypos -= yincrement
+                if magpot is not None:
+                    magpot_str = Params_2_str(magpot, '%06.f')
+                    plt.text(xpos, ypos, magpot_str + " mag pot", color = mag_color)
+                    ypos -= yincrement
+                if LOfreq is not None:
+                    LOfreq_str = Params_2_str(LOfreq, '%3.2f')
+                    plt.text(xpos, ypos, LOfreq_str + " GHz", color = LOfreq_color)
+                    ypos -= yincrement
+                if IFband is not None:
+                    IFband_str = Params_2_str(IFband, '%1.3f')
+                    plt.text(xpos, ypos, IFband_str + " GHz", color = IFband_color)
+                    ypos -= yincrement
+                if TP_int_time is not None:
+                    TP_int_time_str = Params_2_str(TP_int_time, '%1.3f')
+                    plt.text(xpos, ypos, TP_int_time_str + " secs", color = TP_int_time_color)
+                    ypos -= yincrement
+
+
+            ### Axis Labels ###
+            ax1.set_xlabel('Frequency (GHz)')
+            ax1.set_ylabel('Y factor')
+            ax1.set_ylim([0, 3])
+
+            ##################
+            ### Save Plots ###
+            ##################
+            if save_plot:
+                if do_eps:
+                    filename = plotdir+Ynum+"spec.eps"
+                    if verbose:
+                        print "saving EPS file: ", filename
+                    plt.savefig(filename)
+                else:
+                    filename = plotdir+Ynum+"spec.png"
+                    if verbose:
+                        print "saving PNG file: ", filename
+                    plt.savefig(filename)
+
+
+            ##################
+            ### Show Plots ###
+            ##################
+            if show_plot:
+                plt.show()
+                plt.draw()
             else:
-                ypos = ylimR1+y_margin_top*y1size  - yincrement
-            if LOuAset is not None:
-                LOuAset_str = Params_2_str(LOuAset, '%2.3f')
-                plt.text(xpos, ypos, LOuAset_str + " uA LO", color = LOpwr_color)
-                ypos -= yincrement
-            if UCA_volt is not None:
-                UCA_volt_str = Params_2_str(UCA_volt, '%1.5f')
-                plt.text(xpos, ypos, UCA_volt_str + " V  UCA", color = LOpwr_color)
-                ypos -= yincrement
-            if meanSIS_mV is not None:
-                meanSIS_mV_str = Params_2_str(meanSIS_mV, '%2.2f')
-                if stdSIS_mV is not None:
-                    stdSIS_mV_str = Params_2_str(stdSIS_mV, '%2.2f', 'round')
-                    plt.text(xpos, ypos, meanSIS_mV_str + " " + stdSIS_mV_str + " mV", color = LOpwr_color)
-                else:
-                    plt.text(xpos, ypos, str('%1.3f' % meanSIS_mV) + " mV", color = LOpwr_color)
-                ypos -= yincrement
-            if meanSIS_uA is not None:
-                meanSIS_uA_str = Params_2_str(meanSIS_uA, '%2.2f')
-                if stdSIS_uA is not None:
-                    stdSIS_uA_str = Params_2_str(stdSIS_uA, '%2.2f', 'round')
-                    plt.text(xpos, ypos, meanSIS_uA_str + " " + stdSIS_uA_str+ " uA", color = LOpwr_color)
-                else:
-                    plt.text(xpos, ypos, str('%2.2f' % meanSIS_uA) + " uA", color = LOpwr_color)
-                ypos -= yincrement
-            if LOuA_set_pot is not None:
-                LOuA_set_pot_str = Params_2_str(LOuA_set_pot, '%06.f')
-                plt.text(xpos, ypos, "@" + LOuA_set_pot_str + " SIS bias pot", color = LOpwr_color)
-                ypos -= yincrement
-            if LOuA_magpot is not None:
-                LOuA_magpot_str = Params_2_str(LOuA_magpot, '%06f')
-                plt.text(xpos, ypos, "@" + LOuA_magpot_str + "  Magnet pot", color = LOpwr_color)
-                ypos -= yincrement
-            if ((Ydatafound) and (plot_Yfactor)):
-                Yfactor_max_str = Params_2_str(Yfactor_max, '%1.2f')
-                mV_Yfactor_max_str = Params_2_str(mV_Yfactor_max, '%1.2f')
-                plt.text(xpos, ypos, 'max Y-factor ' +Yfactor_max_str + ' @ '+mV_Yfactor_max_str+' mV', color = Yfactor_color)
-                ypos -= yincrement
-                if Y_mV_min is None:
-                    Y_mV_range_min = min(mV_Yfactor)
-                else:
-                     Y_mV_range_min = Y_mV_min
-                if Y_mV_max is None:
-                    Y_mV_range_max = max(mV_Yfactor)
-                else:
-                     Y_mV_range_max = Y_mV_max
-                Y_mV_range_min_str = Params_2_str(Y_mV_range_min, '%1.2f')
-                Y_mV_range_max_str = Params_2_str(Y_mV_range_max, '%1.2f')
-                plt.text(xpos, ypos, 'in range [' + Y_mV_range_min_str + ',' + Y_mV_range_max_str + '] mV', color = Yfactor_color)
-                ax2.plot([mV_Yfactor_max, mV_Yfactor_max],[ylimL2, ylimR2], color=Yfactor_color)
-                ypos -= yincrement
+                plt.close("all")
 
-
-            ################
-            ### Column 2 ###
-            ################
-            xpos = xlimL + (12.0/18.0)*xsize
-            if ax2_plot_list != []:
-                ypos = ylimR2+y_margin_top*y2size - yincrement
-            else:
-                ypos = ylimR1+y_margin_top*y1size  - yincrement
-
-            if magiset is not None:
-                plt.text(xpos, ypos,"magnet set value", color = mag_color)
-                ypos -= yincrement
-                magiset_str = Params_2_str(magiset, '%2.4f')
-                plt.text(xpos, ypos, magiset_str + " mA" , color=mag_color)
-                ypos -= yincrement
-            if meanmag_mA is not None:
-                plt.text(xpos, ypos,"magnet meas value", color = mag_color)
-                ypos -= yincrement
-                meanmag_mA_str = Params_2_str(meanmag_mA, '%2.4f')
-                stdmag_mA_str = Params_2_str(stdmag_mA, '%2.4f', 'round')
-                plt.text(xpos, ypos, meanmag_mA_str +  " " + stdmag_mA_str + " mA", color = mag_color)
-                ypos -= yincrement
-            if magpot is not None:
-                magpot_str = Params_2_str(magpot, '%06.f')
-                plt.text(xpos, ypos, magpot_str + " mag pot", color = mag_color)
-                ypos -= yincrement
-            if LOfreq is not None:
-                LOfreq_str = Params_2_str(LOfreq, '%3.2f')
-                plt.text(xpos, ypos, LOfreq_str + " GHz", color = LOfreq_color)
-                ypos -= yincrement
-            if IFband is not None:
-                IFband_str = Params_2_str(IFband, '%1.3f')
-                plt.text(xpos, ypos, IFband_str + " GHz", color = IFband_color)
-                ypos -= yincrement
-            if TP_int_time is not None:
-                TP_int_time_str = Params_2_str(TP_int_time, '%1.3f')
-                plt.text(xpos, ypos, TP_int_time_str + " secs", color = TP_int_time_color)
-                ypos -= yincrement
-
-        ##################
-        ### Save Plots ###
-        ##################
-        if save_plot:
-            if do_eps:
-                filename = plotdir+Ynum+".eps"
-                if verbose:
-                    print "saving EPS file: ", filename
-                plt.savefig(filename)
-            else:
-                filename = plotdir+Ynum+".png"
-                if verbose:
-                    print "saving PNG file: ", filename
-                plt.savefig(filename)
-
-
-        ##################
-        ### Show Plots ###
-        ##################
-        if show_plot:
-            plt.show()
-            plt.draw()
-        else:
-            plt.close("all")
-
-        if verbose:
-            print " "
+            if verbose:
+                print " "
     plt.close("all")
 
 

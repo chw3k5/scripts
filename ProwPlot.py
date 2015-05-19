@@ -22,7 +22,7 @@ repeat  = 1
 do_Ysweeps              = False
 do_YdataPro             = True
 do_YfactotSweepsPlotter = True
-do_YSpectra_Plotter     = False
+do_YSpectra_Plotter     = True
 
 
 
@@ -109,7 +109,11 @@ if all_Ydata:
 start_num = 1
 #datadir   = '/Users/chw3k5/Google Drive/Kappa_preGoogleDrive/NA38/IVsweep/LO_freq/'
 datadir = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec2/'
-
+Ynums = ['Y0022']
+if Ynums ==[]:
+    search4Ynums = True
+else:
+    search4Ynums = False
 if do_Ysweeps:
     sweep_num = start_num
     BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=False,
@@ -168,13 +172,13 @@ if do_Ysweeps:
 
 
 if do_YdataPro:
-    YdataPro(datadir, verbose=True, search_4Ynums=True, search_str='Y', Ynums=['Y0001'], useOFFdata=False, Off_datadir='',
-             mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01, do_conv_mV=True, sigma_mV=0.08, min_cdf_mV=0.95,
+    YdataPro(datadir, verbose=True, search_4Ynums=search4Ynums, search_str='Y', Ynums=Ynums, useOFFdata=False, Off_datadir='',
+             mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.1, do_conv_mV=True, sigma_mV=0.08, min_cdf_mV=0.95,
              do_normspectra=False, norm_freq=1.42, norm_band=0.060, do_freq_conv=True, min_cdf_freq=0.90,
-             sigma_GHz=0.10)
+             sigma_GHz=0.05)
 
 if do_YfactotSweepsPlotter:
-    YfactorSweepsPlotter(datadir, search_4Ynums=True, Ynums=[], verbose=True, mV_min=0, mV_max=5,
+    YfactorSweepsPlotter(datadir, search_4Ynums=search4Ynums, Ynums=Ynums, verbose=True, mV_min=0, mV_max=5,
                          Y_mV_min=-0.4, Y_mV_max=2.5,
                          plot_rawhot_mVuA=False, plot_rawhot_mVtp=True,
                          plot_rawcold_mVuA=False, plot_rawcold_mVtp=True,
@@ -191,7 +195,7 @@ if do_YfactotSweepsPlotter:
                          do_xkcd=False)
 
 if do_YSpectra_Plotter:
-    YSpectraPlotter2D(datadir, search_4Ynums=True, Ynums=[], verbose=True,
+    YSpectraPlotter2D(datadir, search_4Ynums=search4Ynums, Ynums=Ynums, verbose=True,
                     show_plot=False, save_plot=True, do_eps=False)
 
 
