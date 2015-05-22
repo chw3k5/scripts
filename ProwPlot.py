@@ -173,8 +173,8 @@ if do_Ysweeps:
 
 if do_YdataPro:
     YdataPro(datadir, verbose=True, search_4Ynums=search4Ynums, search_str='Y', Ynums=Ynums, useOFFdata=False, Off_datadir='',
-             mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.1, do_conv_mV=True, sigma_mV=0.08, min_cdf_mV=0.95,
-             do_normspectra=False, norm_freq=1.42, norm_band=0.060, do_freq_conv=True, min_cdf_freq=0.90,
+             mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.1, do_conv_mV=True, sigma_mV=0.05, min_cdf_mV=0.95,
+             do_normspectra=False, regrid_mesh_mV_spec=0.2, norm_freq=1.42, norm_band=0.060, do_freq_conv=True, min_cdf_freq=0.90,
              sigma_GHz=0.05)
 
 if do_YfactotSweepsPlotter:

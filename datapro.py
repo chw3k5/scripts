@@ -391,7 +391,7 @@ def GetSpecData(datadir, specdataname, remove_spikes=True, do_norm=True,  norm_f
 
             # Process the matrix in mV
             data_matrix, raw_matrix, mono_matrix, regrid_matrix, conv_matrix \
-                = ProcessMatrix(data_matrix, mono_switcher_mV, do_regrid_mV, do_conv_mV, regrid_mesh_mV,
+                = ProcessMatrix(data_matrix, mono_switcher_mV, do_regrid_mV, do_conv_mV, regrid_mesh_mV_spec,
                                 min_cdf_mV, sigma_mV, verbose)
             new_mV_list   = list(data_matrix[:,0])
             new_mV_len    = len(new_mV_list)
@@ -439,7 +439,7 @@ def GetSpecData(datadir, specdataname, remove_spikes=True, do_norm=True,  norm_f
 
 def SweepPro(datadir, proparamsfile, prodataname_fast, prodataname_unpump, rawdataname_ast, prodataname_ast, specdataname,
              mono_switcher_mV=True, do_regrid_mV=True, do_conv_mV=False, regrid_mesh_mV=0.01, min_cdf_mV=0.90, sigma_mV=0.03,
-             do_normspectra=False, norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90,
+             do_normspectra=False, regrid_mesh_mV_spec=0.1, norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90,
              sigma_GHz=0.05,verbose=False):
 
     ###### Make the parameters file
@@ -480,7 +480,7 @@ def SweepPro(datadir, proparamsfile, prodataname_fast, prodataname_unpump, rawda
 
 def SweepDataPro(datadir, verbose=False, search_4Sweeps=True, search_str='Y', Snums=[],
                  mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01, do_conv_mV=False, sigma_mV=0.03, min_cdf_mV=0.95,
-                 do_normspectra=False, norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90, sigma_GHz=0.05):
+                 do_normspectra=False, regrid_mesh_mV_spec=0.1, norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90, sigma_GHz=0.05):
 
 
     from profunc import getSnums
@@ -532,14 +532,14 @@ def SweepDataPro(datadir, verbose=False, search_4Sweeps=True, search_str='Y', Sn
             = SweepPro(sweepdir, proparamsfile, prodataname_fast, prodataname_unpump, rawdataname_ast, prodataname_ast, specdataname,
              mono_switcher_mV=mono_switcher_mV, do_regrid_mV=do_regrid_mV, do_conv_mV=do_conv_mV,
              regrid_mesh_mV=regrid_mesh_mV, min_cdf_mV=min_cdf_mV, sigma_mV=sigma_mV,
-             do_normspectra=do_normspectra, norm_freq=norm_freq, norm_band=norm_band, do_freq_conv=do_freq_conv,
+             do_normspectra=do_normspectra,regrid_mesh_mV_spec=regrid_mesh_mV_spec, norm_freq=norm_freq, norm_band=norm_band, do_freq_conv=do_freq_conv,
              min_cdf_freq=min_cdf_freq, sigma_GHz=sigma_GHz,verbose=verbose)
 
     return
 
 def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[], useOFFdata=False, Off_datadir='',
              mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01, do_conv_mV=False, sigma_mV=0.03, min_cdf_mV=0.95,
-             do_normspectra=False, norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90,
+             do_normspectra=False, regrid_mesh_mV_spec=0.1, norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90,
              sigma_GHz=0.05):
 
 
@@ -603,7 +603,7 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
             = SweepPro(hotdir, hotproparamsfile, hotprodataname_fast, hotprodataname_unpump, hotrawdataname_ast, hotprodataname_ast,
                        hotspecdataname, mono_switcher_mV=mono_switcher_mV, do_regrid_mV=do_regrid_mV,
                        do_conv_mV=do_conv_mV, regrid_mesh_mV=regrid_mesh_mV, min_cdf_mV=min_cdf_mV, sigma_mV=sigma_mV,
-                       do_normspectra=do_normspectra, norm_freq=norm_freq, norm_band=norm_band,
+                       do_normspectra=do_normspectra, regrid_mesh_mV_spec=regrid_mesh_mV_spec, norm_freq=norm_freq, norm_band=norm_band,
                        do_freq_conv=do_freq_conv,min_cdf_freq=min_cdf_freq, sigma_GHz=sigma_GHz,verbose=verbose)
         
         ####################################
@@ -625,7 +625,7 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
             = SweepPro(colddir, coldproparamsfile, coldprodataname_fast, coldprodataname_unpump, coldrawdataname_ast, coldprodataname_ast,
                        coldspecdataname, mono_switcher_mV=mono_switcher_mV, do_regrid_mV=do_regrid_mV,
                        do_conv_mV=do_conv_mV, regrid_mesh_mV=regrid_mesh_mV, min_cdf_mV=min_cdf_mV, sigma_mV=sigma_mV,
-                       do_normspectra=do_normspectra, norm_freq=norm_freq, norm_band=norm_band,
+                       do_normspectra=do_normspectra, regrid_mesh_mV_spec=regrid_mesh_mV_spec, norm_freq=norm_freq, norm_band=norm_band,
                        do_freq_conv=do_freq_conv,min_cdf_freq=min_cdf_freq, sigma_GHz=sigma_GHz,verbose=verbose)
 
 
