@@ -4,10 +4,15 @@
 # Import this is the directory that has my scripts
 import sys
 from control import opentelnet, closetelnet, default_sispot, default_magpot
+from profunc import windir
+import matplotlib
+from matplotlib import pyplot as plt
 
 #############################
 ###### From control.py ######
 #############################
+open_and_close_telnet = False
+
 do_LabJackU3_DAQ0 = False # True or False
 do_LabJackU3_AIN0 = False # True or False
 do_LJ_streamTP    = False # True or False
@@ -32,14 +37,15 @@ do_measSIS_TP  = False # True or False
 do_setLOI      = False # True or False
 do_setSIS_Volt = False # True or False
 
-do_zeropots    = True # True of False
+do_zeropots    = False # True of False
 
 
 ############################
 ###### From domath.py ######
 ############################
 
-do_AllanVar    = False # True or False
+do_AllanVar      = False # True or False
+do_spike_remover = True
 
 ####################################
 ###### From StepperControl.py ######
@@ -74,7 +80,8 @@ if do_LJ_streamTP:
 #############################
 ###### From control.py ######
 #############################
-opentelnet()
+if open_and_close_telnet:
+    opentelnet()
 if do_measmag:
     from control import measmag
     verbose = True  # True or False
@@ -235,7 +242,67 @@ if do_stepperTest:
     status = StepperControl.DisableDrive()
 
 
+if do_spike_remover:
+    import numpy
+    from profunc import readspec
+    from domath import spike_finder
+    spec_num_list = [12]
+    plot_dir = windir("/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/function_test_plots/")
+    legendsize = 12
+    legendloc = 4
 
-closetelnet()
+    color_list = ['BlueViolet','CadetBlue','Chartreuse', 'Coral','CornflowerBlue','Crimson','Cyan',
+              'DarkBlue','DarkCyan','DarkGoldenRod', 'DarkGreen','DarkMagenta','DarkOliveGreen','DarkOrange',
+              'DarkOrchid','DarkRed','DarkSalmon','DarkSeaGreen','DarkSlateBlue','DodgerBlue','FireBrick','ForestGreen',
+              'Fuchsia','Gold','GoldenRod','Green','GreenYellow','HotPink','IndianRed','Indigo','LawnGreen',
+              'LightCoral','Lime','LimeGreen','Magenta','Maroon', 'MediumAquaMarine','MediumBlue','MediumOrchid',
+              'MediumPurple','MediumSeaGreen','MediumSlateBlue','MediumTurquoise','MediumVioletRed','MidnightBlue',
+              'Navy','Olive','OliveDrab','Orange','OrangeRed','Orchid','PaleVioletRed','Peru','Pink','Plum','Purple',
+              'Red','RoyalBlue','SaddleBrown','Salmon','SandyBrown','Sienna','SkyBlue','SlateBlue','SlateGrey',
+              'SpringGreen','SteelBlue','Teal','Tomato','Turquoise','Violet','Yellow','YellowGreen']
+
+    leglines = []
+    leglabels = []
+    spectrum_files = []
+    for n in spec_num_list:
+        spectrum_files.append(windir("/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec2/rawdata/Y0022/hot/sweep/spec"+str(n+1)+".csv"))
+
+
+
+    fig, ax1 = plt.subplots()
+    ax2 = ax1.twinx()
+    color_count = 0
+    for spec_file in spectrum_files:
+        freqs, pwr = readspec(spec_file)
+        for neighbor_num in [2,3,4,5,6,7,8,9,10]:
+            spike_sum_array = spike_finder(freqs, pwr, neighbors=neighbor_num)
+            color = color_list[color_count]
+
+            ax2.plot(freqs,spike_sum_array, color=color)
+            leglines.append(plt.Line2D(range(10), range(10), color=color, linewidth=3))
+            leglabels.append(str(neighbor_num)+' neighbors')
+
+
+            color_count+=1
+
+        print numpy.mean(spike_sum_array)
+        ax1.plot(freqs,pwr,linewidth=3, color='black')
+
+    ax1.set_xlabel("frequency (GHz)")
+    ax1.set_ylabel("power recorder output (V)")
+    ax2.set_ylabel("spike finder ranker")
+    matplotlib.rcParams['legend.fontsize'] = legendsize
+    plt.legend(tuple(leglines),tuple(leglabels), numpoints=1, loc=legendloc)
+
+    filename = "spectral_tester.png"
+    print "saving PNG file: ", filename
+    plt.savefig(plot_dir+filename)
+
+
+
+
+
+if open_and_close_telnet:
+    closetelnet()
 #from control import restartTelnet
 #restartTelnet(1)

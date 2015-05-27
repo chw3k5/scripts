@@ -2,6 +2,7 @@ import numpy
 import scipy.stats
 import math
 import sys
+from operator import itemgetter
 
 ####################
 ###### regrid ######
@@ -622,6 +623,75 @@ def Ydata_stats(mV_Yfactor, Yfactor, start_Yrange, end_Yrange):
         print "The was a problem finding the mV of the min Yfactor"
     return mV_max_Yfactor, max_Yfactor, mV_min_Yfactor, min_Yfactor, mean_Yfactor, status
 
+def find_neighbors(x_val, x_array,fx_array):
+    distance_array=None
+    value_array=None
+    index_array=None
+    finished = True
+
+    x_val=float(x_val)
+    x_array = numpy.array(x_array)
+    f_list=list(x_array)
+    fx_array = numpy.array(fx_array)
+    x_len=len(x_array)
+    fx_len=len(fx_array)
+
+    # some brief error checking
+    if not (x_len == fx_len):
+        print "In the function 'find_neighbors' the x and f(x) arrays are not the same length, this is not allowed."
+    else:
+        if (x_len < 2 ):
+             print "In the function 'find_neighbors' the length of the x array is less than 2. x_len="+str(x_len)+", this is not allowed."
+        else:
+            finished = False
+
+    if not finished:
+        old_index_array = numpy.arange(x_len)
+        matrix = numpy.zeros((x_len, 3))
+        matrix[:,0] = x_array
+        matrix[:,1] = fx_array
+        matrix[:,2] = old_index_array
+        diff_array = abs(x_array-x_val)
+        mono_matrix  = numpy.asarray(sorted(matrix,  key=itemgetter(0)))
+        distance_array = mono_matrix[:,0]
+        value_array = mono_matrix[:,1]
+        index_array = mono_matrix[:,2]
+
+    return distance_array, value_array, index_array
+
+def spike_finder(x_array, fx_array, neighbors=10):
+    finished = True
+
+    x_array = numpy.array(x_array)
+    fx_array = numpy.array(fx_array)
+
+    x_len=len(x_array)
+    fx_len=len(fx_array)
+    spike_sum_array = numpy.zeros(x_len)
+
+    # some brief error checking
+    if not (x_len == fx_len):
+        print "In the function 'find_neighbors' the x and f(x) arrays are not the same length, this is not allowed."
+    else:
+        if (x_len < 2 ):
+             print "In the function 'find_neighbors' the length of the x array is less than 2. x_len="+str(x_len)+", this is not allowed."
+        else:
+            finished = False
+
+    if not finished:
+        neighbors_to_check = min(x_len,neighbors)
+        for index in range(x_len):
+            x_val = x_array[index]
+            fx_val = fx_array[index]
+            spike_sum = 0
+            x_distance_array, fx_value_array, index_array = find_neighbors(x_val, x_array, fx_array)
+            near_values = fx_value_array[:neighbors_to_check]
+            spike_sum_array[index] = sum(fx_val-near_values)
+        spike_sum_array = spike_sum_array/numpy.mean(spike_sum_array)
+    return spike_sum_array
+
+
+
 
 def spike_removal(data_list,remove_threshold=10.0,verbose=False):
     list_len = len(data_list)
@@ -637,7 +707,7 @@ def spike_removal(data_list,remove_threshold=10.0,verbose=False):
             right_diff = abs(diff_array[index])
             if ((threshold_diff < left_diff) and (threshold_diff < right_diff)):
                 if verbose:
-                    print "removing data spike, spike value:", data_list[index], "  left value:",data_list[index-1], "  rigt value:",data_list[index+1]
+                    print "removing data spike, spike value:", data_list[index], "  left value:",data_list[index-1], "  right value:",data_list[index+1]
                 clean_data_list[index]=(data_list[index-1]+data_list[index+1])/2.0
     except:
         clean_data_list = None
