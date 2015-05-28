@@ -1,5 +1,13 @@
 ### Test functions in this script ###
-
+color_list = ['BlueViolet','CadetBlue','Chartreuse', 'Coral','CornflowerBlue','Crimson','Cyan',
+          'DarkBlue','DarkCyan','DarkGoldenRod', 'DarkGreen','DarkMagenta','DarkOliveGreen','DarkOrange',
+          'DarkOrchid','DarkRed','DarkSalmon','DarkSeaGreen','DarkSlateBlue','DodgerBlue','FireBrick','ForestGreen',
+          'Fuchsia','Gold','GoldenRod','Green','GreenYellow','HotPink','IndianRed','Indigo','LawnGreen',
+          'LightCoral','Lime','LimeGreen','Magenta','Maroon', 'MediumAquaMarine','MediumBlue','MediumOrchid',
+          'MediumPurple','MediumSeaGreen','MediumSlateBlue','MediumTurquoise','MediumVioletRed','MidnightBlue',
+          'Navy','Olive','OliveDrab','Orange','OrangeRed','Orchid','PaleVioletRed','Peru','Pink','Plum','Purple',
+          'Red','RoyalBlue','SaddleBrown','Salmon','SandyBrown','Sienna','SkyBlue','SlateBlue','SlateGrey',
+          'SpringGreen','SteelBlue','Teal','Tomato','Turquoise','Violet','Yellow','YellowGreen']
 
 # Import this is the directory that has my scripts
 import sys
@@ -44,8 +52,8 @@ do_zeropots    = False # True of False
 ###### From domath.py ######
 ############################
 
-do_AllanVar      = False # True or False
-do_spike_remover = True
+do_AllanVar       = False # True or False
+do_spike_function = True
 
 ####################################
 ###### From StepperControl.py ######
@@ -211,6 +219,18 @@ if do_zeropots:
     verbose   = True  # True or False
     status = zeropots(verbose)
 
+####################################
+###### From StepperControl.py ######
+####################################
+
+if do_stepperTest:
+    import StepperControl
+    import time
+    status = StepperControl.initialize()
+    time.sleep(1)
+    status = StepperControl.GoForth()
+    time.sleep(1)
+    status = StepperControl.DisableDrive()
 
 
 ############################
@@ -228,75 +248,61 @@ if do_AllanVar:
     mV_list, uA_list, tp_list, time_list, regrid_data, Variance = AllanVar(s_time, M, tau, feedback)
     
 
-####################################
-###### From StepperControl.py ######
-####################################
-
-if do_stepperTest:
-    import StepperControl
-    import time
-    status = StepperControl.initialize()
-    time.sleep(1)
-    status = StepperControl.GoForth()
-    time.sleep(1)
-    status = StepperControl.DisableDrive()
 
 
-if do_spike_remover:
-    import numpy
+if do_spike_function:
     from profunc import readspec
-    from domath import spike_finder
-    spec_num_list = [12]
+    from domath import spike_function
+    spec_num_list = range(1,18)
+    neighbor_list = [2,4,8,16,32,64,128]
+
     plot_dir = windir("/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/function_test_plots/")
-    legendsize = 12
-    legendloc = 4
+    legendsize = 10
+    legendloc = 1
 
-    color_list = ['BlueViolet','CadetBlue','Chartreuse', 'Coral','CornflowerBlue','Crimson','Cyan',
-              'DarkBlue','DarkCyan','DarkGoldenRod', 'DarkGreen','DarkMagenta','DarkOliveGreen','DarkOrange',
-              'DarkOrchid','DarkRed','DarkSalmon','DarkSeaGreen','DarkSlateBlue','DodgerBlue','FireBrick','ForestGreen',
-              'Fuchsia','Gold','GoldenRod','Green','GreenYellow','HotPink','IndianRed','Indigo','LawnGreen',
-              'LightCoral','Lime','LimeGreen','Magenta','Maroon', 'MediumAquaMarine','MediumBlue','MediumOrchid',
-              'MediumPurple','MediumSeaGreen','MediumSlateBlue','MediumTurquoise','MediumVioletRed','MidnightBlue',
-              'Navy','Olive','OliveDrab','Orange','OrangeRed','Orchid','PaleVioletRed','Peru','Pink','Plum','Purple',
-              'Red','RoyalBlue','SaddleBrown','Salmon','SandyBrown','Sienna','SkyBlue','SlateBlue','SlateGrey',
-              'SpringGreen','SteelBlue','Teal','Tomato','Turquoise','Violet','Yellow','YellowGreen']
-
-    leglines = []
-    leglabels = []
     spectrum_files = []
     for n in spec_num_list:
-        spectrum_files.append(windir("/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec2/rawdata/Y0022/hot/sweep/spec"+str(n+1)+".csv"))
+        spectrum_files.append((n,windir("/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec2/rawdata/Y0022/hot/sweep/spec"+str(n)+".csv")))
 
 
+    for (spec_num,spec_file) in spectrum_files:
+        fig, ax1 = plt.subplots()
+        ax2 = ax1.twinx()
+        leglines = []
+        leglabels = []
+        color_count = 0
 
-    fig, ax1 = plt.subplots()
-    ax2 = ax1.twinx()
-    color_count = 0
-    for spec_file in spectrum_files:
         freqs, pwr = readspec(spec_file)
-        for neighbor_num in [2,3,4,5,6,7,8,9,10]:
-            spike_sum_array = spike_finder(freqs, pwr, neighbors=neighbor_num)
+        moment_plot_list = []
+        spike_array_sqdiff_norm, neighborhood = spike_function(freqs, pwr, neighborhood=neighbor_list)
+
+
+
+        for (n_index,neighbor_num) in list(enumerate(neighborhood)):
             color = color_list[color_count]
-
-            ax2.plot(freqs,spike_sum_array, color=color)
+            ax2.plot(freqs,spike_array_sqdiff_norm[:,n_index], color=color)
             leglines.append(plt.Line2D(range(10), range(10), color=color, linewidth=3))
-            leglabels.append(str(neighbor_num)+' neighbors')
-
-
+            label_str  = str(neighbor_num)+' neighbors '
+            leglabels.append(label_str)
             color_count+=1
 
-        print numpy.mean(spike_sum_array)
-        ax1.plot(freqs,pwr,linewidth=3, color='black')
 
-    ax1.set_xlabel("frequency (GHz)")
-    ax1.set_ylabel("power recorder output (V)")
-    ax2.set_ylabel("spike finder ranker")
-    matplotlib.rcParams['legend.fontsize'] = legendsize
-    plt.legend(tuple(leglines),tuple(leglabels), numpoints=1, loc=legendloc)
+        color = 'black'
+        leglines.append(plt.Line2D(range(10), range(10), color=color, linewidth=3))
+        leglabels.append('spectral data')
+        ax1.plot(freqs,pwr,linewidth=3, color=color)
 
-    filename = "spectral_tester.png"
-    print "saving PNG file: ", filename
-    plt.savefig(plot_dir+filename)
+        ax2.set_ylim([0, 20])
+        ax1.set_xlabel("frequency (GHz)")
+        ax1.set_ylabel("power recorder output (V)")
+        ax2.set_ylabel("variance in recorder output (unitless)")
+        matplotlib.rcParams['legend.fontsize'] = legendsize
+        plt.legend(tuple(leglines),tuple(leglabels), numpoints=1, loc=legendloc)
+
+        filename = "spectral_tester"+str(spec_num)+".png"
+        print "saving PNG file: ", filename
+        plt.savefig(plot_dir+filename)
+        plt.close('all')
 
 
 

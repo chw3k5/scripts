@@ -648,27 +648,32 @@ def find_neighbors(x_val, x_array,fx_array):
     if not finished:
         old_index_array = numpy.arange(x_len)
         matrix = numpy.zeros((x_len, 3))
-        matrix[:,0] = x_array
+        matrix[:,0] = abs(x_val-x_array)
         matrix[:,1] = fx_array
         matrix[:,2] = old_index_array
         diff_array = abs(x_array-x_val)
+
         mono_matrix  = numpy.asarray(sorted(matrix,  key=itemgetter(0)))
         distance_array = mono_matrix[:,0]
         value_array = mono_matrix[:,1]
         index_array = mono_matrix[:,2]
-
+        None
     return distance_array, value_array, index_array
 
-def spike_finder(x_array, fx_array, neighbors=10):
+def spike_function(x_array, fx_array, neighborhood=[2,4,8,16,32,64,128]):
+    import time
     finished = True
+    spike_array_norm = None
 
     x_array = numpy.array(x_array)
     fx_array = numpy.array(fx_array)
 
+    n_len = len(neighborhood)
     x_len=len(x_array)
     fx_len=len(fx_array)
-    spike_sum_array = numpy.zeros(x_len)
-
+    spike_sum_array = numpy.zeros((x_len,n_len))
+    spike_array_norm = numpy.zeros((x_len,n_len))
+    spike_array_sqdiff_norm = numpy.zeros((x_len,n_len))
     # some brief error checking
     if not (x_len == fx_len):
         print "In the function 'find_neighbors' the x and f(x) arrays are not the same length, this is not allowed."
@@ -678,17 +683,40 @@ def spike_finder(x_array, fx_array, neighbors=10):
         else:
             finished = False
 
+    # this is a flag to skip the rest of the program if it is not possible to run
     if not finished:
-        neighbors_to_check = min(x_len,neighbors)
+
+        # this is the loop that uses the 'find neighbors' function to make an ordered
+        # list of the values of each point's nearest neighbors
         for index in range(x_len):
             x_val = x_array[index]
             fx_val = fx_array[index]
             spike_sum = 0
             x_distance_array, fx_value_array, index_array = find_neighbors(x_val, x_array, fx_array)
-            near_values = fx_value_array[:neighbors_to_check]
-            spike_sum_array[index] = sum(fx_val-near_values)
-        spike_sum_array = spike_sum_array/numpy.mean(spike_sum_array)
-    return spike_sum_array
+
+            # this is the loop over the list of neighboring points that make up my spike function
+            for (n_index, neighbors) in list(enumerate(neighborhood)):
+                neighbors_to_check = min(x_len,neighbors)
+                near_values = fx_value_array[:neighbors_to_check]
+                spike_sum_array[index,n_index] = sum(fx_val-near_values)
+
+        # normailize all the spike functions so that their average value is 1
+        for n_index in range(n_len):
+            spike_array_norm[:,n_index] = spike_sum_array[:,n_index]/numpy.mean(spike_sum_array[:,n_index])
+
+
+        # the spike_array_norm has an average value of 1,
+        # now we find the squared difference of that array
+        # from the expectation value of 1 in that array
+        spike_array_sqdiff = (1.0 - spike_array_norm)**2
+        spike_array_sqdiff_norm = numpy.zeros(numpy.shape(spike_array_sqdiff))
+
+        # Now we normalize squared difference function to have an expectation value of 1
+        for n_index in range(len(neighborhood)):
+            spike_array_sqdiff_norm[:,n_index] = spike_array_sqdiff[:,n_index]/numpy.mean(spike_array_sqdiff[:,n_index])
+
+
+    return spike_array_sqdiff_norm, neighborhood
 
 
 
