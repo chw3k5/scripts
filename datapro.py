@@ -1,8 +1,9 @@
 from profunc import getparams, getSISdata, getmagdata, get_fastIV, ProcessMatrix, getLJdata, readspec, renamespec, windir
-from domath import conv, spike_removal
+from domath import conv, spike_removal, regrid
 from calibration import fetchoffset
 import os, numpy, sys, glob, shutil
 from sys import platform
+import pickle
 
 def ParamsProcessing(dirnames, proparamsfile, verbose):
     params_found        = False
@@ -199,6 +200,9 @@ def getrawdata(sweepdir, verbose=False):
     TP_int_time, meas_num, TP_num, TP_freq \
         = None, None, None, None, None, None, None, None, None, None, None, None
     TP_list = glob.glob(windir(sweepdir) + "TP*.csv")
+    if verbose:
+        print "Fetching raw data in:", sweepdir
+
     if not TP_list == []:
         astrosweep_found = True
         (sweep_pot, sweep_mV_mean, sweep_mV_std,
@@ -208,8 +212,6 @@ def getrawdata(sweepdir, verbose=False):
             # read in SIS data for each sweep step
             thefilename = sweepdir + str(sweep_index + 1) + '.csv'
             temp_mV, temp_uA, temp_tp, temp_pot, temp_time = getSISdata(thefilename)
-            if verbose:
-                print 'Getting data in:', thefilename
             sweep_pot.append(temp_pot[0])
             sweep_mV_mean.append(numpy.mean(temp_mV))
             sweep_mV_std.append(numpy.std(temp_mV))
@@ -308,7 +310,221 @@ def AstroDataPro(datadir, proparamsfile, rawdataname, prodataname, mono_switcher
 
     return astrosweep_found, sweep_mV_mean, sweep_TP_mean, TP_int_time
 
-def GetSpecData(datadir, specdataname, remove_spikes=True, do_norm=True,  norm_freq=1.42, norm_band=0.060,  mono_switcher_mV=True,
+
+
+def GetSpecData(datadir, specdataname, remove_spikes=False,
+                 do_norm=True,  norm_freq=1.42, norm_band=0.060,
+                 mono_switcher_mV=True,
+                 do_regrid_mV=True, regrid_mesh_mV_spec=None,
+                 do_conv_mV=False,  min_cdf_mV=0.90, sigma_mV=0.03,
+                 do_freq_conv=False, min_cdf_freq=0.90, sigma_GHz=0.05,
+                 verbose=False):
+    do_renamespec = False
+    specsweep_found = False
+    sweepdir = datadir + 'sweep/'
+    sweepdir = windir(sweepdir)
+
+    spec_list = glob.glob(sweepdir + "spec*.csv")
+
+    norm_radius = norm_band/2.0
+    spikes_inband = None
+    if not spec_list == []:
+        specsweep_found = True
+
+        # Just reading in the data and putting that data into a list of tuple
+        spec_data_list = []
+        for sweep_index in range(len(spec_list)):
+            # read in SIS data for each sweep step
+            biasfilename = sweepdir + str(sweep_index + 1) + '.csv'
+            temp_mV, temp_uA, temp_tp, temp_pot_array, temp_time = getSISdata(biasfilename)
+
+            temp_pot = temp_pot_array[0]
+            temp_mV_mean = numpy.mean(temp_mV)
+
+            # read in the spectral data
+            specfilename = sweepdir + "spec" +str(sweep_index + 1) + '.csv'
+            temp_freq, temp_pwr = readspec(specfilename)
+            spike_list = []
+
+            # this is an option I once needed to replace a bad header for the spectral data file
+            if do_renamespec:
+                renamespec(specfilename)
+
+            spec_data_list.append((temp_freq,temp_pwr,temp_pot,temp_mV_mean,temp_tp,spike_list,spikes_inband,sweep_index))
+
+
+        # Checking to make sure the frequencies of this set of spectra are the same
+        sweep_freqs = []
+        normfreq_indexes = []
+        for (temp_freq,temp_pwr,temp_pot,temp_mV_mean,temp_tp,spike_list,spikes_inband,sweep_index) in spec_data_list:
+            ### First loop only checking if normalization of the spectral data and the power meter is possible###
+            # start to process the spectral data, normalize it and put it in a 2D list
+            if sweep_freqs == []:
+                sweep_freqs = temp_freq
+            ### After first loop, this makes sure the frequencies of all spectra in a given set of sweeps line up
+            elif not ((abs(sweep_freqs[0] - temp_freq[0]) < 0.0001) and (abs(sweep_freqs[-1] - temp_freq[-1]) < 0.0001)):
+                print "Somehow the sweep start and stop frequencies in the sweep dir ", datadir
+                print "are not the same for sweep 1 and sweep ", sweep_index
+                print "Killing script"
+                sys.exit()
+
+        ###############
+        ###### Data Processing of spectra in the frequency Domain
+        ###############
+
+        # spike removal, this detects and deletes spikes in a data set.
+        data_to_clean = []
+        if remove_spikes:
+
+            spike_data_temp = []
+            for (freq,pwr,pot,mV_mean,tp,spike_list,spikes_inband,sweep_index) in spec_data_list:
+                data_to_clean.append((freq,pwr))
+            # everything happens in this function, res of this is just book keeping
+            clean_data, spike_lists_for_spectra, spike_list_for_set = spike_removal(data_to_clean)
+
+            # find out if spikes are in the normalization band and set a flag if they are
+            for (old_freq,old_pwr,pot,mV_mean,tp,spike_list,spikes_inband,sweep_index) in spec_data_list:
+                (freq,pwr) = clean_data[sweep_index]
+                spike_list.extend(spike_lists_for_spectra[sweep_index])
+                spike_list.extend(spike_list_for_set)
+
+                for (f_index,spike_freq) in list(enumerate(spike_list)):
+                    spikes_inband = False
+                    if abs(spike_freq-norm_freq) <= norm_radius:
+                        spikes_inband = True
+                spike_data_temp.append((freq,pwr,pot,mV_mean,tp,spike_list,spikes_inband,sweep_index))
+            spec_data_list = spike_data_temp
+
+        spec_data_list_temp = []
+        for (freq,pwr,pot,mV_mean,tp,spike_list,spikes_inband,sweep_index) in spec_data_list:
+            ### Regrid the spectra to fix any holes or over lap.
+            # This part makes a dictionary of the length of frequency steps in a spectrum and its occurrences
+            # and set the frequency mesh for regridding
+            step_vector = list(numpy.array(freq[1:])-numpy.array(freq[:-1]))
+            step_dict = {element:step_vector.count(element) for element in step_vector}
+            max_occurrence_finder = 0
+            freq_mesh=0.001
+            for step_freq, occurrences in step_dict.iteritems():
+                if max_occurrence_finder < occurrences:
+                    freq_mesh=step_freq
+                    max_occurrence_finder = occurrences
+
+            # send the data to the regridding function
+            data_matrix = numpy.zeros((len(freq),2))
+            data_matrix[:,0]=freq
+            data_matrix[:,1]=pwr
+            regrid_data, status = regrid(data_matrix, freq_mesh, verbose)
+            freq = regrid_data[:,0]
+            pwr  = regrid_data[:,1]
+
+            ### Normalization of spectrum analyzer data to that of the filtered power meter.
+            if do_norm:
+                inband_spec_pwr = []
+                # Find normalization band indexes
+                freqs_out_of_band = True
+                for (f_index,f_element) in list(enumerate(freq)):
+                    if abs(f_element-norm_freq) <= norm_radius:
+                        inband_spec_pwr.append(pwr[f_index])
+                        freqs_out_of_band = False
+                if freqs_out_of_band:
+                    print "No frequencies were for the center frequency of ", norm_freq, " GHz"
+                    print "for the band_with of ", norm_band, "GHz"
+                    print "In the directory ", datadir, " for sweep 1"
+                    print "do normalization is set to False "
+
+                if ((not freqs_out_of_band) and (not spikes_inband)):
+                    ave_inband_spec_pwr = numpy.mean(inband_spec_pwr)
+                    norm_scale = numpy.mean(tp)/ave_inband_spec_pwr
+                    pwr=pwr*norm_scale
+
+            if do_freq_conv:
+                data_matrix = numpy.zeros((len(freq),2))
+                data_matrix[:,0]=freq
+                data_matrix[:,1]=pwr
+                conv_data, status = conv(data_matrix, freq_mesh, min_cdf_freq, sigma_GHz, verbose)
+                freq = conv_data[:,0]
+                pwr  = conv_data[:,1]
+
+            spec_data_list_temp.append((freq,pwr,pot,mV_mean,tp,spike_list,spikes_inband,sweep_index))
+            # save this processed data for analysis and plotting
+            save_filename = specdataname+"_"+str(sweep_index+1)+".npy"
+            if verbose:
+                print "saving spectral data:",save_filename
+            the_can = (freq,pwr,pot,mV_mean,tp,spike_list,spikes_inband,sweep_index)
+            data_str = pickle.dumps(the_can)
+            with open(save_filename, 'w') as f:
+                f.write(data_str)
+
+
+
+        ###############
+        ###### Below (still working) is the part of the code that does the my normal data processing
+        ###############
+
+
+
+        # if regrid_mesh_mV_spec is not None:
+        #     ### Process the array that the spectra so the the there are regularly spaced units of mV, and convolved
+        #     spec_mV_array = numpy.array(sweep_pwr)
+        #     # put the mV data on the 2D array of pwr(mV,freq) so that it can be sorted
+        #     mV_len   = len(spec_mV_array[:,0])
+        #     freq_len = len(spec_mV_array[0,:])
+        #     data_matrix = numpy.zeros((mV_len,freq_len+1))
+        #     data_matrix[:,0]  = sweep_mV_mean
+        #     data_matrix[:,1:] = spec_mV_array
+        #
+        #     # Process the matrix in mV
+        #     data_matrix, raw_matrix, mono_matrix, regrid_matrix, conv_matrix \
+        #         = ProcessMatrix(data_matrix, mono_switcher_mV, do_regrid_mV, do_conv_mV, regrid_mesh_mV_spec,
+        #                         min_cdf_mV, sigma_mV, verbose)
+        #     new_mV_list   = list(data_matrix[:,0])
+        #     new_mV_len    = len(new_mV_list)
+        #     spec_mV_array = data_matrix[:,1:]
+        # else:
+        #     spec_mV_array = sweep_pwr
+        #
+        # ### Do a convolution of the matrix in frequency
+        # if do_freq_conv:
+        #     spec_mV_array_transpose = numpy.matrix.transpose(spec_mV_array)
+        #     # put the frequency data on the 2D array of spec_mV_array_transpose so that it can be convolved in the
+        #     # expected format
+        #     data_matrix = numpy.zeros((freq_len,new_mV_len+1))
+        #     data_matrix[:,0]  = sweep_freqs
+        #     data_matrix[:,1:] = spec_mV_array_transpose
+        #     freq_mesh = abs(sweep_freqs[1] - sweep_freqs[0])
+        #     conv_matrix, status = conv(data_matrix, freq_mesh, min_cdf_freq, sigma_GHz, verbose)
+        #
+        #     # transpose the data back to maintain a constant format
+        #     spec_mV_array = numpy.matrix.transpose(conv_matrix[:,1:])
+        #
+        # ### save the results in three arrays for plotting
+        # #X
+        # freq_pre_array = []
+        # for n in range(new_mV_len):
+        #     freq_pre_array.append(sweep_freqs)
+        # freq_array = numpy.array(freq_pre_array)
+        # numpy.save(specdataname+"_freq.npy",freq_array)
+        #
+        # #Y
+        # mV_pre_array = []
+        # for n in range(freq_len):
+        #     mV_pre_array.append(new_mV_list)
+        # mV_array = numpy.matrix.transpose(numpy.array(mV_pre_array))
+        # numpy.save(specdataname+"_mV.npy",mV_array)
+        #
+        # #Z
+        # numpy.save(specdataname+"_pwr.npy",spec_mV_array)
+    else:
+        if verbose:
+            print "Data from the spectrum analyser was not found"
+
+    return specsweep_found
+
+
+
+
+
+def GetSpecData_old(datadir, specdataname, remove_spikes=False, do_norm=True,  norm_freq=1.42, norm_band=0.060,  mono_switcher_mV=True,
                 do_regrid_mV=True, do_conv_mV=False, regrid_mesh_mV_spec=None, min_cdf_mV=0.90, sigma_mV=0.03,
                 do_freq_conv=False, min_cdf_freq=0.90, sigma_GHz=0.05, verbose=False):
     do_renamespec = False
@@ -366,8 +582,8 @@ def GetSpecData(datadir, specdataname, remove_spikes=True, do_norm=True,  norm_f
 
 
             # spike removal
-            if remove_spikes:
-                temp_pwr = spike_removal(temp_pwr,verbose=verbose)
+            # if remove_spikes:
+            #     temp_pwr = spike_removal(temp_pwr,verbose=verbose)
 
             # Normalization
             if do_norm:
@@ -439,7 +655,8 @@ def GetSpecData(datadir, specdataname, remove_spikes=True, do_norm=True,  norm_f
 
 def SweepPro(datadir, proparamsfile, prodataname_fast, prodataname_unpump, rawdataname_ast, prodataname_ast, specdataname,
              mono_switcher_mV=True, do_regrid_mV=True, do_conv_mV=False, regrid_mesh_mV=0.01, min_cdf_mV=0.90, sigma_mV=0.03,
-             do_normspectra=False, regrid_mesh_mV_spec=0.1, norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90,
+             remove_spikes=False, do_normspectra=False,
+             regrid_mesh_mV_spec=0.1, norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90,
              sigma_GHz=0.05,verbose=False):
 
     ###### Make the parameters file
@@ -469,7 +686,7 @@ def SweepPro(datadir, proparamsfile, prodataname_fast, prodataname_unpump, rawda
 
     ### get and process the spectra when available
     specsweep_found \
-        = GetSpecData(datadir, specdataname, do_norm=do_normspectra, norm_freq=norm_freq, norm_band=norm_band,
+        = GetSpecData(datadir, specdataname, remove_spikes=remove_spikes, do_norm=do_normspectra, norm_freq=norm_freq, norm_band=norm_band,
                       mono_switcher_mV=mono_switcher_mV, do_regrid_mV=do_regrid_mV, do_conv_mV=do_conv_mV,
                       regrid_mesh_mV_spec=regrid_mesh_mV_spec, min_cdf_mV=min_cdf_mV, sigma_mV=sigma_mV,
                       do_freq_conv=do_freq_conv, min_cdf_freq=min_cdf_freq, sigma_GHz=sigma_GHz, verbose=verbose)
@@ -480,7 +697,7 @@ def SweepPro(datadir, proparamsfile, prodataname_fast, prodataname_unpump, rawda
 
 def SweepDataPro(datadir, verbose=False, search_4Sweeps=True, search_str='Y', Snums=[],
                  mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01, do_conv_mV=False, sigma_mV=0.03, min_cdf_mV=0.95,
-                 do_normspectra=False, regrid_mesh_mV_spec=0.1, norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90, sigma_GHz=0.05):
+                 remove_spikes=False, do_normspectra=False, regrid_mesh_mV_spec=0.1, norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90, sigma_GHz=0.05):
 
 
     from profunc import getSnums
@@ -531,7 +748,7 @@ def SweepDataPro(datadir, verbose=False, search_4Sweeps=True, search_str='Y', Sn
         specsweep_found, sweep_mV_mean, sweep_TP_mean \
             = SweepPro(sweepdir, proparamsfile, prodataname_fast, prodataname_unpump, rawdataname_ast, prodataname_ast, specdataname,
              mono_switcher_mV=mono_switcher_mV, do_regrid_mV=do_regrid_mV, do_conv_mV=do_conv_mV,
-             regrid_mesh_mV=regrid_mesh_mV, min_cdf_mV=min_cdf_mV, sigma_mV=sigma_mV,
+             remove_spikes=remove_spikes, regrid_mesh_mV=regrid_mesh_mV, min_cdf_mV=min_cdf_mV, sigma_mV=sigma_mV,
              do_normspectra=do_normspectra,regrid_mesh_mV_spec=regrid_mesh_mV_spec, norm_freq=norm_freq, norm_band=norm_band, do_freq_conv=do_freq_conv,
              min_cdf_freq=min_cdf_freq, sigma_GHz=sigma_GHz,verbose=verbose)
 
@@ -539,7 +756,7 @@ def SweepDataPro(datadir, verbose=False, search_4Sweeps=True, search_str='Y', Sn
 
 def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[], useOFFdata=False, Off_datadir='',
              mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01, do_conv_mV=False, sigma_mV=0.03, min_cdf_mV=0.95,
-             do_normspectra=False, regrid_mesh_mV_spec=0.1, norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90,
+             remove_spikes=False, do_normspectra=False, regrid_mesh_mV_spec=0.1, norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90,
              sigma_GHz=0.05):
 
 
@@ -603,7 +820,7 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
             = SweepPro(hotdir, hotproparamsfile, hotprodataname_fast, hotprodataname_unpump, hotrawdataname_ast, hotprodataname_ast,
                        hotspecdataname, mono_switcher_mV=mono_switcher_mV, do_regrid_mV=do_regrid_mV,
                        do_conv_mV=do_conv_mV, regrid_mesh_mV=regrid_mesh_mV, min_cdf_mV=min_cdf_mV, sigma_mV=sigma_mV,
-                       do_normspectra=do_normspectra, regrid_mesh_mV_spec=regrid_mesh_mV_spec, norm_freq=norm_freq, norm_band=norm_band,
+                       remove_spikes=remove_spikes,do_normspectra=do_normspectra, regrid_mesh_mV_spec=regrid_mesh_mV_spec, norm_freq=norm_freq, norm_band=norm_band,
                        do_freq_conv=do_freq_conv,min_cdf_freq=min_cdf_freq, sigma_GHz=sigma_GHz,verbose=verbose)
         
         ####################################
@@ -625,7 +842,7 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
             = SweepPro(colddir, coldproparamsfile, coldprodataname_fast, coldprodataname_unpump, coldrawdataname_ast, coldprodataname_ast,
                        coldspecdataname, mono_switcher_mV=mono_switcher_mV, do_regrid_mV=do_regrid_mV,
                        do_conv_mV=do_conv_mV, regrid_mesh_mV=regrid_mesh_mV, min_cdf_mV=min_cdf_mV, sigma_mV=sigma_mV,
-                       do_normspectra=do_normspectra, regrid_mesh_mV_spec=regrid_mesh_mV_spec, norm_freq=norm_freq, norm_band=norm_band,
+                       remove_spikes=remove_spikes,do_normspectra=do_normspectra, regrid_mesh_mV_spec=regrid_mesh_mV_spec, norm_freq=norm_freq, norm_band=norm_band,
                        do_freq_conv=do_freq_conv,min_cdf_freq=min_cdf_freq, sigma_GHz=sigma_GHz,verbose=verbose)
 
 

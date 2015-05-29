@@ -2,7 +2,9 @@ import numpy
 import scipy.stats
 import math
 import sys
+import glob
 from operator import itemgetter
+import pickle
 
 ####################
 ###### regrid ######
@@ -307,7 +309,25 @@ def linfit(X, Y, linif, der1_int, do_der1_conv, der1_min_cdf, der1_sigma,
          bestfits_Y = None
     
     return slopes, intercepts, bestfits_X, bestfits_Y
-      
+
+
+##############################
+###### find_occurrences ######
+##############################
+
+
+def find_occurrences(the_vector):
+    occurrences_dict = {element:the_vector.count(element) for element in the_vector}
+    max_occurrence_finder = 0
+    max_element = None
+    for element, occurrences in occurrences_dict.iteritems():
+        if max_occurrence_finder < occurrences:
+            max_element=element
+            max_occurrence_finder = occurrences
+
+    return occurrences_dict, max_element, max_occurrence_finder
+
+
 ############################
 ###### Allan Variance ######
 ############################
@@ -486,6 +506,59 @@ def data2Yfactor(hot_mV, cold_mV, off_tp, hot_tp, cold_tp, mesh, verbose):
 ###### Specdata2Yfactor ######
 ##############################
 def Specdata2Yfactor(prodatadir, verbose=False):
+    status = True
+
+    # I only care about this list's length
+    search_str = prodatadir + 'hotspecdata_*.npy'
+    spec_list_len = len(glob.glob(search_str))
+
+
+    for Y_index in range(spec_list_len):
+
+        hotfilename  = prodatadir + 'hotspecdata_'+str(Y_index+1)+'.npy'
+        coldfilename = prodatadir + 'coldspecdata_'+str(Y_index+1)+'.npy'
+        with open(hotfilename, 'r') as f:
+            the_hotcan = f.read()
+        with open(coldfilename, 'r') as f:
+            the_coldcan = f.read()
+        (hot_freq,hot_pwr,hot_pot,hot_mV_mean,hot_tp,hot_spike_list,hot_spikes_inband,hot_sweep_index) = pickle.loads(the_hotcan)
+        (cold_freq,cold_pwr,cold_pot,cold_mV_mean,cold_tp,cold_spike_list,cold_spikes_inband,cold_sweep_index) = pickle.loads(the_coldcan)
+
+        if not (hot_sweep_index == cold_sweep_index):
+            print "The hot and cold sweep indexes are different:",hot_sweep_index,',', cold_sweep_index
+            print "there is some sort of nightmare problem in the part of the code that does that data processing"
+            print "killing the script in the function Specdata2Yfactor in domath.py"
+            sys.exit()
+
+        # find the frequency mesh
+        step_vector = list(numpy.array(hot_freq[1:])-numpy.array(hot_freq[:-1]))
+        occurrences_dict, freq_mesh, max_occurrence_finder = find_occurrences(step_vector)
+        if freq_mesh is None:
+            freq_mesh = 0.001
+
+        status, start_index_hot_freq, start_index_cold_freq, len_freq = FindOverlap(hot_freq, cold_freq, freq_mesh)
+        end_index_hot_freq  = start_index_hot_freq  + len_freq
+        end_index_cold_freq = start_index_cold_freq + len_freq
+        freq     =  hot_freq[start_index_hot_freq:end_index_hot_freq]
+        hot_pwr  =   hot_pwr[start_index_hot_freq:end_index_hot_freq]
+        cold_pwr = cold_pwr[start_index_cold_freq:end_index_cold_freq]
+
+        Yfactor = (hot_pwr**2)/(cold_pwr**2)
+        Y_data_filename = prodatadir + "Y"+str(hot_sweep_index+1)+".npy"
+
+        big_can = (freq,Yfactor,
+                   hot_pwr ,hot_pot ,hot_mV_mean ,hot_tp ,hot_spike_list ,hot_spikes_inband ,hot_sweep_index,
+                   cold_pwr,cold_pot,cold_mV_mean,cold_tp,cold_spike_list,cold_spikes_inband,cold_sweep_index)
+
+        pickle_str = pickle.dumps(big_can)
+
+        with open(Y_data_filename, 'w') as f:
+            the_hotcan = f.write(pickle_str)
+
+    return status
+
+
+def Specdata2Yfactor_old(prodatadir, verbose=False):
     hot_freqs_file  = prodatadir + "hotspecdata_freq.npy"
     hot_mVs_file    = prodatadir + "hotspecdata_mV.npy"
     hot_pwr_file    = prodatadir + "hotspecdata_pwr.npy"
@@ -718,10 +791,110 @@ def spike_function(x_array, fx_array, neighborhood=[2,4,8,16,32,64,128]):
 
     return spike_array_sqdiff_norm, neighborhood
 
+def spike_masker(family_of_arrays, min_flag_value=10,flag_number=1):
+    family_of_arrays=abs(numpy.array(family_of_arrays))
+
+    # some brief error checking to make sure flag number is set properly
+    try:
+        family_size = len(family_of_arrays[0,:])
+    except:
+        family_size = 1
+
+    if flag_number < 1:
+        flag_number = 1
+    elif family_size<flag_number:
+        flag_number=family_size
+
+
+    mask_famliy = 1*(family_of_arrays>min_flag_value)
+    stacked_masks = numpy.sum(mask_famliy,axis=1)
+
+    final_mask = stacked_masks >= flag_number
+
+
+    return final_mask
 
 
 
-def spike_removal(data_list,remove_threshold=10.0,verbose=False):
+
+
+def spike_removal(data,verbose=False, neighbor_list=[2,4,8,16,32,64,128,256],min_flag_value=10,flag_number=3,
+                  set_flag_fraction=0.3):
+    list_len = len(data)
+    set_flag_number = numpy.round(list_len*set_flag_fraction)
+    spike_frequencies = []
+    rinsed_data = []
+    spike_lists_for_spectra = []
+    spike_list_for_set = []
+    for (freq,pwr) in data:
+        # This function analyses the spectral data to make a function that makes spikes detectable
+        spike_array_sqdiff_norm, neighborhood = spike_function(freq, pwr, neighborhood=neighbor_list)
+        # This makes a mask of from the output of the function above
+        spike_mask = spike_masker(spike_array_sqdiff_norm, min_flag_value=min_flag_value,flag_number=flag_number)
+
+        # Now we delete the spikes in the data and make a list of all frequencies in this set that have spikes
+        rinse_freq = []
+        rinse_pwr = []
+
+        spike_list = []
+        for (s_index,spike_truth) in list(enumerate(spike_mask)):
+            if spike_truth:
+                spike_freq=freq[s_index]
+                spike_list.append(spike_freq)
+                spike_frequencies.append(spike_freq)
+            else:
+                rinse_freq.append(freq[s_index])
+                rinse_pwr.append(pwr[s_index])
+        spike_lists_for_spectra.append(spike_list)
+        rinsed_data.append((rinse_freq,rinse_pwr))
+
+    # Now we will remove some data from the whole set if there is a spike at that point for a fraction
+    # greater than that of the variable 'set_flag_fraction'
+
+    # This part makes a dictionary of the frequencies and there occurrences
+    set_remove_freqs = []
+    spike_dict = {element:spike_frequencies.count(element) for element in spike_frequencies}
+    for spike_freq, occurences in spike_dict.iteritems():
+        if set_flag_number < occurences:
+            set_remove_freqs.append(spike_freq)
+    spike_list_for_set = set_remove_freqs
+    # now we loop through the set of data and get rid of data points with spikes access the entire set of spectra
+    clean_data = []
+
+
+    for (freq,pwr) in rinsed_data:
+        # find the frequency mesh
+        step_vector = list(numpy.array(freq[1:])-numpy.array(freq[:-1]))
+        occurrences_dict, freq_mesh, max_occurrence_finder = find_occurrences(step_vector)
+        if freq_mesh is None:
+            freq_mesh = 0.001
+
+        clean_freq = freq
+        clean_pwr  = pwr
+        for remove_freq in set_remove_freqs:
+
+            try:
+                remove_index = clean_freq.index(remove_freq)
+                clean_freq.pop(remove_index)
+                clean_pwr.pop(remove_index)
+            except:
+                spike_found = False
+                search_radius = freq_mesh/2.0
+                for (f_index,f_element) in list(enumerate(clean_freq[:])):
+                    if abs(remove_freq - f_element) < search_radius:
+                        clean_freq.pop(f_index)
+                        clean_pwr.pop(f_index)
+                        spike_found = True
+                if not spike_found:
+                    if verbose:
+                        print "the frequency,",remove_freq,"GHz was not found in the frequency lists in the spike removal function"
+
+        clean_data.append((clean_freq,clean_pwr))
+
+
+    return clean_data, spike_lists_for_spectra, spike_list_for_set
+
+def spike_removal_old(data_list,remove_threshold=10.0,verbose=False):
     list_len = len(data_list)
     data_array = numpy.array(data_list)
     diff_array = data_array[:-1]-data_array[1:]

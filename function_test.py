@@ -240,7 +240,7 @@ if do_stepperTest:
 if do_AllanVar:
     from domath import AllanVar
     s_time = 60 # in seconds
-    M = 2  # number of measuemnets to compare. must be greater than 2
+    M = 2  # number of measurements to compare. must be greater than 2
     mesh = 1 # in seconds
     tau = 1  # in seconds
     feedback = True
@@ -252,9 +252,12 @@ if do_AllanVar:
 
 if do_spike_function:
     from profunc import readspec
-    from domath import spike_function
+    from domath import spike_function, spike_masker
     spec_num_list = range(1,18)
-    neighbor_list = [2,4,8,16,32,64,128]
+    neighbor_list = [2,4,8,16,32,64,128,256]
+
+    min_flag_value = 5
+    flag_number = 3
 
     plot_dir = windir("/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/function_test_plots/")
     legendsize = 10
@@ -262,9 +265,9 @@ if do_spike_function:
 
     spectrum_files = []
     for n in spec_num_list:
-        spectrum_files.append((n,windir("/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec2/rawdata/Y0022/hot/sweep/spec"+str(n)+".csv")))
+        spectrum_files.append((n,windir("/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec2/rawdata/Y0022/cold/sweep/spec"+str(n)+".csv")))
 
-
+    list_of_spike_masks = []
     for (spec_num,spec_file) in spectrum_files:
         fig, ax1 = plt.subplots()
         ax2 = ax1.twinx()
@@ -275,8 +278,8 @@ if do_spike_function:
         freqs, pwr = readspec(spec_file)
         moment_plot_list = []
         spike_array_sqdiff_norm, neighborhood = spike_function(freqs, pwr, neighborhood=neighbor_list)
-
-
+        spike_mask = spike_masker(spike_array_sqdiff_norm, min_flag_value=min_flag_value,flag_number=flag_number)
+        list_of_spike_masks.append(spike_mask)
 
         for (n_index,neighbor_num) in list(enumerate(neighborhood)):
             color = color_list[color_count]
@@ -287,12 +290,20 @@ if do_spike_function:
             color_count+=1
 
 
+
+        color = 'yellow'
+        leglines.append(plt.Line2D(range(10), range(10), color=color, linewidth=3))
+        leglabels.append('spike mask')
+        ax1.plot(freqs,1*spike_mask*pwr,linewidth=10, color=color)
+
         color = 'black'
         leglines.append(plt.Line2D(range(10), range(10), color=color, linewidth=3))
         leglabels.append('spectral data')
-        ax1.plot(freqs,pwr,linewidth=3, color=color)
+        ax1.plot(freqs,pwr,linewidth=5, color=color)
 
-        ax2.set_ylim([0, 20])
+
+
+        ax2.set_ylim([0, 100])
         ax1.set_xlabel("frequency (GHz)")
         ax1.set_ylabel("power recorder output (V)")
         ax2.set_ylabel("variance in recorder output (unitless)")

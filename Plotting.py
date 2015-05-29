@@ -9,6 +9,7 @@ from matplotlib import pyplot as plt
 from profunc import windir, getproparams, getmultiParams,  getproSweep, get_fastIV, getproYdata, GetProDirsNames
 from profunc import getprorawdata # Caleb's Functions
 from domath  import linfit # Caleb's Functions
+import pickle, glob
 
 from mpl_toolkits.mplot3d import axes3d
 from matplotlib import cm
@@ -1802,16 +1803,21 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
             print "ploting Spectra for Snum: " + str(Ynum)
         prodir  = proYdatadir + Ynum + '/'
 
-        X_file = prodir + "Y_freq.npy"
-        Y_file = prodir + "Y_mV.npy"
-        Z_file = prodir + "Y.npy"
 
-        freq_matrix = numpy.load(X_file)
-        mV_matrix   = numpy.load(Y_file)
-        pwrs_matrix = numpy.load(Z_file)
+        #############################################################
+        ###### Fetching the spectra from there saved locations ######
+        search_str = prodir + 'hotspecdata_*.npy'
+        spec_list_len = len(glob.glob(search_str))
+        spectal_Y_list = []
+        for spectal_index in range(spec_list_len):
+            Y_factor_file = prodir + "Y"+str(spectal_index+1)+".npy"
 
-        shapetest = numpy.shape(freq_matrix)
-        lentest = len(shapetest)
+            with open(Y_factor_file,'r') as f:
+                pickled_string = f.read()
+
+            Y_factor_can = pickle.loads(pickled_string)
+            spectal_Y_list.append(Y_factor_can)
+
 
 
         ############################
@@ -1828,34 +1834,21 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
             = getmultiParams(paramsfile_list)
 
 
-
-
-        if lentest < 2:
-            if verbose:
-                print 'A Single Bias point for Y factor spectral calculation was found'
-            biaspoints = 1
-            singleflag = True
-            freqs = freq_matrix
-            mVs   = [mV_matrix[0]]
-        else:
-            biaspoints = shapetest[0]
-            singleflag = False
-            freqs = freq_matrix[0,:]
-            mVs   = mV_matrix[:,0]
-            if verbose:
-                print biaspoints, 'Bias points for Y factor spectral calculation were found'
-
-        print mVs, freqs
         ax1_plot_list = []
         leglines  = []
         leglabels = []
         color_len = len(colors)
-        for spec_index in range(biaspoints):
-            color = colors[(spec_index % color_len)]
-            mV = mVs[spec_index]
-            pwrs = pwrs_matrix[spec_index,:]
+        for Ydata in spectal_Y_list:
+
+            (freq,Yfactor,
+            hot_pwr ,hot_pot ,hot_mV_mean ,hot_tp ,hot_spike_list ,hot_spikes_inband ,hot_sweep_index,
+            cold_pwr,cold_pot,cold_mV_mean,cold_tp,cold_spike_list,cold_spikes_inband,cold_sweep_index) = Ydata
+
+            color = colors[(hot_sweep_index % color_len)]
+            mV = (hot_mV_mean+cold_mV_mean)/2.0
+
             ax1_plot_list, leglines, leglabels \
-                = xyplotgen(freqs, pwrs, label='Bias'+str('%1.2f' % mV)+'mV',
+                = xyplotgen(freq, Yfactor, label='Bias'+str('%1.2f' % mV)+'mV',
                             plot_list=ax1_plot_list, leglines=leglines, leglabels=leglabels,
                             color=color, linw=1, ls='-', scale_str='' )
 
