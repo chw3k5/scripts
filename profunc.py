@@ -938,7 +938,7 @@ def GetProDirsNames(datadir, search_4nums, nums):
 
 
 def getpro_spec(prodir):
-    search_str = prodir + 'hotspecdata_*.npy'
+    search_str = windir(prodir + 'hotspecdata_*.npy')
     spec_list_len = len(glob.glob(search_str))
 
     freq_list=[]
@@ -962,7 +962,7 @@ def getpro_spec(prodir):
     spec_data_found = False
     for spectal_index in range(spec_list_len):
         spec_data_found = True
-        Y_factor_file = prodir + "Y"+str(spectal_index+1)+".npy"
+        Y_factor_file = windir(prodir + "Y"+str(spectal_index+1)+".npy")
 
         with open(Y_factor_file,'r') as f:
             pickled_string = f.read()

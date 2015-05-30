@@ -124,54 +124,87 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
 
         def find_max_yfactor_spec(self,min_freq=None,max_freq=None):
             Ysweep = self
-            
+            max_Yfactor      = None
+            max_Yfactor_mV   = None
+            max_Yfactor_freq = None
             if Ysweep.spec_data_found:
+                max_Yfactor      = -1
+                max_Yfactor_mV   = -1
+                max_Yfactor_freq = -1
                 if min_freq is not None:
-                    for freqs in Ysweep.spec_freq_list[:]:
+                    for list_index in range(len(Ysweep.spec_freq_list[:])):
+                        spec_freqs     = list(Ysweep.spec_freq_list[list_index])
+                        spec_Yfactor  = Ysweep.spec_Yfactor_list[list_index]
+                        spec_hot_mV   = Ysweep.spec_hot_mV_mean_list[list_index]
+                        spec_cold_mV  = Ysweep.spec_cold_mV_mean_list[list_index]
+
                         spec_freq_temp = []
                         spec_Yfactor_temp = []
-                        spec_hot_mV_mean_temp = []
-                        spec_cold_mV_mean_temp = []
-                        for (f_index,freq) in list(enumerate(freqs)):
+                        spec_hot_mV_temp = None
+                        spec_cold_mV_temp = None
+                        for (f_index,freq) in list(enumerate(spec_freqs)):
                             if min_freq <= freq:
-                                spec_freq_temp.append(Ysweep.spec_freq_list[f_index])
-                                spec_Yfactor_temp.append(Ysweep.spec_Yfactor_list[f_index])
-                                spec_hot_mV_mean_temp.append(Ysweep.spec_hot_mV_mean_list[f_index])
-                                spec_cold_mV_mean_temp.append(Ysweep.spec_cold_mV_mean_list[f_index])
+                                spec_freq_temp.append(freq)
+                                spec_Yfactor_temp.append(spec_Yfactor[f_index])
+                                if spec_hot_mV_temp is None:
+                                    spec_hot_mV_temp  = spec_hot_mV
+                                    spec_cold_mV_temp = spec_cold_mV
 
-                        Ysweep.spec_freq_list = spec_freq_temp
-                        Ysweep.spec_Yfactor_list = spec_Yfactor_temp
-                        Ysweep.spec_hot_mV_mean_list = spec_hot_mV_mean_temp
-                        Ysweep.spec_cold_mV_mean_list = spec_cold_mV_mean_temp
+                        Ysweep.spec_freq_list[list_index]         = spec_freq_temp
+                        Ysweep.spec_Yfactor_list[list_index]      = spec_Yfactor_temp
+                        Ysweep.spec_hot_mV_mean_list[list_index]  = spec_hot_mV_temp
+                        Ysweep.spec_cold_mV_mean_list[list_index] = spec_cold_mV_temp
 
+
+                if max_freq is not None:
+                    for list_index in range(len(Ysweep.spec_freq_list[:])):
+                        spec_freqs     = Ysweep.spec_freq_list[list_index]
+                        spec_Yfactor  = Ysweep.spec_Yfactor_list[list_index]
+                        spec_hot_mV   = Ysweep.spec_hot_mV_mean_list[list_index]
+                        spec_cold_mV  = Ysweep.spec_cold_mV_mean_list[list_index]
 
                         spec_freq_temp = []
                         spec_Yfactor_temp = []
-                        spec_hot_mV_mean_temp = []
-                        spec_cold_mV_mean_temp = []
-                        for (f_index,freq) in list(enumerate(freqs)):
-
+                        spec_hot_mV_temp = None
+                        spec_cold_mV_temp = None
+                        for (f_index,freq) in list(enumerate(spec_freqs)):
                             if freq <= max_freq:
-                                spec_freq_temp.append(Ysweep.spec_freq_list[f_index])
-                                spec_Yfactor_temp.append(Ysweep.spec_Yfactor_list[f_index])
-                                spec_hot_mV_mean_temp.append(Ysweep.spec_hot_mV_mean_list[f_index])
-                                spec_cold_mV_mean_temp.append(Ysweep.spec_cold_mV_mean_list[f_index])
+                                spec_freq_temp.append(freq)
+                                spec_Yfactor_temp.append(spec_Yfactor[f_index])
+                                if spec_hot_mV_temp is None:
+                                    spec_hot_mV_temp  = spec_hot_mV
+                                    spec_cold_mV_temp = spec_cold_mV
 
-                        Ysweep.spec_freq_list = spec_freq_temp
-                        Ysweep.spec_Yfactor_list = spec_Yfactor_temp
-                        Ysweep.spec_hot_mV_mean_list = spec_hot_mV_mean_temp
-                        Ysweep.spec_cold_mV_mean_list = spec_cold_mV_mean_temp
+                        Ysweep.spec_freq_list[list_index]         = spec_freq_temp
+                        Ysweep.spec_Yfactor_list[list_index]      = spec_Yfactor_temp
+                        Ysweep.spec_hot_mV_mean_list[list_index]  = spec_hot_mV_temp
+                        Ysweep.spec_cold_mV_mean_list[list_index] = spec_cold_mV_temp
 
-                #############
-                ############## Broken Below here, needs to chext throgh all this lists of spectral data and pick out the best stuff
-                ###############
+                list_of_max_Yfactors     = []
+                list_of_max_Yfactor_freq = []
+                list_of_max_Yfactor_mV   = []
 
-                max_Yfactor = max(Ysweep.spec_Yfactor_list)
-                index_of_max = Ysweep.spec_Yfactor_list.index(max_Yfactor)
-                mV = (Ysweep.spec_cold_mV_mean_list[index_of_max]+Ysweep.spec_hot_mV_mean_list[index_of_max])/2.0
+                for list_index in range(len(Ysweep.spec_freq_list[:])):
+                    spec_Yfactor         = list(Ysweep.spec_Yfactor_list[list_index])
+                    Yfactor_freq         = list(Ysweep.spec_freq_list[list_index])
+                    local_max_Yfactor_mV = (Ysweep.spec_hot_mV_mean_list[list_index] + Ysweep.spec_cold_mV_mean_list[list_index])/2.0
+
+                    local_max_Yfactor      = max(spec_Yfactor)
+                    index_of_max_Yfactor   = spec_Yfactor.index(local_max_Yfactor)
+                    local_max_Yfactor_freq = Yfactor_freq[index_of_max_Yfactor]
+
+                    if max_Yfactor < local_max_Yfactor:
+                        max_Yfactor    = local_max_Yfactor
+                        max_Yfactor_mV = local_max_Yfactor_mV
+                        max_Yfactor_freq   = local_max_Yfactor_freq
+
+                    list_of_max_Yfactors.append(local_max_Yfactor)
+                    list_of_max_Yfactor_freq.append(local_max_Yfactor_freq)
+                    list_of_max_Yfactor_mV.append(local_max_Yfactor_mV)
 
 
-            return max_mV_Yfactor, max_Yfactor
+
+            return max_Yfactor, max_Yfactor_mV, max_Yfactor_freq
 
         def intersecting_line(self,mV_center=2.0,mV_plus_minus=0.5):
             def find_ave_Y4X(y_list,x_list,x_center,x_plus_minus):

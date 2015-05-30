@@ -89,6 +89,7 @@ setnames = []#,'set5','set6']
 parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
 parent_folder = windir(parent_folder)
 fullpaths = [parent_folder + setname + '/' for setname in setnames]
+fullpaths.append('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec/')
 fullpaths.append('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec2/')
 print fullpaths
 ### MakeORclear_plotdir ###
@@ -148,13 +149,17 @@ if ((mV_bias_min is not None) and (mV_bias_max is not None)):
 #########################################
 ###### Yfactor versus LO frequency ######
 #########################################
-
+testmode = True
 if do_Yfactor_versus_LO_freq:
     for Ysweep in Ysweeps:
+
         max_mV_Yfactor, max_Yfactor = Ysweep.find_max_yfactor_pm()
-        #print  max_Yfactor,':', max_mV_Yfactor,' mV'
+        if testmode:
+            print  max_Yfactor,':', max_mV_Yfactor,' mV'
 
-
+        max_Yfactor, max_Yfactor_mV, Yfactor_freq = Ysweep.find_max_yfactor_spec(min_freq=4,max_freq=5)
+        if testmode:
+            print 'max_Yfactor:',max_Yfactor, '  max_Yfactor_mV:',max_Yfactor_mV, '  Yfactor_freq:',Yfactor_freq
 
 ################################
 ###### Intersecting Lines ######
