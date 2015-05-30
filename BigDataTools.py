@@ -42,7 +42,7 @@ mono_switcher_mV = True
 do_regrid_mV     = True
 regrid_mesh_mV   = 0.01
 do_conv_mV       = True
-sigma_mV         = 0.08
+sigma_mV         = 0.05
 min_cdf_mV       = 0.95
 remove_spikes    = True
 do_normspectra   = False
@@ -67,7 +67,7 @@ maxdiff_LOuA = None # None is any
 ### Will only work for Y factor
 # mV bias cuts
 mV_bias_min = 0.5 # at least this, None is any
-mV_bias_max = 2.0 # at most this, None is any
+mV_bias_max = 1.8 # at most this, None is any
 
 
 
@@ -75,9 +75,9 @@ mV_bias_max = 2.0 # at most this, None is any
 ###### Yfactor versus LO frequency ######
 #########################################
 do_Yfactor_versus_LO_freq = True
-min_Y_factor = 1.5
+min_Y_factor = 1.2
 spec_bands = [0,1,2,3,4,5]
-Y_LOfreq_colors = ['Crimson','Tomato','Olive','CornflowerBlue','SteelBlue','Red','RoyalBlue','SaddleBrown','Salmon','SandyBrown','Sienna','SkyBlue','SlateBlue','SlateGrey','BlueViolet','Brown','CadetBlue','Chartreuse', 'Chocolate','Coral','CornflowerBlue','Crimson','Cyan']
+Y_LOfreq_colors = ['Crimson','FireBrick','Olive','GoldenRod','RoyalBlue','SaddleBrown','Red','Salmon','SandyBrown','Sienna','SkyBlue','SlateBlue','SlateGrey','BlueViolet','Brown','CadetBlue','Chartreuse', 'Chocolate','Coral','CornflowerBlue','Crimson','Cyan']
 Y_LOfreq_plotdir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Y_LOfreq/')
 
 
@@ -101,13 +101,16 @@ shot_noise_plotdir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/shot_
 ###############################################################
 ### All the sets of data to collect the processed data from ###
 ###############################################################
-setnames = []#,'set5','set6']
+setnames = ['set4','set5','set6','set7','LOfreq']
 
 parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
 parent_folder = windir(parent_folder)
 fullpaths = [parent_folder + setname + '/' for setname in setnames]
-fullpaths.append('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec/')
-fullpaths.append('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec2/')
+# fullpaths.append('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec/')
+# fullpaths.append('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec2/')
+# fullpaths.append('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/moonshot/')
+# fullpaths.append('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/Mag_sweep/')
+# fullpaths.append('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq/')
 print fullpaths
 ### MakeORclear_plotdir ###
 def makeORclear_plotdir(plotdir,clear_flag=clear_old_plots):
@@ -136,6 +139,9 @@ if process_data:
                  do_conv_mV=do_conv_mV, sigma_mV=sigma_mV, min_cdf_mV=min_cdf_mV,
                  remove_spikes=remove_spikes,do_normspectra=do_normspectra, norm_freq=norm_freq, norm_band=norm_band,
                  do_freq_conv=do_freq_conv, min_cdf_freq=min_cdf_freq, sigma_GHz=sigma_GHz)
+
+
+
 
 ##############################
 ###### Get all the data ######
@@ -203,12 +209,12 @@ if do_Yfactor_versus_LO_freq:
                          marker=fmt, markersize=markersize, markerfacecolor=color, alpha=alpha)
     leglines.append(plt.Line2D(range(10), range(10), color=color, ls='', linewidth=linw,
                                marker=fmt, markersize=markersize, markerfacecolor=color, alpha=alpha))
-    leglabels.append("Power meter data 1.42 GHz IF band")
+    leglabels.append("PM data 1.42 GHz IF band")
 
 
 
     # get and plot the spectrum analyzer data
-    for band_index in range(0,len(spec_bands)-1):
+    for band_index in range(len(spec_bands)-1):
         low_freq = spec_bands[band_index]
         high_freq = spec_bands[band_index+1]
 
@@ -216,16 +222,19 @@ if do_Yfactor_versus_LO_freq:
         sa_max_Yfactor_mVs = []
         sa_max_Yfactor_freqs = []
         sa_max_Yfactor_LOfreqs = []
-        for Ysweep in Ysweeps:
-            sa_max_Yfactor, sa_max_Yfactor_mV, sa_Yfactor_freq = Ysweep.find_max_yfactor_spec(min_freq=low_freq,max_freq=high_freq)
-            LOfreq = Ysweep.LOfreq
-            sa_max_Yfactors.append(sa_max_Yfactor)
-            sa_max_Yfactor_mVs.append(sa_max_Yfactor_mV)
-            sa_max_Yfactor_freqs.append(sa_Yfactor_freq)
-            sa_max_Yfactor_LOfreqs.append(LOfreq)
-            if testmode:
-                print 'max_Yfactor:',sa_max_Yfactor, '  max_Yfactor_LOfreq:',LOfreq,'  max_Yfactor_mV:',sa_max_Yfactor_mV, '  Yfactor_freq:',sa_Yfactor_freq
-
+        for (index_Y,Ysweep) in list(enumerate(Ysweeps)):
+            if Ysweep.spec_data_found:
+                sa_max_Yfactor, sa_max_Yfactor_mV, sa_Yfactor_freq = Ysweep.find_max_yfactor_spec(min_freq=low_freq,max_freq=high_freq)
+                LOfreq = Ysweep.LOfreq
+                if min_Y_factor <= sa_max_Yfactor:
+                    sa_max_Yfactors.append(sa_max_Yfactor)
+                    sa_max_Yfactor_mVs.append(sa_max_Yfactor_mV)
+                    sa_max_Yfactor_freqs.append(sa_Yfactor_freq)
+                    sa_max_Yfactor_LOfreqs.append(LOfreq)
+                if testmode:
+                    print 'max_Yfactor:',sa_max_Yfactor, '  max_Yfactor_LOfreq:',LOfreq,'  max_Yfactor_mV:',sa_max_Yfactor_mV, '  Yfactor_freq:',sa_Yfactor_freq
+                    #print index_Y," Y index", Ysweep.name
+                    #print len(Ysweep.spec_freq_list[1]),'length of self.spec_freq_list[1]'
 
         x_vector = sa_max_Yfactor_LOfreqs
         y_vector = sa_max_Yfactors
@@ -242,9 +251,10 @@ if do_Yfactor_versus_LO_freq:
                                    marker=fmt, markersize=markersize, markerfacecolor=color, alpha=alpha))
         leglabels.append("SA data "+str(low_freq)+"-"+str(high_freq)+" GHz IF band")
 
+
     # stuff to make the final plot look good
     matplotlib.rcParams['legend.fontsize'] = 10
-    plt.legend(tuple(leglines),tuple(leglabels), numpoints=3, loc=1)
+    plt.legend(tuple(leglines),tuple(leglabels), numpoints=3, loc=4)
 
     plt.savefig(Y_LOfreq_plotdir+"Yfactor_versus_LOfreq.png")
     plt.close('all')

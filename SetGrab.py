@@ -5,7 +5,7 @@ from datapro import YdataPro, getrawdata, get_fastIV
 from profunc import getproYdata, GetProDirsNames, getproparams, getmultiParams, getproSweep, windir, ProcessMatrix
 from profunc import getpro_spec
 from Plotting import GetAllTheProFastSweepData
-
+import copy
 
 
 def getYsweeps(fullpaths, Ynums=None, verbose=False):
@@ -123,20 +123,25 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
             return max_mV_Yfactor, max_Yfactor
 
         def find_max_yfactor_spec(self,min_freq=None,max_freq=None):
-            Ysweep = self
             max_Yfactor      = None
             max_Yfactor_mV   = None
             max_Yfactor_freq = None
-            if Ysweep.spec_data_found:
+
+            image_of_spec_Yfactor_list      = self.spec_Yfactor_list[:]
+            image_of_spec_freq_list         = self.spec_freq_list[:]
+            image_of_spec_hot_mV_mean_list  = self.spec_hot_mV_mean_list[:]
+            image_of_spec_cold_mV_mean_list = self.spec_cold_mV_mean_list[:]
+
+            if self.spec_data_found:
                 max_Yfactor      = -1
                 max_Yfactor_mV   = -1
                 max_Yfactor_freq = -1
                 if min_freq is not None:
-                    for list_index in range(len(Ysweep.spec_freq_list[:])):
-                        spec_freqs     = list(Ysweep.spec_freq_list[list_index])
-                        spec_Yfactor  = Ysweep.spec_Yfactor_list[list_index]
-                        spec_hot_mV   = Ysweep.spec_hot_mV_mean_list[list_index]
-                        spec_cold_mV  = Ysweep.spec_cold_mV_mean_list[list_index]
+                    for list_index in range(len(image_of_spec_freq_list[:])):
+                        spec_Yfactor  = image_of_spec_Yfactor_list[list_index]
+                        spec_freqs    = image_of_spec_freq_list[list_index]
+                        spec_hot_mV   = image_of_spec_hot_mV_mean_list[list_index]
+                        spec_cold_mV  = image_of_spec_cold_mV_mean_list[list_index]
 
                         spec_freq_temp = []
                         spec_Yfactor_temp = []
@@ -150,18 +155,18 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
                                     spec_hot_mV_temp  = spec_hot_mV
                                     spec_cold_mV_temp = spec_cold_mV
 
-                        Ysweep.spec_freq_list[list_index]         = spec_freq_temp
-                        Ysweep.spec_Yfactor_list[list_index]      = spec_Yfactor_temp
-                        Ysweep.spec_hot_mV_mean_list[list_index]  = spec_hot_mV_temp
-                        Ysweep.spec_cold_mV_mean_list[list_index] = spec_cold_mV_temp
+                        image_of_spec_freq_list[list_index]         = spec_freq_temp
+                        image_of_spec_Yfactor_list[list_index]      = spec_Yfactor_temp
+                        image_of_spec_hot_mV_mean_list[list_index]  = spec_hot_mV_temp
+                        image_of_spec_cold_mV_mean_list[list_index] = spec_cold_mV_temp
 
 
                 if max_freq is not None:
-                    for list_index in range(len(Ysweep.spec_freq_list[:])):
-                        spec_freqs     = Ysweep.spec_freq_list[list_index]
-                        spec_Yfactor  = Ysweep.spec_Yfactor_list[list_index]
-                        spec_hot_mV   = Ysweep.spec_hot_mV_mean_list[list_index]
-                        spec_cold_mV  = Ysweep.spec_cold_mV_mean_list[list_index]
+                    for list_index in range(len(image_of_spec_freq_list[:])):
+                        spec_freqs     = image_of_spec_freq_list[list_index]
+                        spec_Yfactor  = image_of_spec_Yfactor_list[list_index]
+                        spec_hot_mV   = image_of_spec_hot_mV_mean_list[list_index]
+                        spec_cold_mV  = image_of_spec_cold_mV_mean_list[list_index]
 
                         spec_freq_temp = []
                         spec_Yfactor_temp = []
@@ -175,19 +180,19 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
                                     spec_hot_mV_temp  = spec_hot_mV
                                     spec_cold_mV_temp = spec_cold_mV
 
-                        Ysweep.spec_freq_list[list_index]         = spec_freq_temp
-                        Ysweep.spec_Yfactor_list[list_index]      = spec_Yfactor_temp
-                        Ysweep.spec_hot_mV_mean_list[list_index]  = spec_hot_mV_temp
-                        Ysweep.spec_cold_mV_mean_list[list_index] = spec_cold_mV_temp
+                        image_of_spec_freq_list[list_index]         = spec_freq_temp
+                        image_of_spec_Yfactor_list[list_index]      = spec_Yfactor_temp
+                        image_of_spec_hot_mV_mean_list[list_index]  = spec_hot_mV_temp
+                        image_of_spec_cold_mV_mean_list[list_index] = spec_cold_mV_temp
 
                 list_of_max_Yfactors     = []
                 list_of_max_Yfactor_freq = []
                 list_of_max_Yfactor_mV   = []
 
-                for list_index in range(len(Ysweep.spec_freq_list[:])):
-                    spec_Yfactor         = list(Ysweep.spec_Yfactor_list[list_index])
-                    Yfactor_freq         = list(Ysweep.spec_freq_list[list_index])
-                    local_max_Yfactor_mV = (Ysweep.spec_hot_mV_mean_list[list_index] + Ysweep.spec_cold_mV_mean_list[list_index])/2.0
+                for list_index in range(len(image_of_spec_freq_list[:])):
+                    spec_Yfactor         = list(image_of_spec_Yfactor_list[list_index])
+                    Yfactor_freq         = list(image_of_spec_freq_list[list_index])
+                    local_max_Yfactor_mV = (image_of_spec_hot_mV_mean_list[list_index] + image_of_spec_cold_mV_mean_list[list_index])/2.0
 
                     local_max_Yfactor      = max(spec_Yfactor)
                     index_of_max_Yfactor   = spec_Yfactor.index(local_max_Yfactor)
@@ -202,9 +207,7 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
                     list_of_max_Yfactor_freq.append(local_max_Yfactor_freq)
                     list_of_max_Yfactor_mV.append(local_max_Yfactor_mV)
 
-
-
-            return max_Yfactor, max_Yfactor_mV, max_Yfactor_freq
+                return max_Yfactor, max_Yfactor_mV, max_Yfactor_freq
 
         def intersecting_line(self,mV_center=2.0,mV_plus_minus=0.5):
             def find_ave_Y4X(y_list,x_list,x_center,x_plus_minus):
@@ -525,6 +528,9 @@ def mV_bias_cut_Y(Ysweeps, mV_min=None, mV_max=None, verbose=False):
 
 
     return mV_bias_cut_Ysweeps
+
+
+
 
 
 
