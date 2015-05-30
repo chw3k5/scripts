@@ -5,7 +5,8 @@ from matplotlib import pyplot as plt
 import os, shutil, numpy
 from datapro import YdataPro
 from profunc import windir
-from SetGrab import getYsweeps, tp_int_cut, LOuAset_cut, LOuAdiff_cut
+from SetGrab import getYsweeps, tp_int_cut, LOuAset_cut, LOuAdiff_cut, mV_bias_cut_Y
+
 
 ###############
 ### Options ###
@@ -30,6 +31,7 @@ regrid_mesh_mV   = 0.01
 do_conv_mV       = True
 sigma_mV         = 0.08
 min_cdf_mV       = 0.95
+remove_spikes    = True
 do_normspectra   = False
 norm_freq        = 1.42
 norm_band        = 0.060
@@ -41,15 +43,25 @@ sigma_GHz        = 0.10
 ### Parameter Cuts ###
 ######################
 # total power integration time
-min_tp_int = 0 # at least this, None is any
-max_tp_int = 60 # at most this, None is any
+min_tp_int = None # at least this, None is any
+max_tp_int = None # at most this, None is any
 # the attempted setting of LO pump power in uA
-min_LOuAset =  0 # at least this, None is any
-max_LOuAset = 40 # at least this, None is any
+min_LOuAset =  None # at least this, None is any
+max_LOuAset = None # at least this, None is any
 # The maximum difference between the set and measured LO pump power
-maxdiff_LOuA = 2 # None is any
+maxdiff_LOuA = None # None is any
+
+### Will only work for Y factor
+# mV bias cuts
+mV_bias_min = 0.5 # at least this, None is any
+mV_bias_max = 2.0 # at most this, None is any
 
 
+
+#########################################
+###### Yfactor versus LO frequency ######
+#########################################
+do_Yfactor_versus_LO_freq = True
 
 
 ###########################################
@@ -65,21 +77,20 @@ int_lines_mV_plus_minus  = 0.05
 ###################################
 ###### Shot Noise Parameters ######
 ###################################
-do_shot_noise = True
+do_shot_noise = False
 shot_noise_plotdir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/shot_noise/')
 
 
 ###############################################################
 ### All the sets of data to collect the processed data from ###
 ###############################################################
-setnames = ['set5']#,'set5','set6']
-
+setnames = []#,'set5','set6']
 
 parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
 parent_folder = windir(parent_folder)
 fullpaths = [parent_folder + setname + '/' for setname in setnames]
-
-
+fullpaths.append('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec2/')
+print fullpaths
 ### MakeORclear_plotdir ###
 def makeORclear_plotdir(plotdir,clear_flag=clear_old_plots):
     # clear out the old plots if you are going to make new ones in an old directory
@@ -105,7 +116,7 @@ if process_data:
                  Ynums=Ynums, useOFFdata=False, Off_datadir='',
                  mono_switcher_mV=mono_switcher_mV, do_regrid_mV=do_regrid_mV, regrid_mesh_mV=regrid_mesh_mV,
                  do_conv_mV=do_conv_mV, sigma_mV=sigma_mV, min_cdf_mV=min_cdf_mV,
-                 do_normspectra=do_normspectra, norm_freq=norm_freq, norm_band=norm_band,
+                 remove_spikes=remove_spikes,do_normspectra=do_normspectra, norm_freq=norm_freq, norm_band=norm_band,
                  do_freq_conv=do_freq_conv, min_cdf_freq=min_cdf_freq, sigma_GHz=sigma_GHz)
 
 ##############################
@@ -128,6 +139,20 @@ if (maxdiff_LOuA is not None):
     Ysweeps = LOuAdiff_cut(Ysweeps, max_diff=maxdiff_LOuA, verbose=verbose)
 
 
+### Yfactor cut
+if ((mV_bias_min is not None) and (mV_bias_max is not None)):
+    Ysweeps = mV_bias_cut_Y(Ysweeps, mV_min=mV_bias_min, mV_max=mV_bias_max, verbose=verbose)
+
+
+
+#########################################
+###### Yfactor versus LO frequency ######
+#########################################
+
+if do_Yfactor_versus_LO_freq:
+    for Ysweep in Ysweeps:
+        max_mV_Yfactor, max_Yfactor = Ysweep.find_max_yfactor_pm()
+        #print  max_Yfactor,':', max_mV_Yfactor,' mV'
 
 
 

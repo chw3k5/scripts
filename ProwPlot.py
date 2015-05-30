@@ -21,7 +21,7 @@ repeat  = 1
 ### For Y-factor data and Sweeps ###
 do_Ysweeps              = False
 do_YdataPro             = False
-do_YfactotSweepsPlotter = False
+do_YfactotSweepsPlotter = True
 do_YSpectra_Plotter     = True
 
 
@@ -109,7 +109,7 @@ if all_Ydata:
 start_num = 1
 #datadir   = '/Users/chw3k5/Google Drive/Kappa_preGoogleDrive/NA38/IVsweep/LO_freq/'
 datadir = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec2/'
-Ynums = []#'Y0022']
+Ynums = ['Y0012','Y0013']
 if Ynums ==[]:
     search4Ynums = True
 else:

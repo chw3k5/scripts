@@ -3,6 +3,7 @@ import os
 from sys import platform
 from datapro import YdataPro, getrawdata, get_fastIV
 from profunc import getproYdata, GetProDirsNames, getproparams, getmultiParams, getproSweep, windir, ProcessMatrix
+from profunc import getpro_spec
 from Plotting import GetAllTheProFastSweepData
 
 
@@ -34,6 +35,15 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
             self.hot_time_mean, self.cold_time_mean, self.hot_pot, self.cold_pot,\
             self.hotdatafound, self.colddatafound, self.Ydatafound\
                 = getproYdata(proYdatadir)
+
+            # Processed spectrometer data
+            self.spec_data_found, self.spec_freq_list,self.spec_Yfactor_list,\
+            self.spec_hot_pwr_list,self.spec_hot_pot_list,self.spec_hot_mV_mean_list,self.spec_hot_tp_list,\
+            self.spec_hot_spike_list_list,self.spec_hot_spikes_inband_list,self.spec_hot_sweep_index_list,\
+            self.spec_cold_pwr_list,self.spec_cold_pot_list,self.spec_cold_mV_mean_list,self.spec_cold_tp_list,\
+            self.spec_cold_spike_list_list,self.spec_cold_spikes_inband_list,self.spec_cold_sweep_index_list \
+                = getpro_spec(proYdatadir)
+
 
             ### Get the Hot Fast Processed Sweep Data
             self.hot_fastprodata_found, self.hot_unpumpedprodata_found, \
@@ -102,6 +112,66 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
             description += ("Yfactor = %.2f \n" % self.Yfactor[0] )
             return description
 
+
+        def find_max_yfactor_pm(self):
+            max_mV_Yfactor = None
+            max_Yfactor = None
+            if self.Ydatafound:
+                max_Yfactor = max(self.Yfactor)
+                max_mV_Yfactor = self.mV_Yfactor[self.Yfactor.index(max_Yfactor)]
+
+            return max_mV_Yfactor, max_Yfactor
+
+        def find_max_yfactor_spec(self,min_freq=None,max_freq=None):
+            Ysweep = self
+            
+            if Ysweep.spec_data_found:
+                if min_freq is not None:
+                    for freqs in Ysweep.spec_freq_list[:]:
+                        spec_freq_temp = []
+                        spec_Yfactor_temp = []
+                        spec_hot_mV_mean_temp = []
+                        spec_cold_mV_mean_temp = []
+                        for (f_index,freq) in list(enumerate(freqs)):
+                            if min_freq <= freq:
+                                spec_freq_temp.append(Ysweep.spec_freq_list[f_index])
+                                spec_Yfactor_temp.append(Ysweep.spec_Yfactor_list[f_index])
+                                spec_hot_mV_mean_temp.append(Ysweep.spec_hot_mV_mean_list[f_index])
+                                spec_cold_mV_mean_temp.append(Ysweep.spec_cold_mV_mean_list[f_index])
+
+                        Ysweep.spec_freq_list = spec_freq_temp
+                        Ysweep.spec_Yfactor_list = spec_Yfactor_temp
+                        Ysweep.spec_hot_mV_mean_list = spec_hot_mV_mean_temp
+                        Ysweep.spec_cold_mV_mean_list = spec_cold_mV_mean_temp
+
+
+                        spec_freq_temp = []
+                        spec_Yfactor_temp = []
+                        spec_hot_mV_mean_temp = []
+                        spec_cold_mV_mean_temp = []
+                        for (f_index,freq) in list(enumerate(freqs)):
+
+                            if freq <= max_freq:
+                                spec_freq_temp.append(Ysweep.spec_freq_list[f_index])
+                                spec_Yfactor_temp.append(Ysweep.spec_Yfactor_list[f_index])
+                                spec_hot_mV_mean_temp.append(Ysweep.spec_hot_mV_mean_list[f_index])
+                                spec_cold_mV_mean_temp.append(Ysweep.spec_cold_mV_mean_list[f_index])
+
+                        Ysweep.spec_freq_list = spec_freq_temp
+                        Ysweep.spec_Yfactor_list = spec_Yfactor_temp
+                        Ysweep.spec_hot_mV_mean_list = spec_hot_mV_mean_temp
+                        Ysweep.spec_cold_mV_mean_list = spec_cold_mV_mean_temp
+
+                #############
+                ############## Broken Below here, needs to chext throgh all this lists of spectral data and pick out the best stuff
+                ###############
+
+                max_Yfactor = max(Ysweep.spec_Yfactor_list)
+                index_of_max = Ysweep.spec_Yfactor_list.index(max_Yfactor)
+                mV = (Ysweep.spec_cold_mV_mean_list[index_of_max]+Ysweep.spec_hot_mV_mean_list[index_of_max])/2.0
+
+
+            return max_mV_Yfactor, max_Yfactor
 
         def intersecting_line(self,mV_center=2.0,mV_plus_minus=0.5):
             def find_ave_Y4X(y_list,x_list,x_center,x_plus_minus):
@@ -333,6 +403,95 @@ def LOuAdiff_cut(sweeps, max_diff=1.0, verbose=False):
                 print sweep.longDescription()
     return LOuAdiff_cut_sweeps
 
+def mV_bias_cut_Y(Ysweeps, mV_min=None, mV_max=None, verbose=False):
+    mV_bias_cut_Ysweeps = []
+
+    for Ysweep in Ysweeps:
+        # cuts for the power meter acquired data
+        if Ysweep.Ydatafound:
+            if mV_min is not None:
+                new_mV_Yfactor = []
+                new_Yfactor = []
+                for (mV_index,mV) in list(enumerate(Ysweep.mV_Yfactor)):
+                    if mV_min <= mV:
+                        new_mV_Yfactor.append(Ysweep.mV_Yfactor[mV_index])
+                        new_Yfactor.append(Ysweep.Yfactor[mV_index])
+                Ysweep.mV_Yfactor = new_mV_Yfactor
+                Ysweep.Yfactor = new_Yfactor
+            if mV_max is not None:
+                new_mV_Yfactor = []
+                new_Yfactor = []
+                for (mV_index,mV) in list(enumerate(Ysweep.mV_Yfactor)):
+                    if mV <= mV_max:
+                        new_mV_Yfactor.append(Ysweep.mV_Yfactor[mV_index])
+                        new_Yfactor.append(Ysweep.Yfactor[mV_index])
+                Ysweep.mV_Yfactor = new_mV_Yfactor
+                Ysweep.Yfactor = new_Yfactor
+
+        else:
+            if verbose:
+                print "Power meter Y data not found for:",Ysweep.longDescription()
+
+    for Ysweep in Ysweeps:
+        # cuts for the spectrum analyzer data
+        if Ysweep.spec_data_found:
+            if mV_min is not None:
+                for (sweep_index,hot_mV) in list(enumerate(Ysweep.spec_hot_mV_mean_list[:])):
+                    if hot_mV <= mV_min:
+                        index_to_remove = Ysweep.spec_hot_mV_mean_list.index(hot_mV)
+
+                        Ysweep.spec_freq_list.pop(index_to_remove)
+                        Ysweep.spec_Yfactor_list.pop(index_to_remove)
+                        Ysweep.spec_hot_pwr_list.pop(index_to_remove)
+                        Ysweep.spec_hot_pot_list.pop(index_to_remove)
+                        Ysweep.spec_hot_mV_mean_list.pop(index_to_remove)
+                        Ysweep.spec_hot_tp_list.pop(index_to_remove)
+                        Ysweep.spec_hot_spike_list_list.pop(index_to_remove)
+                        Ysweep.spec_hot_spikes_inband_list.pop(index_to_remove)
+                        Ysweep.spec_hot_sweep_index_list.pop(index_to_remove)
+                        Ysweep.spec_cold_pwr_list.pop(index_to_remove)
+                        Ysweep.spec_cold_pot_list.pop(index_to_remove)
+                        Ysweep.spec_cold_mV_mean_list.pop(index_to_remove)
+                        Ysweep.spec_cold_tp_list.pop(index_to_remove)
+                        Ysweep.spec_cold_spike_list_list.pop(index_to_remove)
+                        Ysweep.spec_cold_spikes_inband_list.pop(index_to_remove)
+                        Ysweep.spec_cold_sweep_index_list.pop(index_to_remove)
+
+            if mV_max is not None:
+                for (sweep_index,hot_mV) in list(enumerate(Ysweep.spec_hot_mV_mean_list[:])):
+                    if  mV_max <= hot_mV:
+                        index_to_remove = Ysweep.spec_hot_mV_mean_list.index(hot_mV)
+
+                        Ysweep.spec_freq_list.pop(index_to_remove)
+                        Ysweep.spec_Yfactor_list.pop(index_to_remove)
+                        Ysweep.spec_hot_pwr_list.pop(index_to_remove)
+                        Ysweep.spec_hot_pot_list.pop(index_to_remove)
+                        Ysweep.spec_hot_mV_mean_list.pop(index_to_remove)
+                        Ysweep.spec_hot_tp_list.pop(index_to_remove)
+                        Ysweep.spec_hot_spike_list_list.pop(index_to_remove)
+                        Ysweep.spec_hot_spikes_inband_list.pop(index_to_remove)
+                        Ysweep.spec_hot_sweep_index_list.pop(index_to_remove)
+                        Ysweep.spec_cold_pwr_list.pop(index_to_remove)
+                        Ysweep.spec_cold_pot_list.pop(index_to_remove)
+                        Ysweep.spec_cold_mV_mean_list.pop(index_to_remove)
+                        Ysweep.spec_cold_tp_list.pop(index_to_remove)
+                        Ysweep.spec_cold_spike_list_list.pop(index_to_remove)
+                        Ysweep.spec_cold_spikes_inband_list.pop(index_to_remove)
+                        Ysweep.spec_cold_sweep_index_list.pop(index_to_remove)
+
+    for Ysweep in Ysweeps[:]:
+        if ((Ysweep.Ydatafound) or (Ysweep.spec_data_found)):
+            if  ((Ysweep.Yfactor == []) or (Ysweep.Yfactor is None)):
+               Ysweep.Ydatafound=False
+            if  ((Ysweep.spec_Yfactor_list == []) or (Ysweep.spec_Yfactor_list is None)):
+                Ysweep.spec_data_found=False
+
+            if (((Ysweep.Yfactor != []) and (Ysweep.Yfactor is not None)) or ((Ysweep.spec_Yfactor_list != [])and(Ysweep.spec_Yfactor_list is not None))):
+                mV_bias_cut_Ysweeps.append(Ysweep)
+
+
+
+    return mV_bias_cut_Ysweeps
 
 
 

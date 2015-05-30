@@ -6,6 +6,8 @@ import random
 from sys import platform
 from domath import regrid, conv, FindOverlap # Caleb's Programs
 from operator import itemgetter
+import pickle
+import glob
 
 def windir(filepath):
     if platform == 'win32':
@@ -934,6 +936,66 @@ def GetProDirsNames(datadir, search_4nums, nums):
             sys.exit()
     return nums, prodatadir, plotdir
 
+
+def getpro_spec(prodir):
+    search_str = prodir + 'hotspecdata_*.npy'
+    spec_list_len = len(glob.glob(search_str))
+
+    freq_list=[]
+    Yfactor_list=[]
+    hot_pwr_list=[]
+    hot_pot_list=[]
+    hot_mV_mean_list=[]
+    hot_tp_list=[]
+    hot_spike_list_list=[]
+    hot_spikes_inband_list=[]
+    hot_sweep_index_list=[]
+    cold_pwr_list=[]
+    cold_pot_list=[]
+    cold_mV_mean_list=[]
+    cold_tp_list=[]
+    cold_spike_list_list=[]
+    cold_spikes_inband_list=[]
+    cold_sweep_index_list=[]
+
+
+    spec_data_found = False
+    for spectal_index in range(spec_list_len):
+        spec_data_found = True
+        Y_factor_file = prodir + "Y"+str(spectal_index+1)+".npy"
+
+        with open(Y_factor_file,'r') as f:
+            pickled_string = f.read()
+
+        Ydata = pickle.loads(pickled_string)
+        (freq,Yfactor,
+            hot_pwr ,hot_pot ,hot_mV_mean ,hot_tp ,hot_spike_list ,hot_spikes_inband ,hot_sweep_index,
+            cold_pwr,cold_pot,cold_mV_mean,cold_tp,cold_spike_list,cold_spikes_inband,cold_sweep_index) = Ydata
+
+        freq_list.append(freq)
+        Yfactor_list.append(Yfactor)
+        hot_pwr_list.append(hot_pwr)
+        hot_pot_list.append(hot_pot)
+        hot_mV_mean_list.append(hot_mV_mean)
+        hot_tp_list.append(hot_tp)
+        hot_spike_list_list.append(hot_spike_list)
+        hot_spikes_inband_list.append(hot_spikes_inband)
+        hot_sweep_index_list.append(hot_sweep_index)
+        cold_pwr_list.append(cold_pwr)
+        cold_pot_list.append(cold_pot)
+        cold_mV_mean_list.append(cold_mV_mean)
+        cold_tp_list.append(cold_tp)
+        cold_spike_list_list.append(cold_spike_list)
+        cold_spikes_inband_list.append(cold_spikes_inband)
+        cold_sweep_index_list.append(cold_sweep_index)
+
+
+
+    return spec_data_found, freq_list,Yfactor_list,\
+           hot_pwr_list,hot_pot_list,hot_mV_mean_list,hot_tp_list,\
+           hot_spike_list_list,hot_spikes_inband_list,hot_sweep_index_list,\
+           cold_pwr_list,cold_pot_list,cold_mV_mean_list,cold_tp_list,\
+           cold_spike_list_list,cold_spikes_inband_list,cold_sweep_index_list
 
 
 def ProcessMatrix(raw_matrix, mono_switcher=True, do_regrid=False, do_conv=False, regrid_mesh=0.01, min_cdf=0.9, sigma=5, verbose=False):

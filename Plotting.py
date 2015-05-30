@@ -1852,7 +1852,7 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
                             plot_list=ax1_plot_list, leglines=leglines, leglabels=leglabels,
                             color=color, linw=1, ls='-', scale_str='' )
 
-
+        ############## Start here looking at the spike removal and making tools to get out max Y factors
 
 
         if (ax1_plot_list != []):
