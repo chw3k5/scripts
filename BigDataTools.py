@@ -7,6 +7,19 @@ from datapro import YdataPro
 from profunc import windir
 from SetGrab import getYsweeps, tp_int_cut, LOuAset_cut, LOuAdiff_cut, mV_bias_cut_Y
 
+colors = ['BlueViolet','Brown','CadetBlue','Chartreuse', 'Chocolate','Coral','CornflowerBlue','Crimson','Cyan',
+          'DarkBlue','DarkCyan','DarkGoldenRod', 'DarkGreen','DarkMagenta','DarkOliveGreen','DarkOrange',
+          'DarkOrchid','DarkRed','DarkSalmon','DarkSeaGreen','DarkSlateBlue','DodgerBlue','FireBrick','ForestGreen',
+          'Fuchsia','Gold','GoldenRod','Green','GreenYellow','HotPink','IndianRed','Indigo','LawnGreen',
+          'LightCoral','Lime','LimeGreen','Magenta','Maroon', 'MediumAquaMarine','MediumBlue','MediumOrchid',
+          'MediumPurple','MediumSeaGreen','MediumSlateBlue','MediumTurquoise','MediumVioletRed','MidnightBlue',
+          'Navy','Olive','OliveDrab','Orange','OrangeRed','Orchid','PaleVioletRed','Peru','Pink','Plum','Purple',
+          'Red','RoyalBlue','SaddleBrown','Salmon','SandyBrown','Sienna','SkyBlue','SlateBlue','SlateGrey',
+          'SpringGreen','SteelBlue','Teal','Tomato','Turquoise','Violet','Yellow','YellowGreen']
+
+
+
+
 
 ###############
 ### Options ###
@@ -62,6 +75,10 @@ mV_bias_max = 2.0 # at most this, None is any
 ###### Yfactor versus LO frequency ######
 #########################################
 do_Yfactor_versus_LO_freq = True
+min_Y_factor = 1.5
+spec_bands = [0,1,2,3,4,5]
+Y_LOfreq_colors = ['Crimson','Tomato','Olive','CornflowerBlue','SteelBlue','Red','RoyalBlue','SaddleBrown','Salmon','SandyBrown','Sienna','SkyBlue','SlateBlue','SlateGrey','BlueViolet','Brown','CadetBlue','Chartreuse', 'Chocolate','Coral','CornflowerBlue','Crimson','Cyan']
+Y_LOfreq_plotdir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Y_LOfreq/')
 
 
 ###########################################
@@ -151,15 +168,101 @@ if ((mV_bias_min is not None) and (mV_bias_max is not None)):
 #########################################
 testmode = True
 if do_Yfactor_versus_LO_freq:
+    fig, ax1 = plt.subplots()
+    ax1.set_xlabel("LO frequency (GHz)")
+    ax1.set_ylabel("Y Factor")
+    ax1.set_xlim([645, 695])
+    ax1.set_ylim([0,3])
+    leglines  = []
+    leglabels = []
+
+    # get and plot the power meter data
+    pm_max_Yfactors        = []
+    pm_max_Yfactor_mVs     = []
+    pm_max_Yfactor_LOfreqs = []
     for Ysweep in Ysweeps:
-
-        max_mV_Yfactor, max_Yfactor = Ysweep.find_max_yfactor_pm()
+        pm_max_Yfactor_mV, pm_max_Yfactor = Ysweep.find_max_yfactor_pm()
+        LOfreq = Ysweep.LOfreq
+        if min_Y_factor <= pm_max_Yfactor:
+            pm_max_Yfactors.append(pm_max_Yfactor)
+            pm_max_Yfactor_mVs.append(pm_max_Yfactor_mV)
+            pm_max_Yfactor_LOfreqs.append(LOfreq)
         if testmode:
-            print  max_Yfactor,':', max_mV_Yfactor,' mV'
+            print  pm_max_Yfactor,':',LOfreq,'GHz :', pm_max_Yfactor_mV,' mV'
 
-        max_Yfactor, max_Yfactor_mV, Yfactor_freq = Ysweep.find_max_yfactor_spec(min_freq=4,max_freq=5)
-        if testmode:
-            print 'max_Yfactor:',max_Yfactor, '  max_Yfactor_mV:',max_Yfactor_mV, '  Yfactor_freq:',Yfactor_freq
+    x_vector = pm_max_Yfactor_LOfreqs
+    y_vector = pm_max_Yfactors
+    ls = "None"
+    linw = 1
+    color = 'DarkOrchid'
+    fmt = 'o'
+    markersize = 10
+    alpha = 0.5
+
+    ax1.plot(x_vector,y_vector , linestyle=ls, color=color,
+                         marker=fmt, markersize=markersize, markerfacecolor=color, alpha=alpha)
+    leglines.append(plt.Line2D(range(10), range(10), color=color, ls='', linewidth=linw,
+                               marker=fmt, markersize=markersize, markerfacecolor=color, alpha=alpha))
+    leglabels.append("Power meter data 1.42 GHz IF band")
+
+
+
+    # get and plot the spectrum analyzer data
+    for band_index in range(0,len(spec_bands)-1):
+        low_freq = spec_bands[band_index]
+        high_freq = spec_bands[band_index+1]
+
+        sa_max_Yfactors = []
+        sa_max_Yfactor_mVs = []
+        sa_max_Yfactor_freqs = []
+        sa_max_Yfactor_LOfreqs = []
+        for Ysweep in Ysweeps:
+            sa_max_Yfactor, sa_max_Yfactor_mV, sa_Yfactor_freq = Ysweep.find_max_yfactor_spec(min_freq=low_freq,max_freq=high_freq)
+            LOfreq = Ysweep.LOfreq
+            sa_max_Yfactors.append(sa_max_Yfactor)
+            sa_max_Yfactor_mVs.append(sa_max_Yfactor_mV)
+            sa_max_Yfactor_freqs.append(sa_Yfactor_freq)
+            sa_max_Yfactor_LOfreqs.append(LOfreq)
+            if testmode:
+                print 'max_Yfactor:',sa_max_Yfactor, '  max_Yfactor_LOfreq:',LOfreq,'  max_Yfactor_mV:',sa_max_Yfactor_mV, '  Yfactor_freq:',sa_Yfactor_freq
+
+
+        x_vector = sa_max_Yfactor_LOfreqs
+        y_vector = sa_max_Yfactors
+        ls = "None"
+        linw = 1
+        color = Y_LOfreq_colors[band_index]
+        fmt = 'o'
+        markersize = 10
+        alpha = 0.5
+
+        ax1.plot(x_vector,y_vector , linestyle=ls, color=color,
+                             marker=fmt, markersize=markersize, markerfacecolor=color, alpha=alpha)
+        leglines.append(plt.Line2D(range(10), range(10), color=color, ls='', linewidth=linw,
+                                   marker=fmt, markersize=markersize, markerfacecolor=color, alpha=alpha))
+        leglabels.append("SA data "+str(low_freq)+"-"+str(high_freq)+" GHz IF band")
+
+    # stuff to make the final plot look good
+    matplotlib.rcParams['legend.fontsize'] = 10
+    plt.legend(tuple(leglines),tuple(leglabels), numpoints=3, loc=1)
+
+    plt.savefig(Y_LOfreq_plotdir+"Yfactor_versus_LOfreq.png")
+    plt.close('all')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ################################
 ###### Intersecting Lines ######
