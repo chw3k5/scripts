@@ -45,7 +45,7 @@ do_conv_mV       = True
 sigma_mV         = 0.05
 min_cdf_mV       = 0.95
 remove_spikes    = True
-do_normspectra   = False
+do_normspectra   = True
 norm_freq        = 1.42
 norm_band        = 0.060
 do_freq_conv     = True
@@ -75,6 +75,7 @@ mV_bias_max = 2.2 # at most this, None is any
 ###### Yfactor versus LO frequency ######
 #########################################
 do_Yfactor_versus_LO_freq = True
+do_max_Yfactor = True # False uses the average value for a bandwidth, True uses the maximum
 min_Y_factor = 0.9
 spec_bands = [1,1.39,1.45,2,3,4,5]#,4,5]
 Y_LOfreq_colors = ['Crimson','Olive','GoldenRod','RoyalBlue','SaddleBrown','Red','Salmon','SandyBrown','Sienna','SkyBlue','SlateBlue','SlateGrey','BlueViolet','Brown','CadetBlue','Chartreuse', 'Chocolate','Coral','CornflowerBlue','Crimson','Cyan']
@@ -103,7 +104,7 @@ shot_noise_plotdir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/shot_
 ###############################################################
 setnames = []
 #setnames.extend(['LOfreq']#['set4','set5','set6','set7','LOfreq'])
-setnames.extend(['Mar28/LOfreq_wspec','Mar28/LOfreq_wspec2','Mar28/moonshot','Mar28/Mag_sweep','Mar28/LOfreq'])
+setnames.extend(['Mar28/LOfreq_wspec','Mar28/LOfreq_wspec2'])#,'Mar28/moonshot','Mar28/Mag_sweep','Mar28/LOfreq'])
 #setnames.extend(['Mar24_15/LO_power','Mar24_15/Yfactor_test'])
 #setnames.extend(['Nov05_14/Y_LOfreqMAGLOuA','Nov05_14/Y_MAG','Nov05_14/Y_MAG2','Nov05_14/Y_MAG3','Nov05_14/Y_standard'])
 #setnames.extend(['Oct20_14/LOfreq','Oct20_14/Y_LO_pow','Oct20_14/Y_MAG','Oct20_14/Y_MAG2','Oct20_14'])
@@ -219,27 +220,32 @@ if do_Yfactor_versus_LO_freq:
         low_freq = spec_bands[band_index]
         high_freq = spec_bands[band_index+1]
 
-        sa_max_Yfactors = []
-        sa_max_Yfactor_mVs = []
-        sa_max_Yfactor_freqs = []
-        sa_max_Yfactor_LOfreqs = []
+        sa_Yfactors = []
+        sa_Yfactor_mVs = []
+        sa_Yfactor_freqs = []
+        sa_Yfactor_LOfreqs = []
         for (index_Y,Ysweep) in list(enumerate(Ysweeps)):
             if Ysweep.spec_data_found:
-                sa_max_Yfactor, sa_max_Yfactor_mV, sa_Yfactor_freq = Ysweep.find_max_yfactor_spec(min_freq=low_freq,max_freq=high_freq)
+                sa_max_Yfactor, sa_max_Yfactor_mV, sa_Yfactor_freq, sa_ave_Yfactor = Ysweep.find_max_yfactor_spec(min_freq=low_freq,max_freq=high_freq)
                 LOfreq = Ysweep.LOfreq
-                if ((min_Y_factor <= sa_max_Yfactor) and (Ysweep.fullpath !=windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/LOfreq/'))):
-                    sa_max_Yfactors.append(sa_max_Yfactor)
-                    sa_max_Yfactor_mVs.append(sa_max_Yfactor_mV)
-                    sa_max_Yfactor_freqs.append(sa_Yfactor_freq)
-                    sa_max_Yfactor_LOfreqs.append(LOfreq)
+
+                if do_max_Yfactor:
+                    sa_Yfactor = sa_max_Yfactor
+                else:
+                    sa_Yfactor = sa_ave_Yfactor
+                if ((min_Y_factor <= sa_Yfactor) and (Ysweep.fullpath !=windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/LOfreq/'))):
+                    sa_Yfactors.append(sa_Yfactor)
+                    sa_Yfactor_mVs.append(sa_max_Yfactor_mV)
+                    sa_Yfactor_freqs.append(sa_Yfactor_freq)
+                    sa_Yfactor_LOfreqs.append(LOfreq)
                 if testmode:
-                    print 'max_Yfactor:',sa_max_Yfactor, '  max_Yfactor_LOfreq:',LOfreq,'  max_Yfactor_mV:',sa_max_Yfactor_mV, '  Yfactor_freq:',sa_Yfactor_freq
+                    print 'sa_Yfactor:',sa_Yfactor, '  max_Yfactor_LOfreq:',LOfreq,'  max_Yfactor_mV:',sa_max_Yfactor_mV, '  Yfactor_freq:',sa_Yfactor_freq
                     print Ysweep.fullpath
                     #print index_Y," Y index", Ysweep.name
                     #print len(Ysweep.spec_freq_list[1]),'length of self.spec_freq_list[1]'
 
-        x_vector = sa_max_Yfactor_LOfreqs
-        y_vector = sa_max_Yfactors
+        x_vector = sa_Yfactor_LOfreqs
+        y_vector = sa_Yfactors
         ls = "None"
         linw = 1
         color = Y_LOfreq_colors[band_index]

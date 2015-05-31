@@ -126,7 +126,7 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
             max_Yfactor      = None
             max_Yfactor_mV   = None
             max_Yfactor_freq = None
-
+            ave_Yfactor      = None
             image_of_spec_Yfactor_list      = self.spec_Yfactor_list[:]
             image_of_spec_freq_list         = self.spec_freq_list[:]
             image_of_spec_hot_mV_mean_list  = self.spec_hot_mV_mean_list[:]
@@ -136,6 +136,7 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
                 max_Yfactor      = -1
                 max_Yfactor_mV   = -1
                 max_Yfactor_freq = -1
+                ave_Yfactor      = -1
                 if min_freq is not None:
                     for list_index in range(len(image_of_spec_freq_list[:])):
                         spec_Yfactor  = image_of_spec_Yfactor_list[list_index]
@@ -188,6 +189,7 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
                 list_of_max_Yfactors     = []
                 list_of_max_Yfactor_freq = []
                 list_of_max_Yfactor_mV   = []
+                list_of_ave_Yfactors     = []
 
                 for list_index in range(len(image_of_spec_freq_list[:])):
                     spec_Yfactor         = list(image_of_spec_Yfactor_list[list_index])
@@ -197,17 +199,22 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
                     local_max_Yfactor      = max(spec_Yfactor)
                     index_of_max_Yfactor   = spec_Yfactor.index(local_max_Yfactor)
                     local_max_Yfactor_freq = Yfactor_freq[index_of_max_Yfactor]
+                    local_ave_Yfactor      = np.mean(spec_Yfactor)
 
                     if max_Yfactor < local_max_Yfactor:
                         max_Yfactor    = local_max_Yfactor
                         max_Yfactor_mV = local_max_Yfactor_mV
                         max_Yfactor_freq   = local_max_Yfactor_freq
 
+                    if ave_Yfactor < local_ave_Yfactor:
+                        ave_Yfactor = local_ave_Yfactor
+
                     list_of_max_Yfactors.append(local_max_Yfactor)
                     list_of_max_Yfactor_freq.append(local_max_Yfactor_freq)
                     list_of_max_Yfactor_mV.append(local_max_Yfactor_mV)
+                    list_of_ave_Yfactors.append(ave_Yfactor)
 
-                return max_Yfactor, max_Yfactor_mV, max_Yfactor_freq
+                return max_Yfactor, max_Yfactor_mV, max_Yfactor_freq, ave_Yfactor
 
         def intersecting_line(self,mV_center=2.0,mV_plus_minus=0.5):
             def find_ave_Y4X(y_list,x_list,x_center,x_plus_minus):
