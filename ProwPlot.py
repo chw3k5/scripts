@@ -21,7 +21,7 @@ repeat  = 1
 ### For Y-factor data and Sweeps ###
 do_Ysweeps              = False
 do_YdataPro             = False
-do_YfactotSweepsPlotter = True
+do_YfactotSweepsPlotter = False
 do_YSpectra_Plotter     = True
 
 
@@ -107,9 +107,9 @@ if all_Ydata:
 
 # The directory what the data is kept
 start_num = 1
-#datadir   = '/Users/chw3k5/Google Drive/Kappa_preGoogleDrive/NA38/IVsweep/LO_freq/'
-datadir = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec2/'
-Ynums = ['Y0012','Y0013']
+#datadir   = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/LOfreq/'
+datadir = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec/'
+Ynums = []
 if Ynums ==[]:
     search4Ynums = True
 else:
@@ -174,7 +174,7 @@ if do_Ysweeps:
 if do_YdataPro:
     YdataPro(datadir, verbose=True, search_4Ynums=search4Ynums, search_str='Y', Ynums=Ynums, useOFFdata=False, Off_datadir='',
              mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.1, do_conv_mV=True, sigma_mV=0.05, min_cdf_mV=0.95,
-             remove_spikes=True, do_normspectra=False,
+             remove_spikes=False, do_normspectra=True,
              regrid_mesh_mV_spec=0.2, norm_freq=1.42, norm_band=0.060, do_freq_conv=True, min_cdf_freq=0.90,
              sigma_GHz=0.10)
 
@@ -196,8 +196,11 @@ if do_YfactotSweepsPlotter:
                          do_xkcd=False)
 
 if do_YSpectra_Plotter:
-    YSpectraPlotter2D(datadir, search_4Ynums=search4Ynums, Ynums=Ynums, verbose=True,
-                    show_plot=False, save_plot=True, do_eps=False)
+    YSpectraPlotter2D(datadir, search_4Ynums=search4Ynums, Ynums=Ynums,
+                      mV_min=None,mV_max=None, show_spikes=False,
+                      verbose=True,display_params=True,
+                      show_plot=False, save_plot=True, do_eps=False)
+
 
 
 

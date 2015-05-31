@@ -596,7 +596,7 @@ def readspec(filename):
         filename = windir(filename)
     data = atpy.Table(filename, type="ascii", delimiter=",")
     freqs = data.GHz
-    pwr  = data.pwr
+    pwr  =  (data.pwr)**2
     return freqs, pwr
 
 def getpromagSweep(datadir):

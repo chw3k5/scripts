@@ -1743,7 +1743,7 @@ def SingleSpectraPlotter(datadir, search_4Snums=False, Snums='', verbose=False,
 
 import random
 def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
-                      mV_min=None,mV_max=None,
+                      mV_min=None,mV_max=None, show_spikes=False,
                       display_params=True, verbose=False,
                       show_plot=False, save_plot=True, do_eps=False):
 
@@ -1847,10 +1847,22 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
             color = colors[(hot_sweep_index % color_len)]
             mV = (hot_mV_mean+cold_mV_mean)/2.0
 
+            print hot_spike_list
+
+            if show_spikes:
+                for spike in list(hot_spike_list).extend(list(cold_spike_list)):
+                    ax1_plot_list, leglines, leglabels \
+                        = xyplotgen([spike,spike], [0,3], label=str('%1.2f' % spike)+'GHz',
+                                    plot_list=ax1_plot_list, leglines=leglines, leglabels=leglabels,
+                                    color='yellow', linw=3, ls='-', scale_str='' )
+
+
+
             ax1_plot_list, leglines, leglabels \
                 = xyplotgen(freq, Yfactor, label='Bias'+str('%1.2f' % mV)+'mV',
                             plot_list=ax1_plot_list, leglines=leglines, leglabels=leglabels,
                             color=color, linw=1, ls='-', scale_str='' )
+
 
         ############## Start here looking at the spike removal and making tools to get out max Y factors
 

@@ -34,7 +34,7 @@ do_eps          = True
 
 
 # data processing
-process_data  = False
+process_data  = True
 Ynums         = None
 search_str    = 'Y'
 search_4Ynums = True
@@ -66,8 +66,8 @@ maxdiff_LOuA = None # None is any
 
 ### Will only work for Y factor
 # mV bias cuts
-mV_bias_min = 0.5 # at least this, None is any
-mV_bias_max = 1.8 # at most this, None is any
+mV_bias_min = 0.7 # at least this, None is any
+mV_bias_max = 2.2 # at most this, None is any
 
 
 
@@ -75,9 +75,9 @@ mV_bias_max = 1.8 # at most this, None is any
 ###### Yfactor versus LO frequency ######
 #########################################
 do_Yfactor_versus_LO_freq = True
-min_Y_factor = 1.2
-spec_bands = [0,1,2,3,4,5]
-Y_LOfreq_colors = ['Crimson','FireBrick','Olive','GoldenRod','RoyalBlue','SaddleBrown','Red','Salmon','SandyBrown','Sienna','SkyBlue','SlateBlue','SlateGrey','BlueViolet','Brown','CadetBlue','Chartreuse', 'Chocolate','Coral','CornflowerBlue','Crimson','Cyan']
+min_Y_factor = 0.9
+spec_bands = [1,1.39,1.45,2,3,4,5]#,4,5]
+Y_LOfreq_colors = ['Crimson','Olive','GoldenRod','RoyalBlue','SaddleBrown','Red','Salmon','SandyBrown','Sienna','SkyBlue','SlateBlue','SlateGrey','BlueViolet','Brown','CadetBlue','Chartreuse', 'Chocolate','Coral','CornflowerBlue','Crimson','Cyan']
 Y_LOfreq_plotdir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Y_LOfreq/')
 
 
@@ -101,16 +101,17 @@ shot_noise_plotdir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/shot_
 ###############################################################
 ### All the sets of data to collect the processed data from ###
 ###############################################################
-setnames = ['set4','set5','set6','set7','LOfreq']
+setnames = []
+#setnames.extend(['LOfreq']#['set4','set5','set6','set7','LOfreq'])
+setnames.extend(['Mar28/LOfreq_wspec','Mar28/LOfreq_wspec2','Mar28/moonshot','Mar28/Mag_sweep','Mar28/LOfreq'])
+#setnames.extend(['Mar24_15/LO_power','Mar24_15/Yfactor_test'])
+#setnames.extend(['Nov05_14/Y_LOfreqMAGLOuA','Nov05_14/Y_MAG','Nov05_14/Y_MAG2','Nov05_14/Y_MAG3','Nov05_14/Y_standard'])
+#setnames.extend(['Oct20_14/LOfreq','Oct20_14/Y_LO_pow','Oct20_14/Y_MAG','Oct20_14/Y_MAG2','Oct20_14'])
 
 parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
-parent_folder = windir(parent_folder)
-fullpaths = [parent_folder + setname + '/' for setname in setnames]
-# fullpaths.append('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec/')
-# fullpaths.append('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec2/')
-# fullpaths.append('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/moonshot/')
-# fullpaths.append('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/Mag_sweep/')
-# fullpaths.append('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq/')
+fullpaths = [windir(parent_folder + setname + '/') for setname in setnames]
+
+
 print fullpaths
 ### MakeORclear_plotdir ###
 def makeORclear_plotdir(plotdir,clear_flag=clear_old_plots):
@@ -226,13 +227,14 @@ if do_Yfactor_versus_LO_freq:
             if Ysweep.spec_data_found:
                 sa_max_Yfactor, sa_max_Yfactor_mV, sa_Yfactor_freq = Ysweep.find_max_yfactor_spec(min_freq=low_freq,max_freq=high_freq)
                 LOfreq = Ysweep.LOfreq
-                if min_Y_factor <= sa_max_Yfactor:
+                if ((min_Y_factor <= sa_max_Yfactor) and (Ysweep.fullpath !=windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/LOfreq/'))):
                     sa_max_Yfactors.append(sa_max_Yfactor)
                     sa_max_Yfactor_mVs.append(sa_max_Yfactor_mV)
                     sa_max_Yfactor_freqs.append(sa_Yfactor_freq)
                     sa_max_Yfactor_LOfreqs.append(LOfreq)
                 if testmode:
                     print 'max_Yfactor:',sa_max_Yfactor, '  max_Yfactor_LOfreq:',LOfreq,'  max_Yfactor_mV:',sa_max_Yfactor_mV, '  Yfactor_freq:',sa_Yfactor_freq
+                    print Ysweep.fullpath
                     #print index_Y," Y index", Ysweep.name
                     #print len(Ysweep.spec_freq_list[1]),'length of self.spec_freq_list[1]'
 

@@ -543,7 +543,8 @@ def Specdata2Yfactor(prodatadir, verbose=False):
         hot_pwr  =   hot_pwr[start_index_hot_freq:end_index_hot_freq]
         cold_pwr = cold_pwr[start_index_cold_freq:end_index_cold_freq]
 
-        Yfactor = (hot_pwr**2)/(cold_pwr**2)
+        #Yfactor = (hot_pwr**2)/(cold_pwr**2)
+        Yfactor = (hot_pwr)/(cold_pwr)
         Y_data_filename = prodatadir + "Y"+str(hot_sweep_index+1)+".npy"
 
         big_can = (freq,Yfactor,

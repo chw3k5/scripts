@@ -432,10 +432,10 @@ def GetSpecData(datadir, specdataname, remove_spikes=False,
                     print "In the directory ", datadir, " for sweep 1"
                     print "do normalization is set to False "
 
-                if ((not freqs_out_of_band) and (not spikes_inband)):
+                if ((not freqs_out_of_band)):# and (not spikes_inband)):
                     ave_inband_spec_pwr = numpy.mean(inband_spec_pwr)
                     norm_scale = numpy.mean(tp)/ave_inband_spec_pwr
-                    pwr=pwr*norm_scale
+                    pwr=(pwr*norm_scale)
 
             if do_freq_conv:
                 data_matrix = numpy.zeros((len(freq),2))
