@@ -6,6 +6,48 @@ import glob
 from operator import itemgetter
 import pickle
 
+############################
+###### make_monotonic ######
+############################
+
+def make_monotonic(list_of_lists,reverse=False):
+    # the first list in the list_of_list should be the one for which the other lists are to be sorted
+    sorted_list_of_lists = []
+    num_of_lists = len(list_of_lists)
+    sort_list = list_of_lists[0]
+    len_sort_list = len(sort_list)
+    sort_matrix = numpy.zeros((len_sort_list,num_of_lists))
+    for (list_index,alist) in list(enumerate(list_of_lists)):
+        sort_matrix[:,list_index]=alist
+    sorted_martix = numpy.array(sorted(sort_matrix, key=itemgetter(0)))
+    if reverse:
+        for list_index in range(num_of_lists):
+            sorted_list_of_lists.append(list(sorted_martix[:,list_index]).reverse())
+    else:
+        for list_index in range(num_of_lists):
+            sorted_list_of_lists.append(list(sorted_martix[:,list_index]))
+    return sorted_list_of_lists
+
+######################
+###### uniquify ######
+######################
+def uniquify(seq, idfun=None):
+   # order preserving
+   if idfun is None:
+       def idfun(x): return x
+   seen = {}
+   result = []
+   for item in seq:
+       marker = idfun(item)
+       # in old Python versions:
+       # if seen.has_key(marker)
+       # but in new ones:
+       if marker in seen: continue
+       seen[marker] = 1
+       result.append(item)
+   return result
+
+
 ####################
 ###### regrid ######
 ####################

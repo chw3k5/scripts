@@ -6,6 +6,7 @@ import os, shutil, numpy
 from datapro import YdataPro
 from profunc import windir
 from SetGrab import getYsweeps, tp_int_cut, LOuAset_cut, LOuAdiff_cut, mV_bias_cut_Y
+from domath import make_monotonic
 
 colors = ['BlueViolet','Brown','CadetBlue','Chartreuse', 'Chocolate','Coral','CornflowerBlue','Crimson','Cyan',
           'DarkBlue','DarkCyan','DarkGoldenRod', 'DarkGreen','DarkMagenta','DarkOliveGreen','DarkOrange',
@@ -67,7 +68,7 @@ maxdiff_LOuA = None # None is any
 ### Will only work for Y factor
 # mV bias cuts
 mV_bias_min = 0.7 # at least this, None is any
-mV_bias_max = 2.2 # at most this, None is any
+mV_bias_max = 1.9 # at most this, None is any
 
 
 
@@ -77,11 +78,19 @@ mV_bias_max = 2.2 # at most this, None is any
 do_Yfactor_versus_LO_freq = True
 do_max_Yfactor = True # False uses the average value for a bandwidth, True uses the maximum
 min_Y_factor = 0.9
-spec_bands = [1,1.39,1.45,2,3,4,5]#,4,5]
+spec_bands = [1,2,3,4,5]#1.39,1.45]#,4,5]
 Y_LOfreq_colors = ['Crimson','Olive','GoldenRod','RoyalBlue','SaddleBrown','Red','Salmon','SandyBrown','Sienna','SkyBlue','SlateBlue','SlateGrey','BlueViolet','Brown','CadetBlue','Chartreuse', 'Chocolate','Coral','CornflowerBlue','Crimson','Cyan']
 Y_LOfreq_plotdir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Y_LOfreq/')
 
+Y_LOfreq_ls = "-"
+Y_LOfreq_linw = 3
+Y_LOfreq_fmt = 'o'
+Y_LOfreq_markersize = 5
+Y_LOfreq_alpha = 1
 
+Y_LOfreq_legend_size = 10
+Y_LOfreq_legend_num_of_points = 3
+Y_LOfreq_legend_loc = 3
 ###########################################
 ###### Intersecting lines Parameters ######
 ###########################################
@@ -103,7 +112,7 @@ shot_noise_plotdir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/shot_
 ### All the sets of data to collect the processed data from ###
 ###############################################################
 setnames = []
-#setnames.extend(['LOfreq']#['set4','set5','set6','set7','LOfreq'])
+#setnames.extend(['LOfreq'])#['set4','set5','set6','set7','LOfreq'])
 setnames.extend(['Mar28/LOfreq_wspec','Mar28/LOfreq_wspec2'])#,'Mar28/moonshot','Mar28/Mag_sweep','Mar28/LOfreq'])
 #setnames.extend(['Mar24_15/LO_power','Mar24_15/Yfactor_test'])
 #setnames.extend(['Nov05_14/Y_LOfreqMAGLOuA','Nov05_14/Y_MAG','Nov05_14/Y_MAG2','Nov05_14/Y_MAG3','Nov05_14/Y_standard'])
@@ -180,7 +189,7 @@ if do_Yfactor_versus_LO_freq:
     ax1.set_xlabel("LO frequency (GHz)")
     ax1.set_ylabel("Y Factor")
     ax1.set_xlim([645, 695])
-    ax1.set_ylim([0,3])
+    ax1.set_ylim([0.5,2.5])
     leglines  = []
     leglabels = []
 
@@ -198,19 +207,20 @@ if do_Yfactor_versus_LO_freq:
         if testmode:
             print  pm_max_Yfactor,':',LOfreq,'GHz :', pm_max_Yfactor_mV,' mV'
 
+    # Sort all the data to make monotonic lines in the domain of LO frequency
+    list_of_lists = [pm_max_Yfactor_LOfreqs,pm_max_Yfactors,pm_max_Yfactor_mVs]
+    sorted_list_of_lists = make_monotonic(list_of_lists,reverse=False)
+    [pm_max_Yfactor_LOfreqs,pm_max_Yfactors,pm_max_Yfactor_mVs] = sorted_list_of_lists
+
     x_vector = pm_max_Yfactor_LOfreqs
     y_vector = pm_max_Yfactors
-    ls = "None"
-    linw = 1
     color = 'DarkOrchid'
-    fmt = 'o'
-    markersize = 10
-    alpha = 0.5
 
-    ax1.plot(x_vector,y_vector , linestyle=ls, color=color,
-                         marker=fmt, markersize=markersize, markerfacecolor=color, alpha=alpha)
-    leglines.append(plt.Line2D(range(10), range(10), color=color, ls='', linewidth=linw,
-                               marker=fmt, markersize=markersize, markerfacecolor=color, alpha=alpha))
+
+    ax1.plot(x_vector,y_vector , linestyle=Y_LOfreq_ls, color=color, linewidth=Y_LOfreq_linw,
+                         marker=Y_LOfreq_fmt, markersize=Y_LOfreq_markersize, markerfacecolor=color, alpha=Y_LOfreq_alpha)
+    leglines.append(plt.Line2D(range(10), range(10), color=color, ls=Y_LOfreq_ls, linewidth=Y_LOfreq_linw,
+                               marker=Y_LOfreq_fmt, markersize=Y_LOfreq_markersize, markerfacecolor=color, alpha=Y_LOfreq_alpha))
     leglabels.append("PM data 1.42 GHz IF band")
 
 
@@ -244,25 +254,27 @@ if do_Yfactor_versus_LO_freq:
                     #print index_Y," Y index", Ysweep.name
                     #print len(Ysweep.spec_freq_list[1]),'length of self.spec_freq_list[1]'
 
+        # Sort all the data to make monotonic lines in the domain of LO frequency
+        list_of_lists = [sa_Yfactor_LOfreqs,sa_Yfactors,sa_Yfactor_mVs,sa_Yfactor_freqs]
+        sorted_list_of_lists = make_monotonic(list_of_lists,reverse=False)
+        [sa_Yfactor_LOfreqs,sa_Yfactors,sa_Yfactor_mVs,sa_Yfactor_freqs] = sorted_list_of_lists
+
+
+
         x_vector = sa_Yfactor_LOfreqs
         y_vector = sa_Yfactors
-        ls = "None"
-        linw = 1
         color = Y_LOfreq_colors[band_index]
-        fmt = 'o'
-        markersize = 10
-        alpha = 0.5
 
-        ax1.plot(x_vector,y_vector , linestyle=ls, color=color,
-                             marker=fmt, markersize=markersize, markerfacecolor=color, alpha=alpha)
-        leglines.append(plt.Line2D(range(10), range(10), color=color, ls='', linewidth=linw,
-                                   marker=fmt, markersize=markersize, markerfacecolor=color, alpha=alpha))
+        ax1.plot(x_vector,y_vector , linestyle=Y_LOfreq_ls, color=color, linewidth=Y_LOfreq_linw,
+                             marker=Y_LOfreq_fmt, markersize=Y_LOfreq_markersize, markerfacecolor=color, alpha=Y_LOfreq_alpha)
+        leglines.append(plt.Line2D(range(10), range(10), color=color, ls=Y_LOfreq_ls, linewidth=Y_LOfreq_linw,
+                                   marker=Y_LOfreq_fmt, markersize=Y_LOfreq_markersize, markerfacecolor=color, alpha=Y_LOfreq_alpha))
         leglabels.append("SA data "+str(low_freq)+"-"+str(high_freq)+" GHz IF band")
 
 
     # stuff to make the final plot look good
-    matplotlib.rcParams['legend.fontsize'] = 10
-    plt.legend(tuple(leglines),tuple(leglabels), numpoints=3, loc=4)
+    matplotlib.rcParams['legend.fontsize'] = Y_LOfreq_legend_size
+    plt.legend(tuple(leglines),tuple(leglabels), numpoints=Y_LOfreq_legend_num_of_points, loc=Y_LOfreq_legend_loc)
 
     plt.savefig(Y_LOfreq_plotdir+"Yfactor_versus_LOfreq.png")
     plt.close('all')

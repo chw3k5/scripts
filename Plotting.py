@@ -7,8 +7,8 @@ from matplotlib import pyplot as plt
 #if platform == 'darwin':
 #    matplotlib.rc('text', usetex=True)
 from profunc import windir, getproparams, getmultiParams,  getproSweep, get_fastIV, getproYdata, GetProDirsNames
-from profunc import getprorawdata # Caleb's Functions
-from domath  import linfit # Caleb's Functions
+from profunc import getprorawdata, find_max_yfactor_spec  # Caleb's Functions
+from domath  import linfit, uniquify # Caleb's Functions
 import pickle, glob
 
 from mpl_toolkits.mplot3d import axes3d
@@ -489,6 +489,14 @@ def xyplotgen(x_vector, y_vector, label='', plot_list=[], leglines=[], leglabels
     plot_list.append((x_vector, y_vector, color, linw, ls, scale_str))
     leglines.append((color,ls,linw))
     leglabels.append(label)
+    return plot_list, leglines, leglabels
+
+
+def xyplotgen2(x_vector, y_vector, label='', plot_list=[], leglines=[], leglabels=[], color='black', linw=1, ls='-', alpha=1.0, scale_str='', leg_on=True ):
+    plot_list.append((x_vector, y_vector, color, linw, ls, alpha, scale_str))
+    if leg_on:
+        leglines.append((color,ls,linw,alpha))
+        leglabels.append(label)
     return plot_list, leglines, leglabels
 
 def xyerrorplotgen(x_vector, y_vector, x_error=None, y_error=None,
@@ -1588,7 +1596,7 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
             if ax2_plot_list != []:
                 ypos = ylimR2+y_margin_top*y2size - yincrement
             else:
-                ypos = ylimR1+y_margin_top*y1size  - yincrement
+                ypos = ylimR1+y_margin_top*y1size - yincrement
 
             if magiset is not None:
                 plt.text(xpos, ypos,"magnet set value", color = mag_color)
@@ -1630,7 +1638,7 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                     print "saving EPS file: ", filename
                 plt.savefig(filename)
             else:
-                filename = plotdir+Ynum+".png"
+                filename = plotdir+str(LOfreq)+"_LOfreq_"+Ynum+".png"
                 if verbose:
                     print "saving PNG file: ", filename
                 plt.savefig(filename)
@@ -1743,7 +1751,8 @@ def SingleSpectraPlotter(datadir, search_4Snums=False, Snums='', verbose=False,
 
 import random
 def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
-                      mV_min=None,mV_max=None, show_spikes=False,
+                      mV_min=None,mV_max=None, show_spikes=False, show_spike_label=False,
+                      find_best_Yfactors=True,
                       display_params=True, verbose=False,
                       show_plot=False, save_plot=True, do_eps=False):
 
@@ -1765,7 +1774,7 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
     # This fraction is added to the total size of the curves on the axis to make a margin
     x_margin_right = 0.
     x_margin_left  = 0.
-    y_margin_top   = 0.5
+    y_margin_top   = 0.02
     y_margin_bot   = 0.
 
     ### Legend ###
@@ -1774,20 +1783,27 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
 
         ### Axis Limits ###
     # X-axis
-    if mV_min is not None:
-        xlimL = mV_min
-    else:
-        xlimL = 999999.
-    if mV_max is not None:
-        xlimR = mV_max
-    else:
-        xlimR = -999999.
-
-
+    xlimL = 0
+    xlimR = 7.5
     # Y-axis
-    ylimL =   0
-    ylimR =  10
+    ylimL = 0
+    ylimR = 3
     yscale = abs(ylimR - ylimL)
+
+    # spike plotting options
+    spike_color = 'black'
+    spike_linw  = 1
+    spike_ls    = '-'
+    spike_alpha = 0.2
+
+    # best Y factor plotting options
+    best_Yfactors_linw = 3
+    best_Yfactors_ls = '-'
+    best_Yfactors_alpha = 1
+
+
+    # Finding best Y factor in a frequency band
+    freq_vector = [1,2,3,4,5]
 
     ### Parameter Colors
     LOpwr_color       = 'dodgerblue'
@@ -1795,6 +1811,8 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
     LOfreq_color      = 'thistle'
     IFband_color      = 'aquamarine'
     TP_int_time_color = 'darkgreen'
+
+
 
 
     Ynums, proYdatadir, plotdir = GetProDirsNames(datadir, search_4Ynums, Ynums)
@@ -1838,6 +1856,13 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
         leglines  = []
         leglabels = []
         color_len = len(colors)
+
+        spec_Yfactor_list = []
+        spec_freq_list = []
+        spec_hot_mV_mean_list = []
+        spec_cold_mV_mean_list = []
+
+        color_count = 0
         for Ydata in spectal_Y_list:
 
             (freq,Yfactor,
@@ -1845,24 +1870,62 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
             cold_pwr,cold_pot,cold_mV_mean,cold_tp,cold_spike_list,cold_spikes_inband,cold_sweep_index) = Ydata
 
             color = colors[(hot_sweep_index % color_len)]
+            color_count+=1
             mV = (hot_mV_mean+cold_mV_mean)/2.0
 
-            print hot_spike_list
+            if find_best_Yfactors:
+                spec_Yfactor_list.append(Yfactor)
+                spec_freq_list.append(freq)
+                spec_hot_mV_mean_list.append(hot_mV_mean)
+                spec_cold_mV_mean_list.append(cold_mV_mean)
 
-            if show_spikes:
-                for spike in list(hot_spike_list).extend(list(cold_spike_list)):
-                    ax1_plot_list, leglines, leglabels \
-                        = xyplotgen([spike,spike], [0,3], label=str('%1.2f' % spike)+'GHz',
-                                    plot_list=ax1_plot_list, leglines=leglines, leglabels=leglabels,
-                                    color='yellow', linw=3, ls='-', scale_str='' )
+            #print hot_spike_list
+            if (((mV_min <= mV) or (mV_min is None)) and ((mV <= mV_max) or (mV_max is None))):
+                if show_spikes:
+                    spike_list = []
+                    spike_list.extend(hot_spike_list)
+                    spike_list.extend(cold_spike_list)
+                    spike_list = uniquify(spike_list)
+                    spike_list.sort()
+
+                    for spike in spike_list:
+                        label_str = str('%1.2f' % spike)+'GHz'
+                        ax1_plot_list, leglines, leglabels \
+                            = xyplotgen2([spike,spike], [0,3], label=label_str,
+                                        plot_list=ax1_plot_list, leglines=leglines, leglabels=leglabels,
+                                        color=spike_color, linw=spike_linw, ls=spike_ls, scale_str='',
+                                        alpha=spike_alpha,leg_on=show_spike_label )
 
 
+                ax1_plot_list, leglines, leglabels \
+                    = xyplotgen2(freq, Yfactor, label='Bias'+str('%1.2f' % mV)+'mV',
+                                plot_list=ax1_plot_list, leglines=leglines, leglabels=leglabels,
+                                color=color, linw=1, ls='-', scale_str='' )
 
-            ax1_plot_list, leglines, leglabels \
-                = xyplotgen(freq, Yfactor, label='Bias'+str('%1.2f' % mV)+'mV',
-                            plot_list=ax1_plot_list, leglines=leglines, leglabels=leglabels,
-                            color=color, linw=1, ls='-', scale_str='' )
+        if ((show_spikes) and (not show_spike_label)):
+            leglines.append((spike_color,spike_ls,spike_linw,spike_alpha))
+            leglabels.append('found spikes')
 
+        if find_best_Yfactors:
+            for band_index in range(len(freq_vector)-1):
+                low_freq = freq_vector[band_index]
+                high_freq = freq_vector[band_index+1]
+
+                max_Yfactor, max_Yfactor_mV, max_Yfactor_freq, ave_Yfactor,\
+                   tuple_of_max_Yfactor_for_plot, tuple_of_avg_Yfactor_for_plot \
+                    = find_max_yfactor_spec(spec_Yfactor_list,spec_freq_list,
+                                            spec_hot_mV_mean_list,spec_cold_mV_mean_list,
+                                            min_freq=low_freq,max_freq=high_freq)
+
+                color = colors[(color_count % color_len)]
+                color_count+=1
+                # Max Average Y factor of the set of spectra
+                (freq, Yfactor,mV) = tuple_of_avg_Yfactor_for_plot
+                ax1_plot_list, leglines, leglabels \
+                    = xyplotgen2(freq, Yfactor, label='best ave for ['+str(low_freq)+','+str(high_freq)+'] '+str('%1.2f' % mV)+'mV',
+                                plot_list=ax1_plot_list, leglines=leglines, leglabels=leglabels,
+                                color=color, linw=best_Yfactors_linw, ls=best_Yfactors_ls, scale_str='',
+                                alpha=best_Yfactors_alpha)
 
         ############## Start here looking at the spike removal and making tools to get out max Y factors
 
@@ -1870,29 +1933,22 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
         if (ax1_plot_list != []):
             fig, ax1 = plt.subplots()
 
-            ### Axis Limits
-            #ax1.set_xlim([ax1_xlim0, ax1_xlim1])
-            #ax1.set_ylim([ax1_ylim0, ax1_ylim1])
-            for plot_obj in ax1_plot_list:
-                (x_vector, y_vector, color, linw, ls, scale_str) = plot_obj
-                ax1.plot(x_vector, y_vector, color=color, linewidth=linw, ls=ls)
-
-
             ##############
             ### AXIS 1 ###
             ##############
             if (ax1_plot_list != []):
                 fig, ax1 = plt.subplots()
                 for plot_obj in ax1_plot_list:
-                    (x_vector, y_vector, color, linw, ls, scale_str) = plot_obj
+                    (x_vector, y_vector, color, linw, ls,alpha, scale_str) = plot_obj
                     # scale_factor = findscaling(scale_str,ax1_yscales)
                     scale_factor = 1.0
                     scale_x_vector = numpy.array(x_vector)
                     scale_y_vector = numpy.array(y_vector)*scale_factor
 
                     if verbose:
-                        print 'ax1', scale_str, scale_factor, color, linw, ls, numpy.shape(scale_x_vector), numpy.shape(scale_y_vector)
-                    ax1.plot(scale_x_vector, scale_y_vector, color=color, linewidth=linw, ls=ls)
+                        print 'ax1', scale_str, scale_factor, color, linw, ls, \
+                            numpy.shape(scale_x_vector), numpy.shape(scale_y_vector)
+                    ax1.plot(scale_x_vector, scale_y_vector, color=color, linewidth=linw, ls=ls, alpha=alpha)
 
 
 
@@ -1909,14 +1965,11 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
             for indexer in range(len(leglines)):
                 if ((leglines[indexer] != None) and (leglabels[indexer] != None)):
                     final_leglabels.append(leglabels[indexer])
-                    legline_data = leglines[indexer]
-                    color = legline_data[0]
-                    ls    = legline_data[1]
-                    linw  = legline_data[2]
-                    final_leglines.append(plt.Line2D(range(10), range(10), color=color, ls=ls, linewidth=linw))
+                    (color,ls,linw,alpha) = leglines[indexer]
+                    final_leglines.append(plt.Line2D(range(10), range(10), color=color,
+                                                     ls=ls, linewidth=linw, alpha=alpha))
             matplotlib.rcParams['legend.fontsize'] = legendsize
             plt.legend(tuple(final_leglines),tuple(final_leglabels), numpoints=1, loc=legendloc)
-
 
 
 
@@ -1927,9 +1980,11 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
                 ################
                 ### Column 1 ###
                 ################
-                xpos = xlimL + (4.0/18.0)*xsize
+                xpos = xlimL + (2.0/18.0)*xsize
                 yincrement = (ysize*(1+(y_margin_top+y_margin_bot)))/25.0
-                ypos = ylimR+y_margin_top*ysize  - yincrement
+                ypos = ylimR - y_margin_top*ysize - yincrement
+
+                # print xpos, ypos
                 if LOuAset is not None:
                     LOuAset_str = Params_2_str(LOuAset, '%2.3f')
                     plt.text(xpos, ypos, LOuAset_str + " uA LO", color = LOpwr_color)
@@ -1965,7 +2020,8 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
                 # if ((Ydatafound) and (plot_Yfactor)):
                 #     Yfactor_max_str = Params_2_str(Yfactor_max, '%1.2f')
                 #     mV_Yfactor_max_str = Params_2_str(mV_Yfactor_max, '%1.2f')
-                #     plt.text(xpos, ypos, 'max Y-factor ' +Yfactor_max_str + ' @ '+mV_Yfactor_max_str+' mV', color = Yfactor_color)
+                #     plt.text(xpos, ypos, 'max Y-factor ' +Yfactor_max_str + ' @ '+mV_Yfactor_max_str+' mV',
+                #              color = Yfactor_color)
                 #     ypos -= yincrement
                 #     if Y_mV_min is None:
                 #         Y_mV_range_min = min(mV_Yfactor)
@@ -1977,7 +2033,8 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
                 #          Y_mV_range_max = Y_mV_max
                 #     Y_mV_range_min_str = Params_2_str(Y_mV_range_min, '%1.2f')
                 #     Y_mV_range_max_str = Params_2_str(Y_mV_range_max, '%1.2f')
-                #     plt.text(xpos, ypos, 'in range [' + Y_mV_range_min_str + ',' + Y_mV_range_max_str + '] mV', color = Yfactor_color)
+                #     plt.text(xpos, ypos, 'in range [' + Y_mV_range_min_str + ',' + Y_mV_range_max_str + '] mV',
+                #              color = Yfactor_color)
                 #     ax1.plot([mV_Yfactor_max, mV_Yfactor_max],[ylimL2, ylimR2], color=Yfactor_color)
                 #     ypos -= yincrement
 
@@ -1985,8 +2042,8 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
                 ################
                 ### Column 2 ###
                 ################
-                xpos = xlimL + (12.0/18.0)*xsize
-                ypos = ylimR+y_margin_top*ysize  - yincrement
+                xpos = xlimL + (10.0/18.0)*xsize
+                ypos = ylimR - y_margin_top*ysize - yincrement
 
                 if magiset is not None:
                     plt.text(xpos, ypos,"magnet set value", color = mag_color)
@@ -2022,7 +2079,9 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
             ### Axis Labels ###
             ax1.set_xlabel('Frequency (GHz)')
             ax1.set_ylabel('Y factor')
-            ax1.set_ylim([0, 3])
+            ### Axis Limits
+            ax1.set_xlim([xlimL, xlimR])
+            ax1.set_ylim([ylimL, ylimR])
 
             ##################
             ### Save Plots ###
@@ -2034,7 +2093,8 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
                         print "saving EPS file: ", filename
                     plt.savefig(filename)
                 else:
-                    filename = plotdir+Ynum+"spec.png"
+                    # filename = plotdir+Ynum+"spec.png"
+                    filename = plotdir+str(LOfreq)+"_LOfreq_"+Ynum+"spec.png"
                     if verbose:
                         print "saving PNG file: ", filename
                     plt.savefig(filename)

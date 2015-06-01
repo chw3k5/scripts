@@ -998,7 +998,8 @@ def getpro_spec(prodir):
            cold_spike_list_list,cold_spikes_inband_list,cold_sweep_index_list
 
 
-def ProcessMatrix(raw_matrix, mono_switcher=True, do_regrid=False, do_conv=False, regrid_mesh=0.01, min_cdf=0.9, sigma=5, verbose=False):
+def ProcessMatrix(raw_matrix, mono_switcher=True, do_regrid=False,
+                  do_conv=False, regrid_mesh=0.01, min_cdf=0.9, sigma=5, verbose=False):
     matrix        = raw_matrix
     mono_matrix   = False
     regrid_matrix = False
@@ -1017,4 +1018,109 @@ def ProcessMatrix(raw_matrix, mono_switcher=True, do_regrid=False, do_conv=False
         matrix = conv_matrix
         
     return matrix, raw_matrix, mono_matrix, regrid_matrix, conv_matrix
+
+
+
+
+
+def find_max_yfactor_spec(spec_Yfactor_list,spec_freq_list,spec_hot_mV_mean_list,spec_cold_mV_mean_list,
+                          min_freq=None,max_freq=None):
+    max_Yfactor      = None
+    max_Yfactor_mV   = None
+    max_Yfactor_freq = None
+    ave_Yfactor      = None
+    image_of_spec_Yfactor_list      = spec_Yfactor_list[:]
+    image_of_spec_freq_list         = spec_freq_list[:]
+    image_of_spec_hot_mV_mean_list  = spec_hot_mV_mean_list[:]
+    image_of_spec_cold_mV_mean_list = spec_cold_mV_mean_list[:]
+
+    max_Yfactor      = -1
+    max_Yfactor_mV   = -1
+    max_Yfactor_freq = -1
+    ave_Yfactor      = -1
+    if min_freq is not None:
+        for list_index in range(len(image_of_spec_freq_list[:])):
+            spec_Yfactor  = image_of_spec_Yfactor_list[list_index]
+            spec_freqs    = image_of_spec_freq_list[list_index]
+            spec_hot_mV   = image_of_spec_hot_mV_mean_list[list_index]
+            spec_cold_mV  = image_of_spec_cold_mV_mean_list[list_index]
+
+            spec_freq_temp = []
+            spec_Yfactor_temp = []
+            spec_hot_mV_temp = None
+            spec_cold_mV_temp = None
+            for (f_index,freq) in list(enumerate(spec_freqs)):
+                if min_freq <= freq:
+                    spec_freq_temp.append(freq)
+                    spec_Yfactor_temp.append(spec_Yfactor[f_index])
+                    if spec_hot_mV_temp is None:
+                        spec_hot_mV_temp  = spec_hot_mV
+                        spec_cold_mV_temp = spec_cold_mV
+
+            image_of_spec_freq_list[list_index]         = spec_freq_temp
+            image_of_spec_Yfactor_list[list_index]      = spec_Yfactor_temp
+            image_of_spec_hot_mV_mean_list[list_index]  = spec_hot_mV_temp
+            image_of_spec_cold_mV_mean_list[list_index] = spec_cold_mV_temp
+
+
+    if max_freq is not None:
+        for list_index in range(len(image_of_spec_freq_list[:])):
+            spec_freqs     = image_of_spec_freq_list[list_index]
+            spec_Yfactor  = image_of_spec_Yfactor_list[list_index]
+            spec_hot_mV   = image_of_spec_hot_mV_mean_list[list_index]
+            spec_cold_mV  = image_of_spec_cold_mV_mean_list[list_index]
+
+            spec_freq_temp = []
+            spec_Yfactor_temp = []
+            spec_hot_mV_temp = None
+            spec_cold_mV_temp = None
+            for (f_index,freq) in list(enumerate(spec_freqs)):
+                if freq <= max_freq:
+                    spec_freq_temp.append(freq)
+                    spec_Yfactor_temp.append(spec_Yfactor[f_index])
+                    if spec_hot_mV_temp is None:
+                        spec_hot_mV_temp  = spec_hot_mV
+                        spec_cold_mV_temp = spec_cold_mV
+
+            image_of_spec_freq_list[list_index]         = spec_freq_temp
+            image_of_spec_Yfactor_list[list_index]      = spec_Yfactor_temp
+            image_of_spec_hot_mV_mean_list[list_index]  = spec_hot_mV_temp
+            image_of_spec_cold_mV_mean_list[list_index] = spec_cold_mV_temp
+
+    list_of_max_Yfactors     = []
+    list_of_max_Yfactor_freq = []
+    list_of_max_Yfactor_mV   = []
+    list_of_ave_Yfactors     = []
+    tuple_of_max_Yfactor_for_plot=([],[],-1)
+    tuple_of_avg_Yfactor_for_plot=([],[],-1)
+
+
+    for list_index in range(len(image_of_spec_freq_list[:])):
+        spec_Yfactor         = list(image_of_spec_Yfactor_list[list_index])
+        Yfactor_freq         = list(image_of_spec_freq_list[list_index])
+        local_max_Yfactor_mV = (image_of_spec_hot_mV_mean_list[list_index]
+                                + image_of_spec_cold_mV_mean_list[list_index])/2.0
+
+        local_max_Yfactor      = max(spec_Yfactor)
+        index_of_max_Yfactor   = spec_Yfactor.index(local_max_Yfactor)
+        local_max_Yfactor_freq = Yfactor_freq[index_of_max_Yfactor]
+        local_ave_Yfactor      = numpy.mean(spec_Yfactor)
+
+        if max_Yfactor < local_max_Yfactor:
+            max_Yfactor    = local_max_Yfactor
+            max_Yfactor_mV = local_max_Yfactor_mV
+            max_Yfactor_freq   = local_max_Yfactor_freq
+            tuple_of_max_Yfactor_for_plot = (Yfactor_freq,spec_Yfactor,local_max_Yfactor_mV)
+
+        if ave_Yfactor < local_ave_Yfactor:
+            ave_Yfactor = local_ave_Yfactor
+            tuple_of_avg_Yfactor_for_plot = (Yfactor_freq,spec_Yfactor,local_max_Yfactor_mV)
+
+        list_of_max_Yfactors.append(local_max_Yfactor)
+        list_of_max_Yfactor_freq.append(local_max_Yfactor_freq)
+        list_of_max_Yfactor_mV.append(local_max_Yfactor_mV)
+        list_of_ave_Yfactors.append(ave_Yfactor)
+
+    return max_Yfactor, max_Yfactor_mV, max_Yfactor_freq, ave_Yfactor,\
+           tuple_of_max_Yfactor_for_plot, tuple_of_avg_Yfactor_for_plot
 
