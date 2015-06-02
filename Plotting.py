@@ -4,8 +4,6 @@ import os
 import numpy
 import matplotlib
 from matplotlib import pyplot as plt
-#if platform == 'darwin':
-#    matplotlib.rc('text', usetex=True)
 from profunc import windir, getproparams, getmultiParams,  getproSweep, get_fastIV, getproYdata, GetProDirsNames
 from profunc import getprorawdata, find_max_yfactor_spec  # Caleb's Functions
 from domath  import linfit, uniquify # Caleb's Functions
@@ -13,7 +11,6 @@ import pickle, glob
 
 from mpl_toolkits.mplot3d import axes3d
 from matplotlib import cm
-platform = sys.platform
 #if platform == 'darwin':
 #    matplotlib.rc('text', usetex=True)
 
@@ -491,7 +488,7 @@ def xyplotgen(x_vector, y_vector, label='', plot_list=[], leglines=[], leglabels
     leglabels.append(label)
     return plot_list, leglines, leglabels
 
-
+# plot_list, leglines, leglabels = xyplotgen2(x_vector, y_vector, label='', plot_list=[], leglines=[], leglabels=[], color='black', linw=1, ls='-', alpha=1.0, scale_str='', leg_on=True )
 def xyplotgen2(x_vector, y_vector, label='', plot_list=[], leglines=[], leglabels=[], color='black', linw=1, ls='-', alpha=1.0, scale_str='', leg_on=True ):
     plot_list.append((x_vector, y_vector, color, linw, ls, alpha, scale_str))
     if leg_on:

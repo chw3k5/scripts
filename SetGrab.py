@@ -216,7 +216,7 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
 
                 return max_Yfactor, max_Yfactor_mV, max_Yfactor_freq, ave_Yfactor
 
-        def intersecting_line(self,mV_center=2.0,mV_plus_minus=0.5):
+        def intersecting_line_mV(self,mV_center=2.0,mV_plus_minus=0.05):
             def find_ave_Y4X(y_list,x_list,x_center,x_plus_minus):
                 y_to_average = []
                 diff_min = 999999999999999.0
@@ -251,6 +251,13 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
             m = (tp_hot-tp_cold)/(temp_hot-temp_cold)
             self.intersectingL_m = m
             self.intersectingL_b = tp_hot-m*temp_hot
+            return
+
+
+        def intersecting_line_Ymax(self,mV_plus_minus=0.05):
+            max_mV_Yfactor, max_Yfactor = self.find_max_yfactor_pm()
+            self.intersecting_line_mV(mV_center=max_mV_Yfactor, mV_plus_minus=mV_plus_minus)
+
             return
 
         def shotnoise_test(self, min_uA=80,max_uA=None, mono_switcher=True, do_regrid=False, do_conv=False, regrid_mesh=0.1, min_cdf=0.95, sigma=5, verbose=False):
@@ -445,6 +452,21 @@ def LOuAdiff_cut(sweeps, max_diff=1.0, verbose=False):
             if verbose:
                 print sweep.longDescription()
     return LOuAdiff_cut_sweeps
+
+
+def LOfreq_cut(sweeps,LOfreq):
+    new_sweeps = []
+    try:
+        LOfreq = np.round(LOfreq)
+        for sweep in sweeps:
+            if np.round(sweep.LOfreq) == LOfreq:
+                new_sweeps.append(sweep)
+    except:
+        new_sweeps = sweeps
+    return new_sweeps
+
+
+
 
 def mV_bias_cut_Y(Ysweeps, mV_min=None, mV_max=None, verbose=False):
     mV_bias_cut_Ysweeps = []

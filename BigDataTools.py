@@ -2,11 +2,13 @@ __author__ = 'chw3k5'
 from sys import platform
 import matplotlib
 from matplotlib import pyplot as plt
+from matplotlib import cm
 import os, shutil, numpy
 from datapro import YdataPro
 from profunc import windir
-from SetGrab import getYsweeps, tp_int_cut, LOuAset_cut, LOuAdiff_cut, mV_bias_cut_Y
-from domath import make_monotonic
+from SetGrab import getYsweeps, tp_int_cut, LOuAset_cut, LOuAdiff_cut, mV_bias_cut_Y, LOfreq_cut
+from domath import make_monotonic, filter_on_occurrences
+from Plotting import xyplotgen2
 
 colors = ['BlueViolet','Brown','CadetBlue','Chartreuse', 'Chocolate','Coral','CornflowerBlue','Crimson','Cyan',
           'DarkBlue','DarkCyan','DarkGoldenRod', 'DarkGreen','DarkMagenta','DarkOliveGreen','DarkOrange',
@@ -18,7 +20,7 @@ colors = ['BlueViolet','Brown','CadetBlue','Chartreuse', 'Chocolate','Coral','Co
           'Red','RoyalBlue','SaddleBrown','Salmon','SandyBrown','Sienna','SkyBlue','SlateBlue','SlateGrey',
           'SpringGreen','SteelBlue','Teal','Tomato','Turquoise','Violet','Yellow','YellowGreen']
 
-
+color_len = len(colors)
 
 
 
@@ -63,7 +65,12 @@ max_tp_int = None # at most this, None is any
 min_LOuAset =  None # at least this, None is any
 max_LOuAset = None # at least this, None is any
 # The maximum difference between the set and measured LO pump power
-maxdiff_LOuA = None # None is any
+maxdiff_LOuA = 1 # None is any
+# select an LO freqency to look at
+LOfreq_to_get = 672 # this number is rounded to the near integer, None is any
+
+
+
 
 ### Will only work for Y factor
 # mV bias cuts
@@ -75,7 +82,7 @@ mV_bias_max = 1.9 # at most this, None is any
 #########################################
 ###### Yfactor versus LO frequency ######
 #########################################
-do_Yfactor_versus_LO_freq = True
+do_Yfactor_versus_LO_freq = False
 do_max_Yfactor = True # False uses the average value for a bandwidth, True uses the maximum
 min_Y_factor = 0.9
 spec_bands = [1,2,3,4,5]#1.39,1.45]#,4,5]
@@ -91,13 +98,37 @@ Y_LOfreq_alpha = 1
 Y_LOfreq_legend_size = 10
 Y_LOfreq_legend_num_of_points = 3
 Y_LOfreq_legend_loc = 3
+
+
+
+
 ###########################################
 ###### Intersecting lines Parameters ######
 ###########################################
-do_intersecting_lines    = False
+do_intersecting_lines    = True
 int_lines_plotdir        = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/intersecting_lines/')
-int_lines_mV_centers     = list(numpy.arange(0.5,2.5,0.1))
+
+intersecting_lines_behavior = 'Y_max' #'Y_max','Y_mV_band_ave'
+int_lines_mV_centers     = [0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8]#list(numpy.arange(0.5,2.0,0.1))
 int_lines_mV_plus_minus  = 0.05
+
+include_spec_data        = True
+IFband_vector            = [1,2,3,4,5]
+
+show_popular_LOfreqs     = False
+popular_LOfreqs_min_occurrences = 5 # integer or None for any
+popular_LOfreqs_max_occurrences = None # integer or None for any
+
+show_popular_meanmag_mA     = True
+popular_meanmag_mA_min_occurrences = 5 # integer or None for any
+popular_meanmag_mA_max_occurrences = None # integer or None for any
+
+
+inter_lines_leg_on       = False
+int_line_alpha = 1.0
+int_line_linw  = 1
+int_line_ls    = '-'
+
 
 
 
@@ -112,9 +143,9 @@ shot_noise_plotdir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/shot_
 ### All the sets of data to collect the processed data from ###
 ###############################################################
 setnames = []
-#setnames.extend(['LOfreq'])#['set4','set5','set6','set7','LOfreq'])
-setnames.extend(['Mar28/LOfreq_wspec','Mar28/LOfreq_wspec2'])#,'Mar28/moonshot','Mar28/Mag_sweep','Mar28/LOfreq'])
-#setnames.extend(['Mar24_15/LO_power','Mar24_15/Yfactor_test'])
+setnames.extend(['set4','set5','set6','set7','LOfreq'])
+setnames.extend(['Mar28/LOfreq_wspec','Mar28/LOfreq_wspec2','Mar28/moonshot','Mar28/Mag_sweep','Mar28/LOfreq'])
+setnames.extend(['Mar24_15/LO_power','Mar24_15/Yfactor_test'])
 #setnames.extend(['Nov05_14/Y_LOfreqMAGLOuA','Nov05_14/Y_MAG','Nov05_14/Y_MAG2','Nov05_14/Y_MAG3','Nov05_14/Y_standard'])
 #setnames.extend(['Oct20_14/LOfreq','Oct20_14/Y_LO_pow','Oct20_14/Y_MAG','Oct20_14/Y_MAG2','Oct20_14'])
 
@@ -172,6 +203,8 @@ if ((min_LOuAset is not None) and (max_LOuAset is not None)):
 ### the diffence between the measured LO power in uA and the LO power the was supposed to be set ###
 if (maxdiff_LOuA is not None):
     Ysweeps = LOuAdiff_cut(Ysweeps, max_diff=maxdiff_LOuA, verbose=verbose)
+if LOfreq_to_get is not None:
+    Ysweeps = LOfreq_cut(Ysweeps,LOfreq_to_get)
 
 
 ### Yfactor cut
@@ -287,45 +320,177 @@ if do_Yfactor_versus_LO_freq:
 
 
 
-
-
-
-
-
-
-
 ################################
 ###### Intersecting Lines ######
 ################################
 if do_intersecting_lines:
+    great_data_list = []
+
+    great_plot_list = []
+    great_leglines  = []
+    great_leglabels = []
     makeORclear_plotdir(int_lines_plotdir)
-    for mV_center in int_lines_mV_centers:
-        fig, ax1 = plt.subplots()
+    fig, ax1 = plt.subplots()
+
+    if intersecting_lines_behavior == 'Y_max':
+        color_count = 0
+        plot_title = 'Ymax'
+
+        local_plot_list = []
+        local_leglines  = []
+        local_leglabels = []
+        local_Ysweeps   = []
+
         for Ysweep in Ysweeps:
-            Ysweep.intersecting_line(mV_center=mV_center,mV_plus_minus=int_lines_mV_plus_minus)
+            color = colors[color_count % color_len]
+            color_count+=1
+            Ysweep.intersecting_line_Ymax(mV_plus_minus=int_lines_mV_plus_minus)
+
             m = Ysweep.intersectingL_m
             b = Ysweep.intersectingL_b
-            temps=[-300,300]
+            temps=[-300,400]
             powers=[]
             for temp in temps:
                 powers.append((temp*m)+b)
-            ax1.plot(temps,powers)
+            local_plot_list, local_leglines, local_leglabels \
+                = xyplotgen2(temps, powers, label=''+str(Ysweep.mV_Yfactor)+' mV',
+                             plot_list=local_plot_list, leglines=local_leglines, leglabels=local_leglabels,
+                             color=color, linw=int_line_linw,
+                             ls= int_line_ls, alpha= int_line_alpha,
+                             scale_str='', leg_on=True )
+            local_Ysweeps.append(Ysweep)
 
-        plt.title("Bias voltage "+str('%2.2f' % mV_center ) + ' mV')
+        great_data_list.append((plot_title, local_Ysweeps, local_plot_list, local_leglines, local_leglabels))
+
+    elif intersecting_lines_behavior == 'Y_mV_band_ave':
+        for mV_center in int_lines_mV_centers:
+            color_count = 0
+            plot_title = str('%2.2f' % mV_center )+'mV'
+
+            local_plot_list = []
+            local_leglines  = []
+            local_leglabels = []
+            local_Ysweeps   = []
+
+            for Ysweep in Ysweeps:
+                color = colors[color_count % color_len]
+                color_count+=1
+                Ysweep.intersecting_line_mV(mV_center=mV_center,mV_plus_minus=int_lines_mV_plus_minus)
+
+                m = Ysweep.intersectingL_m
+                b = Ysweep.intersectingL_b
+                temps=[-300,400]
+                powers=[]
+                for temp in temps:
+                    powers.append((temp*m)+b)
+                local_plot_list, local_leglines, local_leglabels \
+                    = xyplotgen2(temps, powers, label=''+str(Ysweep.mV_Yfactor)+' mV',
+                                 plot_list=local_plot_list, leglines=local_leglines, leglabels=local_leglabels,
+                                 color=color, linw=int_line_linw,
+                                 ls= int_line_ls, alpha= int_line_alpha,
+                                 scale_str='', leg_on=True )
+                local_Ysweeps.append(Ysweep)
+            great_data_list.append((plot_title,local_Ysweeps, local_plot_list, local_leglines, local_leglabels))
+
+
+    ### Now I take the data and subdivide it based on things like LO frequency or whatever I want to look at
+    # LO freq
+    if show_popular_LOfreqs:
+        new_great_data_list = []
+        for (plot_title, Ysweeps, plot_list, leglines, leglabels) in great_data_list:
+            LOfreq_list = []
+            for Ysweep in Ysweeps:
+                LOfreq_list.append(Ysweep.LOfreq)
+
+            unique_LOfreq_list \
+                = filter_on_occurrences(LOfreq_list,min_occurrences=popular_LOfreqs_min_occurrences,
+                                        max_occurrences=popular_LOfreqs_max_occurrences)
+
+            for unique_LOfreq in unique_LOfreq_list:
+                local_plot_list = []
+                local_leglines  = []
+                local_leglabels = []
+                local_Ysweeps   = []
+                new_plot_title=plot_title+' '+str(unique_LOfreq)+'GHz'
+                for (sweep_index,Ysweep) in list(enumerate(Ysweeps)):
+
+                    if unique_LOfreq == Ysweep.LOfreq:
+                        local_plot_list.append(plot_list[sweep_index])
+                        local_leglines.append(leglines[sweep_index])
+                        local_leglabels.append(leglabels[sweep_index])
+                        local_Ysweeps.append(Ysweep)
+
+                new_great_data_list.append((new_plot_title,local_Ysweeps, local_plot_list, local_leglines, local_leglabels))
+        great_data_list = new_great_data_list
+
+    # meanmag_mA
+    if show_popular_meanmag_mA:
+        new_great_data_list = []
+        for (plot_title, Ysweeps, plot_list, leglines, leglabels) in great_data_list:
+            meanmag_mA_list = []
+            for Ysweep in Ysweeps:
+                ave_meanmag_mA = numpy.mean(Ysweep.meanmag_mA)
+                meanmag_mA_list.append(numpy.round(ave_meanmag_mA))
+
+            unique_meanmag_mA_list \
+                = filter_on_occurrences(meanmag_mA_list,min_occurrences=popular_meanmag_mA_min_occurrences,
+                                        max_occurrences=popular_meanmag_mA_max_occurrences)
+
+            for unique_meanmag_mA in unique_meanmag_mA_list:
+                local_plot_list = []
+                local_leglines  = []
+                local_leglabels = []
+                local_Ysweeps   = []
+                new_plot_title=plot_title+' '+str(unique_meanmag_mA)+'mA'
+                for (sweep_index,Ysweep) in list(enumerate(Ysweeps)):
+
+                    if unique_meanmag_mA == (numpy.round(numpy.mean(Ysweep.meanmag_mA))):
+                        local_plot_list.append(plot_list[sweep_index])
+                        local_leglines.append(leglines[sweep_index])
+                        local_leglabels.append(leglabels[sweep_index])
+                        local_Ysweeps.append(Ysweep)
+
+                new_great_data_list.append((new_plot_title,local_Ysweeps,
+                                            local_plot_list, local_leglines, local_leglabels))
+        great_data_list = new_great_data_list
+
+
+
+
+
+
+
+
+    for (plot_title, Ysweeps, plot_list, leglines, leglabels) in great_data_list:
+
+        ##############
+        ### AXIS 1 ###
+        ##############
+        if (plot_list != []):
+            fig, ax1 = plt.subplots()
+            for plot_obj in plot_list:
+                (x_vector, y_vector, color, linw, ls, alpha, scale_str) = plot_obj
+                ax1.plot(x_vector, y_vector, color=color, linewidth=linw, ls=ls, alpha=alpha)
+
+        plt.title(plot_title)
         plt.xlabel('temperature (K)')
         plt.ylabel('power recorder output (V)')
 
-        #plt.legend(loc=2)
-        # temper= -44
-        # plt.text(-20, 0.22, "$44 K = T^\prime$", fontsize=16, color="firebrick")
-        # ax1.plot([temper, temper],[-0.1, .25], color="firebrick")
+        leglines_plot_line = []
+        for indexer in range(len(leglines)):
+            (color,ls,linw,alpha) = leglines[indexer]
+            leglines_plot_line.append(plt.Line2D(range(10), range(10), color=color,
+                            ls=ls, linewidth=linw, alpha=alpha))
+        if inter_lines_leg_on:
+            matplotlib.rcParams['legend.fontsize'] = 12
+            plt.legend(tuple(leglines_plot_line),tuple(leglabels), numpoints=1, loc=0)
 
         if show_plots:
             plt.show()
             plt.draw()
 
         if save_plots:
-            plotfilename = int_lines_plotdir+'intersecting_lines_'+str('%2.2f' % mV_center )
+            plotfilename = int_lines_plotdir+'intersecting_lines_'+plot_title.replace(' ','_')
             if ((do_eps) and (not platform == 'win32')):
                 if verbose:
                     print 'saving EPS file'
@@ -335,6 +500,17 @@ if do_intersecting_lines:
                     print 'saving PNG file'
                 plt.savefig(plotfilename+'.png')
             plt.close("all")
+
+
+
+
+
+
+
+
+
+
+
 
 
 

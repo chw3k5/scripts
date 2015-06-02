@@ -6,6 +6,30 @@ import glob
 from operator import itemgetter
 import pickle
 
+###################################
+###### filter_on_occurrences ######
+###################################
+
+#  unique_element_list = filter_on_occurrences(vector,min_occurrences=1,max_occurrences=None)
+def filter_on_occurrences(vector,min_occurrences=1,max_occurrences=None):
+    unique_element_list = []
+    the_dict = {element:vector.count(element) for element in vector}
+    for unique_element, occurrences in the_dict.iteritems():
+        if (((min_occurrences <= occurrences) or (min_occurrences is None))
+            and ((occurrences <= max_occurrences) or (max_occurrences is None))):
+            unique_element_list.append(unique_element)
+    if unique_element_list != []:
+        unique_element_list.sort()
+        unique_element_list.reverse()
+    else:
+        print 'The filter_on_occurrences definition has filtered out all responces,'
+        print 'The min occurences are:',min_occurrences
+        print 'The max occurences are:',max_occurrences
+        print 'The dictionary is:',the_dict
+    #print the_dict
+    return unique_element_list
+
+
 ############################
 ###### make_monotonic ######
 ############################
