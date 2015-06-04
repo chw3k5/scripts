@@ -67,9 +67,9 @@ max_LOuAset = None # at least this, None is any
 # The maximum difference between the set and measured LO pump power
 maxdiff_LOuA = 1 # None is any
 # select an LO freqency to look at
-LOfreq_to_get = 672 # this number is rounded to the near integer, None is any
-
-
+LOfreq_to_get = None # this number is rounded to the near integer, None is any
+# reorder the Ysweeps list in terms of lowest to highest LOuA (meanSIS_uA)
+sort_LOuA = False
 
 
 ### Will only work for Y factor
@@ -85,8 +85,11 @@ mV_bias_max = 1.9 # at most this, None is any
 do_Yfactor_versus_LO_freq = False
 do_max_Yfactor = True # False uses the average value for a bandwidth, True uses the maximum
 min_Y_factor = 0.9
-spec_bands = [1,2,3,4,5]#1.39,1.45]#,4,5]
-Y_LOfreq_colors = ['Crimson','Olive','GoldenRod','RoyalBlue','SaddleBrown','Red','Salmon','SandyBrown','Sienna','SkyBlue','SlateBlue','SlateGrey','BlueViolet','Brown','CadetBlue','Chartreuse', 'Chocolate','Coral','CornflowerBlue','Crimson','Cyan']
+spec_bands = [1.39,1.45]#1.39,1.45]#,4,5]
+Y_LOfreq_colors = ['Crimson','Olive','GoldenRod','RoyalBlue','SaddleBrown','Red','Salmon','SandyBrown','Sienna',
+                   'SkyBlue','SlateBlue','SlateGrey','BlueViolet','Brown','CadetBlue','Chartreuse', 'Chocolate',
+                   'Coral','CornflowerBlue','Crimson','Cyan']
+
 Y_LOfreq_plotdir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Y_LOfreq/')
 
 Y_LOfreq_ls = "-"
@@ -112,19 +115,21 @@ intersecting_lines_behavior = 'Y_max' #'Y_max','Y_mV_band_ave'
 int_lines_mV_centers     = [0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8]#list(numpy.arange(0.5,2.0,0.1))
 int_lines_mV_plus_minus  = 0.05
 
-include_spec_data        = True
-IFband_vector            = [1,2,3,4,5]
+# include_spec_data        = True
+# IFband_vector            = [1,2,3,4,5]
 
-show_popular_LOfreqs     = False
+show_popular_LOfreqs     = True
 popular_LOfreqs_min_occurrences = 5 # integer or None for any
 popular_LOfreqs_max_occurrences = None # integer or None for any
 
-show_popular_meanmag_mA     = True
+show_popular_meanmag_mA     = False
 popular_meanmag_mA_min_occurrences = 5 # integer or None for any
 popular_meanmag_mA_max_occurrences = None # integer or None for any
 
+int_lines_sort_LOuA = True # True or False, sort by LO pump power (LOuA) just before making the plot
 
-inter_lines_leg_on       = False
+
+inter_lines_leg_on       = True
 int_line_alpha = 1.0
 int_line_linw  = 1
 int_line_ls    = '-'
@@ -143,9 +148,9 @@ shot_noise_plotdir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/shot_
 ### All the sets of data to collect the processed data from ###
 ###############################################################
 setnames = []
-setnames.extend(['set4','set5','set6','set7','LOfreq'])
+#setnames.extend(['set4','set5','set6','set7','LOfreq'])
 setnames.extend(['Mar28/LOfreq_wspec','Mar28/LOfreq_wspec2','Mar28/moonshot','Mar28/Mag_sweep','Mar28/LOfreq'])
-setnames.extend(['Mar24_15/LO_power','Mar24_15/Yfactor_test'])
+#setnames.extend(['Mar24_15/LO_power','Mar24_15/Yfactor_test'])
 #setnames.extend(['Nov05_14/Y_LOfreqMAGLOuA','Nov05_14/Y_MAG','Nov05_14/Y_MAG2','Nov05_14/Y_MAG3','Nov05_14/Y_standard'])
 #setnames.extend(['Oct20_14/LOfreq','Oct20_14/Y_LO_pow','Oct20_14/Y_MAG','Oct20_14/Y_MAG2','Oct20_14'])
 
@@ -203,9 +208,15 @@ if ((min_LOuAset is not None) and (max_LOuAset is not None)):
 ### the diffence between the measured LO power in uA and the LO power the was supposed to be set ###
 if (maxdiff_LOuA is not None):
     Ysweeps = LOuAdiff_cut(Ysweeps, max_diff=maxdiff_LOuA, verbose=verbose)
+### select a singel LO frequency
 if LOfreq_to_get is not None:
     Ysweeps = LOfreq_cut(Ysweeps,LOfreq_to_get)
-
+### reorder the Y sweeps for lowest to higher LO power (meanSIS_uA)
+if sort_LOuA:
+    LOuA_Ysweep_sort_list = []
+    for Ysweep in Ysweeps:
+         LOuA_Ysweep_sort_list.append(numpy.mean(Ysweep.meanSIS_uA))
+    [new_LOuA_order,Ysweeps] = make_monotonic([LOuA_Ysweep_sort_list,Ysweeps])
 
 ### Yfactor cut
 if ((mV_bias_min is not None) and (mV_bias_max is not None)):
@@ -222,7 +233,7 @@ if do_Yfactor_versus_LO_freq:
     ax1.set_xlabel("LO frequency (GHz)")
     ax1.set_ylabel("Y Factor")
     ax1.set_xlim([645, 695])
-    ax1.set_ylim([0.5,2.5])
+    ax1.set_ylim([0.5, 2.5])
     leglines  = []
     leglabels = []
 
@@ -340,7 +351,6 @@ if do_intersecting_lines:
         local_leglines  = []
         local_leglabels = []
         local_Ysweeps   = []
-
         for Ysweep in Ysweeps:
             color = colors[color_count % color_len]
             color_count+=1
@@ -353,7 +363,7 @@ if do_intersecting_lines:
             for temp in temps:
                 powers.append((temp*m)+b)
             local_plot_list, local_leglines, local_leglabels \
-                = xyplotgen2(temps, powers, label=''+str(Ysweep.mV_Yfactor)+' mV',
+                = xyplotgen2(temps, powers, label=''+str('%2.2f' % numpy.mean(Ysweep.meanSIS_uA))+' uA',
                              plot_list=local_plot_list, leglines=local_leglines, leglabels=local_leglabels,
                              color=color, linw=int_line_linw,
                              ls= int_line_ls, alpha= int_line_alpha,
@@ -460,9 +470,17 @@ if do_intersecting_lines:
 
 
 
+    if int_lines_sort_LOuA:
+        new_great_data_list = []
+        for (plot_title, Ysweeps, plot_list, leglines, leglabels) in great_data_list:
+            LOuA_Ysweep_sort_list = []
+            for Ysweep in Ysweeps:
+                 LOuA_Ysweep_sort_list.append(numpy.mean(Ysweep.meanSIS_uA))
+            [new_LOuA_order,Ysweeps,plot_list, leglines, leglabels] = make_monotonic([LOuA_Ysweep_sort_list,Ysweeps,plot_list, leglines, leglabels])
+            new_great_data_list.append((plot_title, Ysweeps, plot_list, leglines, leglabels))
+        great_data_list = new_great_data_list
 
     for (plot_title, Ysweeps, plot_list, leglines, leglabels) in great_data_list:
-
         ##############
         ### AXIS 1 ###
         ##############

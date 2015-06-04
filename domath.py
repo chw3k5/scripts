@@ -34,7 +34,22 @@ def filter_on_occurrences(vector,min_occurrences=1,max_occurrences=None):
 ###### make_monotonic ######
 ############################
 
+
 def make_monotonic(list_of_lists,reverse=False):
+    # the first list in the list_of_list should be the one for which the other lists are to be sorted
+    # pack the data into the correct format
+    sort_matrix = [list(x) for x in zip(*list_of_lists)]
+    # sort
+    sorted_martix = numpy.array(sorted(sort_matrix, key=itemgetter(0)))
+    # Unpack and reverse
+    if reverse:
+        sorted_list_of_lists = [list(x).reverse() for x in zip(*sorted_martix)]
+    else:
+        sorted_list_of_lists = [list(x)           for x in zip(*sorted_martix)]
+    return sorted_list_of_lists
+
+
+def make_monotonic_old(list_of_lists,reverse=False):
     # the first list in the list_of_list should be the one for which the other lists are to be sorted
     sorted_list_of_lists = []
     num_of_lists = len(list_of_lists)
@@ -51,6 +66,8 @@ def make_monotonic(list_of_lists,reverse=False):
         for list_index in range(num_of_lists):
             sorted_list_of_lists.append(list(sorted_martix[:,list_index]))
     return sorted_list_of_lists
+
+
 
 ######################
 ###### uniquify ######
