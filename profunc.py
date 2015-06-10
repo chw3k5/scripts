@@ -23,6 +23,10 @@ def windir(filepath):
         winfilepath = filepath
     return winfilepath
 
+def local_copy(filepath):
+    newfilepath = filepath.replace('Google Drive', 'local_kappa_data')
+    return newfilepath
+
 def getparams(filename):
     if platform == 'win32':
         filename = windir(filename)

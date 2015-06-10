@@ -111,7 +111,7 @@ folder =windir('/Users/chw3k5/Google Drive/Kappa/temperatureData/Jun08_15/')
 
 do_emailgroppi = False
 
-monitor_type = 'coolpumpon' # options: 'coolpumpon', 'coolpumpoff', 'LN2fill', 'LHefill', 'almostcold', 'cold', 'fastwarm', 'slowwarm'
+monitor_type = 'coolpumpoff' # options: 'coolpumpon', 'coolpumpoff', 'LN2fill', 'LHefill', 'almostcold', 'cold', 'fastwarm', 'slowwarm'
 meas_period      = 7.0 # in seconds
 rest_time        = 0.5 # in seconds
 channels = [4,2,3]

@@ -2,6 +2,7 @@
 from Plotting import SingleSpectraPlotter, YfactorSweepsPlotter, SimpleSweepPlot, YSpectraPlotter2D
 from BiasSweep2 import BiasSweep
 from datapro import SweepDataPro, YdataPro
+from profunc import local_copy
 from TestSweeper import testsweeps, protestsweeps, plottestsweeps
 from profunc import windir
 
@@ -17,12 +18,6 @@ do_SweepDataPro        = False
 do_SimpleSweepPlot     = False
 do_SingeSpectraPlotter = False
 repeat  = 1
-
-### For Y-factor data and Sweeps ###
-do_Ysweeps              = False
-do_YdataPro             = False
-do_YfactotSweepsPlotter = False
-do_YSpectra_Plotter     = False
 
 
 
@@ -76,13 +71,17 @@ if do_sweeps:
 
         if do_SweepDataPro:
             SweepDataPro(datadir, verbose=True, search_4Sweeps=True, search_str='Y', Snums=['00003'],
-                         mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01, do_conv_mV=False, sigma_mV=0.02, min_cdf_mV=0.95,
-                         do_normspectra=True, norm_freq=1.42, norm_band=0.060, do_freq_conv=True, min_cdf_freq=0.90, sigma_GHz=0.10)
+                         mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01,
+                         do_conv_mV=False, sigma_mV=0.02, min_cdf_mV=0.95,
+                         do_normspectra=True, norm_freq=1.42, norm_band=0.060,
+                         do_freq_conv=True, min_cdf_freq=0.90, sigma_GHz=0.10)
 
         if do_SimpleSweepPlot:
-            SimpleSweepPlot(datadir, search_4Snums=True, Snums='', verbose=True, show_standdev=True, std_num=3, display_params=True,
+            SimpleSweepPlot(datadir, search_4Snums=True, Snums='', verbose=True,
+                            show_standdev=True, std_num=3, display_params=True,
                             show_plot=False, save_plot=True, do_eps=False,
-                            find_lin_mVuA=True, linif=0.3, der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
+                            find_lin_mVuA=True, linif=0.3,
+                            der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
                             der2_int=1, do_der2_conv=True, der2_min_cdf=0.95, der2_sigma=0.05,
                             plot_astromVuA=True, plot_astromVtp=True, plot_fastmVuA=True, plot_fastmVtp=True,
                             plot_unpumpmVuA=True, plot_unpumpmVtp=True)
@@ -99,6 +98,12 @@ if do_sweeps:
 ###########################
 ### For Y factor sweeps ###
 ###########################
+### For Y-factor data and Sweeps ###
+do_Ysweeps              = False
+do_YdataPro             = False
+do_YfactotSweepsPlotter = True
+do_YSpectra_Plotter     = True
+
 if all_Ydata:
     do_YdataPro             = True
     do_YfactotSweepsPlotter = True
@@ -107,8 +112,11 @@ if all_Ydata:
 
 # The directory what the data is kept
 start_num = 1
-#datadir   = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/LOfreq/'
-datadir = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec2/'
+norm_freq=1.42  # GHz
+norm_band=0.060 # GHz
+use_google_drive=False
+datadir   = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/LOfreq/'
+#datadir = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec2/'
 Ynums = []
 if Ynums ==[]:
     search4Ynums = True
@@ -167,16 +175,22 @@ if do_Ysweeps:
               LOuAsearch_list=[16],
 
               K_list=[296, 77],
-              IFband_start=1.42, IFband_stop=1.42, IFband_step=0.10
+              IFband_start=norm_freq, IFband_stop=norm_freq, IFband_step=0.10
               )
 
 
 if do_YdataPro:
-    YdataPro(datadir, verbose=True, search_4Ynums=search4Ynums, search_str='Y', Ynums=Ynums, useOFFdata=False, Off_datadir='',
-             mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.1, do_conv_mV=True, sigma_mV=0.05, min_cdf_mV=0.95,
+    YdataPro(datadir, verbose=True, search_4Ynums=search4Ynums, search_str='Y', Ynums=Ynums,
+             use_google_drive=use_google_drive,
+             useOFFdata=False, Off_datadir='',
+             mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.1,
+             do_conv_mV=True, sigma_mV=0.05, min_cdf_mV=0.95,
              remove_spikes=False, do_normspectra=True,
-             regrid_mesh_mV_spec=0.2, norm_freq=1.42, norm_band=0.060, do_freq_conv=True, min_cdf_freq=0.90,
-             sigma_GHz=0.10)
+             regrid_mesh_mV_spec=0.2, norm_freq=norm_freq, norm_band=norm_band,
+             do_freq_conv=True, min_cdf_freq=0.90, sigma_GHz=0.10)
+
+if not use_google_drive:
+    datadir = local_copy(datadir)
 
 if do_YfactotSweepsPlotter:
     YfactorSweepsPlotter(datadir, search_4Ynums=search4Ynums, Ynums=Ynums, verbose=True, mV_min=0, mV_max=5,
@@ -206,9 +220,9 @@ if do_YSpectra_Plotter:
 
 
 ### TestSweeps ###
-do_testsweeps     = True
-do_protestsweeps  = True
-do_plottestsweeps = True
+do_testsweeps     = False
+do_protestsweeps  = False
+do_plottestsweeps = False
 istester     = False
 isdummydewar = False
 istestcirc   = False

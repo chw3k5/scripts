@@ -1,4 +1,5 @@
-from profunc import getparams, getSISdata, getmagdata, get_fastIV, ProcessMatrix, getLJdata, readspec, renamespec, windir
+from profunc import getparams, getSISdata, getmagdata, get_fastIV, ProcessMatrix, \
+    getLJdata, readspec, renamespec, windir, local_copy
 from domath import conv, spike_removal, regrid
 from calibration import fetchoffset
 import os, numpy, sys, glob, shutil
@@ -754,9 +755,12 @@ def SweepDataPro(datadir, verbose=False, search_4Sweeps=True, search_str='Y', Sn
 
     return
 
-def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[], useOFFdata=False, Off_datadir='',
-             mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01, do_conv_mV=False, sigma_mV=0.03, min_cdf_mV=0.95,
-             remove_spikes=False, do_normspectra=False, regrid_mesh_mV_spec=0.1, norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90,
+def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[], use_google_drive=True,
+             useOFFdata=False, Off_datadir='',
+             mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01,
+             do_conv_mV=False, sigma_mV=0.03, min_cdf_mV=0.95,
+             remove_spikes=False, do_normspectra=False, regrid_mesh_mV_spec=0.1,
+             norm_freq=1.42, norm_band=0.060, do_freq_conv=False, min_cdf_freq=0.90,
              sigma_GHz=0.05):
 
 
@@ -764,8 +768,9 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
     from domath import data2Yfactor, Specdata2Yfactor
 
     prodatadir = datadir + "prodata/"
-    if platform == 'win32':
-        prodatadir = windir(prodatadir)
+    if not use_google_drive:
+        prodatadir = local_copy(prodatadir)
+    prodatadir = windir(prodatadir)
     if os.path.isdir(prodatadir):
         # remove old processed data
         shutil.rmtree(prodatadir)
@@ -775,9 +780,7 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
         # make a folder for new processed data
         os.makedirs(prodatadir)
 
-    rawdatadir = datadir + "rawdata/"
-    if sys.platform == 'win32':
-        rawdatadir = windir(rawdatadir)
+    rawdatadir = windir(datadir + "rawdata/")
 
     ### Find all the Y## directory if search_4Ynums = True
     if search_4Ynums:
@@ -787,33 +790,24 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
     for Ynum_index in range(len(Ynums)):
         Ynum = Ynums[Ynum_index]
 
-        Ydatadir = rawdatadir + Ynum + '/'
-        if sys.platform == 'win32':
-            Ydatadir = windir(Ydatadir)
+        Ydatadir = windir(rawdatadir + Ynum + '/')
 
         if verbose:
             print 'reducing data in: ' + Ydatadir
         # make the directory where this data goes
-        prodatadir = datadir + "prodata/" + Ynum + '/'
-        if platform == 'win32':
-            prodatadir = windir(prodatadir)
-
-        if not os.path.isdir(prodatadir):
-            os.makedirs(prodatadir)
+        prodata_Ydir = windir(prodatadir + Ynum + '/')
+        if not os.path.isdir(prodata_Ydir): os.makedirs(prodata_Ydir)
             
         ###################################
         #### Start Hot data Processing ####
         ###################################
-        if sys.platform == 'win32':
-            hotdir            = Ydatadir   + 'hot\\'
-        elif sys.platform == 'darwin':
-            hotdir            = Ydatadir   + 'hot/'
-        hotproparamsfile      = prodatadir + 'hotproparams.csv'
-        hotprodataname_fast   = prodatadir + 'hotfastIV.csv'
-        hotprodataname_unpump = prodatadir + 'hotunpumped.csv'
-        hotrawdataname_ast    = prodatadir + 'hotraw_data.csv'
-        hotprodataname_ast    = prodatadir + 'hotdata.csv'
-        hotspecdataname       = prodatadir + 'hotspecdata'
+        hotdir            = windir(Ydatadir   + 'hot/')
+        hotproparamsfile      = prodata_Ydir + 'hotproparams.csv'
+        hotprodataname_fast   = prodata_Ydir + 'hotfastIV.csv'
+        hotprodataname_unpump = prodata_Ydir + 'hotunpumped.csv'
+        hotrawdataname_ast    = prodata_Ydir + 'hotraw_data.csv'
+        hotprodataname_ast    = prodata_Ydir + 'hotdata.csv'
+        hotspecdataname       = prodata_Ydir + 'hotspecdata'
         
         hotparams_found, hotstandSISdata_found, hotstandmagdata_found, fastIVhot_found, hotunpumped_found, \
         astrosweephot_found, hotspecsweep_found, hot_sweep_mV_mean,hot_sweep_TP_mean \
@@ -826,16 +820,13 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
         ####################################
         #### Start Cold data Processing ####
         ####################################
-        if sys.platform == 'win32':
-            colddir            = Ydatadir   + 'cold\\'
-        elif sys.platform == 'darwin':
-            colddir            = Ydatadir   + 'cold/'
-        coldproparamsfile      = prodatadir + 'coldproparams.csv'
-        coldprodataname_fast   = prodatadir + 'coldfastIV.csv'
-        coldprodataname_unpump = prodatadir + 'coldunpumped.csv'
-        coldrawdataname_ast    = prodatadir + 'coldraw_data.csv'
-        coldprodataname_ast    = prodatadir + 'colddata.csv'
-        coldspecdataname       = prodatadir + 'coldspecdata'
+        colddir            = windir(Ydatadir   + 'cold/')
+        coldproparamsfile      = prodata_Ydir + 'coldproparams.csv'
+        coldprodataname_fast   = prodata_Ydir + 'coldfastIV.csv'
+        coldprodataname_unpump = prodata_Ydir + 'coldunpumped.csv'
+        coldrawdataname_ast    = prodata_Ydir + 'coldraw_data.csv'
+        coldprodataname_ast    = prodata_Ydir + 'colddata.csv'
+        coldspecdataname       = prodata_Ydir + 'coldspecdata'
         
         coldparams_found, coldstandSISdata_found, coldstandmagdata_found, fastIVcold_found, coldunpumped_found,\
         astrosweepcold_found, coldspecsweep_found, cold_sweep_mV_mean,cold_sweep_TP_mean \
@@ -857,7 +848,7 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
                 = data2Yfactor(hot_sweep_mV_mean, cold_sweep_mV_mean, off_tp,
                                hot_sweep_TP_mean, cold_sweep_TP_mean, regrid_mesh_mV, verbose)
             # save the results of the Y factor calculation 
-            o = open(prodatadir + 'Ydata.csv', 'w')
+            o = open(prodata_Ydir + 'Ydata.csv', 'w')
             o.write('mV_Yfactor,Yfactor\n')
 
             for sweep_index in range(len(mV_Yfactor)):
@@ -867,7 +858,7 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
         if (hotspecsweep_found and coldspecsweep_found):
             if verbose:
                 print "doing spectral Y factor calculation"
-            status = Specdata2Yfactor(prodatadir, verbose=verbose)
+            status = Specdata2Yfactor(prodata_Ydir, verbose=verbose)
 
     if verbose:
         print "The YdataPro function has completed"

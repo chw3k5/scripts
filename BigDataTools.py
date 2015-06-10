@@ -29,7 +29,7 @@ color_len = len(colors)
 ###############
 
 # general
-verbose         = False
+verbose         = True
 show_plots      = False
 save_plots      = True
 clear_old_plots = True
@@ -82,7 +82,7 @@ mV_bias_max = 1.9 # at most this, None is any
 #########################################
 ###### Yfactor versus LO frequency ######
 #########################################
-do_Yfactor_versus_LO_freq = False
+do_Yfactor_versus_LO_freq = True
 do_max_Yfactor = True # False uses the average value for a bandwidth, True uses the maximum
 min_Y_factor = 0.9
 spec_bands = [1.39,1.45]#1.39,1.45]#,4,5]
@@ -108,7 +108,7 @@ Y_LOfreq_legend_loc = 3
 ###########################################
 ###### Intersecting lines Parameters ######
 ###########################################
-do_intersecting_lines    = True
+do_intersecting_lines    = False
 int_lines_plotdir        = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/intersecting_lines/')
 
 intersecting_lines_behavior = 'Y_max' #'Y_max','Y_mV_band_ave'
@@ -181,7 +181,8 @@ def makeORclear_plotdir(plotdir,clear_flag=clear_old_plots):
 if process_data:
     for fullpath in fullpaths:
         YdataPro(fullpath, verbose=verbose, search_4Ynums=search_4Ynums, search_str=search_str,
-                 Ynums=Ynums, useOFFdata=False, Off_datadir='',
+                 Ynums=Ynums, use_google_drive=False,
+                 useOFFdata=False, Off_datadir='',
                  mono_switcher_mV=mono_switcher_mV, do_regrid_mV=do_regrid_mV, regrid_mesh_mV=regrid_mesh_mV,
                  do_conv_mV=do_conv_mV, sigma_mV=sigma_mV, min_cdf_mV=min_cdf_mV,
                  remove_spikes=remove_spikes,do_normspectra=do_normspectra, norm_freq=norm_freq, norm_band=norm_band,
@@ -381,6 +382,7 @@ if do_intersecting_lines:
             local_leglines  = []
             local_leglabels = []
             local_Ysweeps   = []
+
 
             for Ysweep in Ysweeps:
                 color = colors[color_count % color_len]
