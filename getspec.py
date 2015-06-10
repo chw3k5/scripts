@@ -154,7 +154,7 @@ def getspec(filename, verbose=False, linear_sc=True, freq_start=0, freq_stop=6, 
 
 
 def getspecPlusTP(spec_filename, TP_filename, TPSampleFrequency, verbose=False, linear_sc=True,
-                  freq_start=0, freq_stop=6, sweep_time='AUTO', video_band=10, resol_band=30, attenu=0,
+                  freq_start=0.0, freq_stop=5.0, sweep_time='AUTO', video_band=10, resol_band=30, attenu=0,
                   aveNum=1, lin_ref_lev=500):
     import visa
     if platform == 'win32':
@@ -291,4 +291,12 @@ def getspecPlusTP(spec_filename, TP_filename, TPSampleFrequency, verbose=False, 
         print error_code, "error code"
     return
 
-#getspec('C:\\Users\\MtDewar\\Documents\\Kappa\\NA38\\test\\SpecTest.csv')
+if __name__ == "__main__":
+    test_dir = 'C:\\Users\\chwheele\\Google Drive\\Kappa\\NA38\\IVsweep\\test\\spec_test\\'
+    freq_vector = [0,1,2,3,4,5]
+    for freq_index in range(len(freq_vector)-1):
+        getspecPlusTP(spec_filename=test_dir+'spec1.csv',
+                      TP_filename=test_dir+'1.csv',
+                      TPSampleFrequency=100, verbose=True, linear_sc=True,
+                      freq_start=freq_vector[freq_index], freq_stop=freq_vector[freq_index+1], sweep_time='AUTO', video_band=30, resol_band=30, attenu=0,
+                      aveNum=16, lin_ref_lev=100)

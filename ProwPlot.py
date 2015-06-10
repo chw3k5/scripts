@@ -21,8 +21,8 @@ repeat  = 1
 ### For Y-factor data and Sweeps ###
 do_Ysweeps              = False
 do_YdataPro             = False
-do_YfactotSweepsPlotter = True
-do_YSpectra_Plotter     = True
+do_YfactotSweepsPlotter = False
+do_YSpectra_Plotter     = False
 
 
 
@@ -206,21 +206,24 @@ if do_YSpectra_Plotter:
 
 
 ### TestSweeps ###
-do_testsweeps     = False
-do_protestsweeps  = False
-do_plottestsweeps = False
+do_testsweeps     = True
+do_protestsweeps  = True
+do_plottestsweeps = True
 istester     = False
 isdummydewar = False
 istestcirc   = False
 istestpixel  = False
-iscold       = True
+iscold       = False
+
+do_SISsweep = True
+do_MAGsweep = True
 
 if all_testsweeps:
     do_testsweeps     = True
     do_protestsweeps  = True
     do_plottestsweeps = True
 
-datadir='/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/'
+datadir='/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Jun08_15/'
 if istester:
     datadir += 'test/'
 elif isdummydewar:
@@ -236,7 +239,7 @@ else:
 
 datadir = windir(datadir)
 if do_testsweeps:
-    testsweeps(datadir, do_SISsweep=False, do_MAGsweep=True, iscold=iscold, verbose=True,
+    testsweeps(datadir, do_SISsweep=do_SISsweep, do_MAGsweep=do_MAGsweep, iscold=iscold, verbose=True,
                numofmeas=10)
 
 if do_protestsweeps:
