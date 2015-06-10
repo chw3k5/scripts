@@ -115,106 +115,117 @@ start_num = 1
 norm_freq=1.42  # GHz
 norm_band=0.060 # GHz
 use_google_drive=False
-datadir   = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/LOfreq/'
-#datadir = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Mar28/LOfreq_wspec2/'
-Ynums = []
-if Ynums ==[]:
-    search4Ynums = True
-else:
-    search4Ynums = False
-if do_Ysweeps:
-    sweep_num = start_num
-    BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=False,
-              FinishedEmail=do_email, FiveMinEmail=do_email, PeriodicEmail=do_email,
-              seconds_per_email=60*20, chopper_off=False, biastestmode=False,
-              testmode=False, warmmode=False,sweepShape="rectangular",warning=warning,
-              Kaxis=0, sisVaxis=1, magaxis=3, LOpowaxis=2, LOfreqaxis=4, IFbandaxis=5,
+#datadir   = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/LOfreq/'
+setnames = []
+#setnames.extend(['set4','set5','set6','set7','LOfreq'])
+setnames.extend(['Mar28/LOfreq_wspec','Mar28/LOfreq_wspec2','Mar28/moonshot','Mar28/Mag_sweep','Mar28/LOfreq'])
+#setnames.extend(['Mar24_15/LO_power','Mar24_15/Yfactor_test'])
+#setnames.extend(['Nov05_14/Y_LOfreqMAGLOuA','Nov05_14/Y_MAG','Nov05_14/Y_MAG2','Nov05_14/Y_MAG3','Nov05_14/Y_standard'])
+#setnames.extend(['Oct20_14/LOfreq','Oct20_14/Y_LO_pow','Oct20_14/Y_MAG','Oct20_14/Y_MAG2','Oct20_14'])
 
-              do_fastsweep=True, do_unpumpedsweep=True, fastsweep_feedback=False,
-              SweepStart_feedTrue=65000, SweepStop_feedTrue=52000, SweepStep_feedTrue=500,
-              SweepStart_feedFalse=66100, SweepStop_feedFalse=57000, SweepStep_feedFalse=100,
-
-              do_sisVsweep=False, sisV_feedback=True, high_res_meas=5,
-              sisVsweep_start=1.5, sisVsweep_stop=2.25, sisVsweep_step=0.1,
-              sisVsweep_list=[0.5,0.55,0.6,0.65,0.7,0.75],
-              sisPot_feedTrue_start=58000, sisPot_feedTrue_stop=54000, sisPot_feedTrue_step=200,
-              sisPot_feedTrue_list=[65430,  65037,  64774,  64571,
-                                    62671, 62226,  61745,
-                                    61250,  60872,  60393,  59924,
-                                    59461,  59039,  58549,  58111, 57638,  57173],
+parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
+fullpaths = [windir(parent_folder + setname + '/') for setname in setnames]
+for datadir in fullpaths:
 
 
+    Ynums = []
+    if Ynums ==[]:
+        search4Ynums = True
+    else:
+        search4Ynums = False
+    if do_Ysweeps:
+        sweep_num = start_num
+        BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=False,
+                  FinishedEmail=do_email, FiveMinEmail=do_email, PeriodicEmail=do_email,
+                  seconds_per_email=60*20, chopper_off=False, biastestmode=False,
+                  testmode=False, warmmode=False,sweepShape="rectangular",warning=warning,
+                  Kaxis=0, sisVaxis=1, magaxis=3, LOpowaxis=2, LOfreqaxis=4, IFbandaxis=5,
+
+                  do_fastsweep=True, do_unpumpedsweep=True, fastsweep_feedback=False,
+                  SweepStart_feedTrue=65000, SweepStop_feedTrue=52000, SweepStep_feedTrue=500,
+                  SweepStart_feedFalse=66100, SweepStop_feedFalse=57000, SweepStep_feedFalse=100,
+
+                  do_sisVsweep=False, sisV_feedback=True, high_res_meas=5,
+                  sisVsweep_start=1.5, sisVsweep_stop=2.25, sisVsweep_step=0.1,
+                  sisVsweep_list=[0.5,0.55,0.6,0.65,0.7,0.75],
+                  sisPot_feedTrue_start=58000, sisPot_feedTrue_stop=54000, sisPot_feedTrue_step=200,
+                  sisPot_feedTrue_list=[65430,  65037,  64774,  64571,
+                                        62671, 62226,  61745,
+                                        61250,  60872,  60393,  59924,
+                                        59461,  59039,  58549,  58111, 57638,  57173],
 
 
-              # [65430, 65491, 65037, 64949, 64774, 64697, 64571, 64480,
-              #                       61250, 61127, 60872, 60581, 60393, 60125, 59924, 59684,
-              #                       59461, 59223, 59039, 58831, 58549, 58345, 58111, 57879, 57638, 57418, 57173, 56987,
-              #                       56775, 56525, 56299, 56052, 55826, 55582, 55369, 55123, 54955, 54732, 54471, 54247, 54013]
-
-              sisPot_feedFalse_start=65100, sisPot_feedFalse_stop=57000, sisPot_feedFalse_step=100,
-
-              TPSampleFrequency=100, TPSampleTime=2,
-              getspecs=True, spec_linear_sc=True, spec_freq_start=0.0, spec_freq_stop=5.01, spec_freq_step=1.0,
-              spec_sweep_time='AUTO', spec_video_band=300, spec_resol_band=300,
-              spec_attenu=0, lin_ref_lev=1000, aveNum=16,
-
-              LOfreq_start=673 , LOfreq_stop=649, LOfreq_step=1,
-              LOfreqs_list=None,
-
-              do_magisweep=False, mag_meas=10,
-              magisweep_start=50, magisweep_stop=39, magisweep_step=-1,
-              magisweep_list=[55],
-              magpotsweep_start=100000, magpotsweep_stop=70000-1, magpotsweep_step=-500,
-              magpotsweep_list=[85000],#[100020, 94637, 89198, 83723],
-
-              do_LOuAsearch=True, do_LOuApresearch=False, LOuA_search_every_sweep=True,
-              UCA_meas=10,
-              UCAsweep_min=0.00, UCAsweep_max=0.00, UCAsweep_step=0.05,
-              UCAsweep_list=None,
-              LOuAsearch_start=30, LOuAsearch_stop=11, LOuAsearch_step=-1,
-              LOuAsearch_list=[16],
-
-              K_list=[296, 77],
-              IFband_start=norm_freq, IFband_stop=norm_freq, IFband_step=0.10
-              )
 
 
-if do_YdataPro:
-    YdataPro(datadir, verbose=True, search_4Ynums=search4Ynums, search_str='Y', Ynums=Ynums,
-             use_google_drive=use_google_drive,
-             useOFFdata=False, Off_datadir='',
-             mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.1,
-             do_conv_mV=True, sigma_mV=0.05, min_cdf_mV=0.95,
-             remove_spikes=False, do_normspectra=True,
-             regrid_mesh_mV_spec=0.2, norm_freq=norm_freq, norm_band=norm_band,
-             do_freq_conv=True, min_cdf_freq=0.90, sigma_GHz=0.10)
+                  # [65430, 65491, 65037, 64949, 64774, 64697, 64571, 64480,
+                  #                       61250, 61127, 60872, 60581, 60393, 60125, 59924, 59684,
+                  #                       59461, 59223, 59039, 58831, 58549, 58345, 58111, 57879, 57638, 57418, 57173, 56987,
+                  #                       56775, 56525, 56299, 56052, 55826, 55582, 55369, 55123, 54955, 54732, 54471, 54247, 54013]
 
-if not use_google_drive:
-    datadir = local_copy(datadir)
+                  sisPot_feedFalse_start=65100, sisPot_feedFalse_stop=57000, sisPot_feedFalse_step=100,
 
-if do_YfactotSweepsPlotter:
-    YfactorSweepsPlotter(datadir, search_4Ynums=search4Ynums, Ynums=Ynums, verbose=True, mV_min=0, mV_max=5,
-                         Y_mV_min=-0.4, Y_mV_max=2.5,
-                         plot_rawhot_mVuA=False, plot_rawhot_mVtp=True,
-                         plot_rawcold_mVuA=False, plot_rawcold_mVtp=True,
-                         show_standdev=False, std_num=1,
-                         display_params=True, show_plot=False, save_plot=True, do_eps=False,
-                         plot_mVuA=True, plot_mVtp=True, plot_Yfactor=True, plot_Ntemp=False,
-                         find_lin_mVuA=False, find_lin_mVtp=False, find_lin_Yf=False,
-                         plot_fastmVuA=True, plot_fastmVtp=False, plot_fastmVpot=False,
-                         hotfast_find_lin_mVuA=False, coldfast_find_lin_mVuA=False,
-                         plot_unpumpmVuA=True, plot_unpumpmVtp=False, plot_unpumpmVpot=False,
-                         hotunpumped_find_lin_mVuA=True, coldunpumped_find_lin_mVuA=False,
-                         linif=0.4, der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
-                         der2_int=1, do_der2_conv=True, der2_min_cdf=0.95, der2_sigma=0.05,
-                         do_xkcd=False)
+                  TPSampleFrequency=100, TPSampleTime=2,
+                  getspecs=True, spec_linear_sc=True, spec_freq_start=0.0, spec_freq_stop=5.01, spec_freq_step=1.0,
+                  spec_sweep_time='AUTO', spec_video_band=300, spec_resol_band=300,
+                  spec_attenu=0, lin_ref_lev=1000, aveNum=16,
 
-if do_YSpectra_Plotter:
-    YSpectraPlotter2D(datadir, search_4Ynums=search4Ynums, Ynums=Ynums,
-                      mV_min=0.5,mV_max=None, show_spikes=True, show_spike_label=False,
-                      find_best_Yfactors=True,
-                      verbose=True,display_params=True,
-                      show_plot=False, save_plot=True, do_eps=False)
+                  LOfreq_start=673 , LOfreq_stop=649, LOfreq_step=1,
+                  LOfreqs_list=None,
+
+                  do_magisweep=False, mag_meas=10,
+                  magisweep_start=50, magisweep_stop=39, magisweep_step=-1,
+                  magisweep_list=[55],
+                  magpotsweep_start=100000, magpotsweep_stop=70000-1, magpotsweep_step=-500,
+                  magpotsweep_list=[85000],#[100020, 94637, 89198, 83723],
+
+                  do_LOuAsearch=True, do_LOuApresearch=False, LOuA_search_every_sweep=True,
+                  UCA_meas=10,
+                  UCAsweep_min=0.00, UCAsweep_max=0.00, UCAsweep_step=0.05,
+                  UCAsweep_list=None,
+                  LOuAsearch_start=30, LOuAsearch_stop=11, LOuAsearch_step=-1,
+                  LOuAsearch_list=[16],
+
+                  K_list=[296, 77],
+                  IFband_start=norm_freq, IFband_stop=norm_freq, IFband_step=0.10
+                  )
+
+
+    if do_YdataPro:
+        YdataPro(datadir, verbose=True, search_4Ynums=search4Ynums, search_str='Y', Ynums=Ynums,
+                 use_google_drive=use_google_drive,
+                 useOFFdata=False, Off_datadir='',
+                 mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.1,
+                 do_conv_mV=True, sigma_mV=0.05, min_cdf_mV=0.95,
+                 remove_spikes=False, do_normspectra=True,
+                 regrid_mesh_mV_spec=0.2, norm_freq=norm_freq, norm_band=norm_band,
+                 do_freq_conv=True, min_cdf_freq=0.90, sigma_GHz=0.10)
+
+    if not use_google_drive:
+        datadir = local_copy(datadir)
+
+    if do_YfactotSweepsPlotter:
+        YfactorSweepsPlotter(datadir, search_4Ynums=search4Ynums, Ynums=Ynums, verbose=True, mV_min=0, mV_max=5,
+                             Y_mV_min=-0.4, Y_mV_max=2.5,
+                             plot_rawhot_mVuA=False, plot_rawhot_mVtp=True,
+                             plot_rawcold_mVuA=False, plot_rawcold_mVtp=True,
+                             show_standdev=False, std_num=1,
+                             display_params=True, show_plot=False, save_plot=True, do_eps=False,
+                             plot_mVuA=True, plot_mVtp=True, plot_Yfactor=True, plot_Ntemp=False,
+                             find_lin_mVuA=False, find_lin_mVtp=False, find_lin_Yf=False,
+                             plot_fastmVuA=True, plot_fastmVtp=False, plot_fastmVpot=False,
+                             hotfast_find_lin_mVuA=False, coldfast_find_lin_mVuA=False,
+                             plot_unpumpmVuA=True, plot_unpumpmVtp=False, plot_unpumpmVpot=False,
+                             hotunpumped_find_lin_mVuA=True, coldunpumped_find_lin_mVuA=False,
+                             linif=0.4, der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
+                             der2_int=1, do_der2_conv=True, der2_min_cdf=0.95, der2_sigma=0.05,
+                             do_xkcd=False)
+
+    if do_YSpectra_Plotter:
+        YSpectraPlotter2D(datadir, search_4Ynums=search4Ynums, Ynums=Ynums,
+                          mV_min=0.5,mV_max=None, show_spikes=True, show_spike_label=False,
+                          find_best_Yfactors=True,
+                          verbose=True,display_params=True,
+                          show_plot=False, save_plot=True, do_eps=False)
 
 
 
