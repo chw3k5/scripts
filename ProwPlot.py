@@ -101,8 +101,8 @@ if do_sweeps:
 ### For Y-factor data and Sweeps ###
 do_Ysweeps              = False
 do_YdataPro             = False
-do_YfactotSweepsPlotter = True
-do_YSpectra_Plotter     = True
+do_YfactotSweepsPlotter = False
+do_YSpectra_Plotter     = False
 
 if all_Ydata:
     do_YdataPro             = True
@@ -232,13 +232,13 @@ for datadir in fullpaths:
 
 ### TestSweeps ###
 do_testsweeps     = False
-do_protestsweeps  = False
-do_plottestsweeps = False
+do_protestsweeps  = True
+do_plottestsweeps = True
 istester     = False
 isdummydewar = False
 istestcirc   = False
 istestpixel  = False
-iscold       = False
+iscold       = True
 
 do_SISsweep = True
 do_MAGsweep = True
@@ -277,7 +277,7 @@ if do_plottestsweeps:
     plottestsweeps(datadir, plot_SIS=True, plot_MAG=True,
                        show_std=True, std_num=10,
                        show_plot=False, save_plot=True, do_eps=True,
-                       find_lin=True, linif=1.1,
+                       find_lin=True, linif=0.3,
                        der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.05,
                        der2_int=1, do_der2_conv=True, der2_min_cdf=0.95, der2_sigma=0.10,
                        verbose=False)
