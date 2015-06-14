@@ -19,7 +19,7 @@ from matplotlib import pyplot as plt
 #############################
 ###### From control.py ######
 #############################
-open_and_close_telnet = False
+open_and_close_telnet = True
 
 do_LabJackU3_DAQ0 = False # True or False
 do_LabJackU3_AIN0 = False # True or False
@@ -33,7 +33,7 @@ do_Emag_PID         = False # True or False
 
 do_RFfreqset   = False # True or False
 do_RFon        = False # True or False
-do_RFoff       = False # True or False
+do_RFoff       = True # True or False
 
 do_measSIS     = False # True or False
 do_setfeedback = False # True or False
@@ -45,7 +45,7 @@ do_measSIS_TP  = False # True or False
 do_setLOI      = False # True or False
 do_setSIS_Volt = False # True or False
 
-do_zeropots    = False # True of False
+do_zeropots    = True # True of False
 
 
 ############################

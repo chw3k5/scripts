@@ -50,9 +50,9 @@ if do_sweeps:
               sisVsweep_list=[-.1, -0.05, 0.0, 0.05, 0.1, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4],
               sisPot_feedFalse_start=65100, sisPot_feedFalse_stop=57000, sisPot_feedFalse_step=100,
               sisPot_feedTrue_start=60000, sisPot_feedTrue_stop=49000, sisPot_feedTrue_step=200,
-              getspecs=False, spec_linear_sc=True, spec_freq_start=0, spec_freq_stop=10,
+              getspecs=False, spec_linear_sc=True, spec_freq_vector=[0.4,1.0,1.6,2.2,2.8,3.4,4.0,4.6,5.2],
               spec_sweep_time='AUTO', spec_video_band=30, spec_resol_band=30,
-              spec_attenu=0, lin_ref_lev=500, aveNum=32,
+              spec_attenu=0, lin_ref_lev=300, aveNum=32,
               Kaxis=0, sisVaxis=1, magaxis=2, LOpowaxis=3, LOfreqaxis=4, IFbandaxis=5,
               K_list=[296],
               LOfreq_start=672, LOfreq_stop=672, LOfreq_step=0.25,
@@ -100,35 +100,30 @@ if do_sweeps:
 ###########################
 ### For Y-factor data and Sweeps ###
 do_Ysweeps              = False
-do_YdataPro             = False
-do_YfactotSweepsPlotter = False
+do_YdataPro             = True
+do_YfactotSweepsPlotter = True
 do_YSpectra_Plotter     = False
 
-if all_Ydata:
-    do_YdataPro             = True
-    do_YfactotSweepsPlotter = True
-    do_YSpectra_Plotter     = True
-
+start_num = 1
+norm_freq=2.3  # GHz
+norm_band=0.015 # GHz
+use_google_drive=False
+do_email = True
+warning  = True
 
 # The directory what the data is kept
-start_num = 1
-norm_freq=1.42  # GHz
-norm_band=0.060 # GHz
-use_google_drive=False
-#datadir   = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/LOfreq/'
 setnames = []
-#setnames.extend(['set4','set5','set6','set7','LOfreq'])
-setnames.extend(['Mar28/LOfreq_wspec','Mar28/LOfreq_wspec2','Mar28/moonshot','Mar28/Mag_sweep','Mar28/LOfreq'])
-#setnames.extend(['Mar24_15/LO_power','Mar24_15/Yfactor_test'])
-#setnames.extend(['Nov05_14/Y_LOfreqMAGLOuA','Nov05_14/Y_MAG','Nov05_14/Y_MAG2','Nov05_14/Y_MAG3','Nov05_14/Y_standard'])
-#setnames.extend(['Oct20_14/LOfreq','Oct20_14/Y_LO_pow','Oct20_14/Y_MAG','Oct20_14/Y_MAG2','Oct20_14'])
+# setnames.extend(['set4','set5','set6','set7','LOfreq'])
+# setnames.extend(['Mar28/LOfreq_wspec','Mar28/LOfreq_wspec2','Mar28/moonshot','Mar28/Mag_sweep','Mar28/LOfreq'])
+# setnames.extend(['Mar24_15/LO_power','Mar24_15/Yfactor_test'])
+# setnames.extend(['Nov05_14/Y_LOfreqMAGLOuA','Nov05_14/Y_MAG','Nov05_14/Y_MAG2','Nov05_14/Y_MAG3','Nov05_14/Y_standard'])
+# setnames.extend(['Oct20_14/LOfreq','Oct20_14/Y_LO_pow','Oct20_14/Y_MAG','Oct20_14/Y_MAG2','Oct20_14'])
+setnames.extend(['Jun08_15/RandS'])
 
 parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
 fullpaths = [windir(parent_folder + setname + '/') for setname in setnames]
 for datadir in fullpaths:
-
-
-    Ynums = []
+    Ynums = []#'Y0004']
     if Ynums ==[]:
         search4Ynums = True
     else:
@@ -149,10 +144,10 @@ for datadir in fullpaths:
                   sisVsweep_start=1.5, sisVsweep_stop=2.25, sisVsweep_step=0.1,
                   sisVsweep_list=[0.5,0.55,0.6,0.65,0.7,0.75],
                   sisPot_feedTrue_start=58000, sisPot_feedTrue_stop=54000, sisPot_feedTrue_step=200,
-                  sisPot_feedTrue_list=[65430,  65037,  64774,  64571,
-                                        62671, 62226,  61745,
+                  sisPot_feedTrue_list=[65037,
                                         61250,  60872,  60393,  59924,
-                                        59461,  59039,  58549,  58111, 57638,  57173],
+                                        59461,  59039,  58549,  58111,
+                                        57638, 57173, 56775],
 
 
 
@@ -165,18 +160,18 @@ for datadir in fullpaths:
                   sisPot_feedFalse_start=65100, sisPot_feedFalse_stop=57000, sisPot_feedFalse_step=100,
 
                   TPSampleFrequency=100, TPSampleTime=2,
-                  getspecs=True, spec_linear_sc=True, spec_freq_start=0.0, spec_freq_stop=5.01, spec_freq_step=1.0,
+                  getspecs=True, spec_linear_sc=True, spec_freq_vector=[0.4,1.0,1.6,2.2,2.8,3.4,4.0,4.6,5.2],
                   spec_sweep_time='AUTO', spec_video_band=300, spec_resol_band=300,
-                  spec_attenu=0, lin_ref_lev=1000, aveNum=16,
+                  spec_attenu=0, lin_ref_lev=500, aveNum=32,
 
-                  LOfreq_start=673 , LOfreq_stop=649, LOfreq_step=1,
-                  LOfreqs_list=None,
+                  LOfreq_start=672 , LOfreq_stop=672, LOfreq_step=1,
+                  LOfreqs_list=[660],
 
                   do_magisweep=False, mag_meas=10,
                   magisweep_start=50, magisweep_stop=39, magisweep_step=-1,
                   magisweep_list=[55],
-                  magpotsweep_start=100000, magpotsweep_stop=70000-1, magpotsweep_step=-500,
-                  magpotsweep_list=[85000],#[100020, 94637, 89198, 83723],
+                  magpotsweep_start=78000, magpotsweep_stop=65000-1, magpotsweep_step=-500,
+                  magpotsweep_list=None,#[84000],
 
                   do_LOuAsearch=True, do_LOuApresearch=False, LOuA_search_every_sweep=True,
                   UCA_meas=10,
@@ -196,7 +191,7 @@ for datadir in fullpaths:
                  useOFFdata=False, Off_datadir='',
                  mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.1,
                  do_conv_mV=True, sigma_mV=0.05, min_cdf_mV=0.95,
-                 remove_spikes=False, do_normspectra=True,
+                 remove_spikes=True, do_normspectra=True,
                  regrid_mesh_mV_spec=0.2, norm_freq=norm_freq, norm_band=norm_band,
                  do_freq_conv=True, min_cdf_freq=0.90, sigma_GHz=0.10)
 
@@ -222,7 +217,8 @@ for datadir in fullpaths:
 
     if do_YSpectra_Plotter:
         YSpectraPlotter2D(datadir, search_4Ynums=search4Ynums, Ynums=Ynums,
-                          mV_min=0.5,mV_max=None, show_spikes=True, show_spike_label=False,
+                          mV_min=0.5,mV_max=None, freq_vector = [0.4,1.0,1.6,2.2,2.8,3.4,4.0,4.6,5.2],
+                          show_spikes=True, show_spike_label=False,
                           find_best_Yfactors=True,
                           verbose=True,display_params=True,
                           show_plot=False, save_plot=True, do_eps=False)
@@ -232,8 +228,8 @@ for datadir in fullpaths:
 
 ### TestSweeps ###
 do_testsweeps     = False
-do_protestsweeps  = True
-do_plottestsweeps = True
+do_protestsweeps  = False
+do_plottestsweeps = False
 istester     = False
 isdummydewar = False
 istestcirc   = False

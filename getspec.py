@@ -6,10 +6,8 @@ from profunc import windir
 from LabJack_control import LJ_streamTP
 
 extra_sleep_fraction = 0.05 # fraction of the total sweep time to add to waiting time for a singe sweep
-extra_sleep_float    = 1.0  # seconds added to total sweep time, allows for IF switching in the Spectrum Analyzer
+extra_sleep_float    = 1.0  # seconds added to total sweep time
 min_sleep_time       = 2.9
-crossover_points     = [2.5] # GHz
-extra_crossover_time = 5
 
 GPIB_str = "GPIB0::5::INSTR"
 
@@ -97,9 +95,6 @@ def start_spec_grab(spec_filename,
     sweep_sleep = (sweep_time_float*aveNum)*(1+extra_sleep_fraction) + extra_sleep_float
     if sweep_sleep < min_sleep_time:
         sweep_sleep = min_sleep_time
-    for crossover in crossover_points:
-        if ((freq_start < crossover) and (crossover < freq_stop)):
-            sweep_sleep += extra_crossover_time
 
     if verbose:
         print "spectrometer sweep, frequency start: "+ freq_start_str + '   frequency stop: '+freq_stop_str
@@ -179,18 +174,18 @@ def getspec(spec_filename,
 
 def getspecPlusTP(spec_filename, TP_filename, TPSampleFrequency, verbose=False, linear_sc=True,
                   freq_start=0.0, freq_stop=5.0, sweep_time='AUTO', video_band=10, resol_band=30, attenu=0,
-                  aveNum=1, lin_ref_lev=500):
+                  aveNum=1, lin_ref_lev=500, get_total_power=True):
     sweep_sleep = start_spec_grab(spec_filename=spec_filename,
                                   verbose=verbose, linear_sc=linear_sc,
                                   freq_start=freq_start, freq_stop=freq_stop,
                                   sweep_time=sweep_time, video_band=video_band,
                                   resol_band=resol_band, attenu=attenu,
                                   aveNum=aveNum, lin_ref_lev=lin_ref_lev)
-
-    if verbose:
-        print "Getting total power from the LabJack while sweeping for " + str('%2.3f' % sweep_sleep) + "s"
-    # let the LabJack get total power data while the spectral sweep is taking place
-    LJ_streamTP(TP_filename, TPSampleFrequency, sweep_sleep, verbose)
+    if get_total_power:
+        if verbose:
+            print "Getting total power from the LabJack while sweeping for " + str('%2.3f' % sweep_sleep) + "s"
+        # let the LabJack get total power data while the spectral sweep is taking place
+        LJ_streamTP(TP_filename, TPSampleFrequency, sweep_sleep, verbose)
 
     finish_spec_grab(spec_filename, freq_start=freq_start, freq_stop=freq_stop,
                  verbose=verbose, linear_sc=linear_sc)
@@ -198,7 +193,26 @@ def getspecPlusTP(spec_filename, TP_filename, TPSampleFrequency, verbose=False, 
     return
 
 
+def get_multi_band_spec(spec_filename, TP_filename, TPSampleFrequency, verbose=False, linear_sc=True,
+                        spec_freq_vector=[], sweep_time='AUTO', video_band=10, resol_band=30, attenu=0,
+                        aveNum=1, lin_ref_lev=500, get_total_power=True):
 
+    len_spec_freq_vector = len(spec_freq_vector)
+    if len_spec_freq_vector < 2:
+        print "The frequency vector has less than 2 elements the function get_multi_band_specs requires a frequency\n"+\
+              "vector with a length of 2 or greater. A length of 2 specifies a single band to sweep. This function\n"+\
+              "return without doing anything. Bummer."
+    else:
+        for band_index in range(len_spec_freq_vector-1):
+            getspecPlusTP(spec_filename=spec_filename, TP_filename=TP_filename,
+                          TPSampleFrequency=TPSampleFrequency, verbose=verbose, linear_sc=linear_sc,
+                          freq_start=spec_freq_vector[band_index], freq_stop=spec_freq_vector[band_index+1],
+                          sweep_time=sweep_time, video_band=video_band, resol_band=resol_band, attenu=attenu,
+                          aveNum=aveNum, lin_ref_lev=lin_ref_lev, get_total_power=get_total_power)
+
+
+
+    return
 
 
 

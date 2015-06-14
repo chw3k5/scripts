@@ -1748,7 +1748,8 @@ def SingleSpectraPlotter(datadir, search_4Snums=False, Snums='', verbose=False,
 
 import random
 def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
-                      mV_min=None,mV_max=None, show_spikes=False, show_spike_label=False,
+                      mV_min=None,mV_max=None, freq_vector=[0,5],
+                      show_spikes=False, show_spike_label=False,
                       find_best_Yfactors=True,
                       display_params=True, verbose=False,
                       show_plot=False, save_plot=True, do_eps=False):
@@ -1798,9 +1799,6 @@ def YSpectraPlotter2D(datadir, search_4Ynums=False, Ynums=[],
     best_Yfactors_ls = '-'
     best_Yfactors_alpha = 1
 
-
-    # Finding best Y factor in a frequency band
-    freq_vector = [1,2,3,4,5]
 
     ### Parameter Colors
     LOpwr_color       = 'dodgerblue'

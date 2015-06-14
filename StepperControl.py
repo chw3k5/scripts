@@ -488,6 +488,6 @@ def test(test_num=10,move_sleep=1, vel=0.2, accel=0.2,forth_dist='0.20',back_dis
         print n
     stepper_close()
     return
-
-#test(test_num=3, move_sleep=2, vel=0.5, accel=1, forth_dist='0.25',back_dist='0.25', verbose=True)
+if __name__ == "__main__":
+    test(test_num=3, move_sleep=2, vel=0.5, accel=1, forth_dist='0.25',back_dist='0.25', verbose=True)
 

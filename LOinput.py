@@ -1,15 +1,29 @@
-def setfreq(freq=14):
+import sys
+#freq = 0.0 # in GHz
+low_freq  = 13.541 # in GHz
+high_freq = 14.417 # in GHz
+low_LOfreq  = 650.0 # in GHz
+high_LOfreq = 692.0 # in GHz
+LOfreq_multiplier = 48.0
+
+sigGen='RandS_SMB100A' #'RandS_SMB100A', 'Anritsu69247A'
+
+try:
     import visa
-    import sys
-    #freq = 0.0 # in GHz
-    low_freq  = 13.541 # in GHz
-    high_freq = 14.417 # in GHz
-    ampl = 11.9 # in dBm
-    
-    low_LOfreq  = 650.0 # in GHz
-    high_LOfreq = 692.0 # in GHz
-    
-    LOfreq_multiplier = 48.0
+    if sigGen=='Anritsu69247A':
+        sa = visa.instrument("GPIB0::2::INSTR")
+        ampl = 11.5 # in dBm
+    elif sigGen=='RandS_SMB100A':
+        sa = visa.instrument("TCPIP::192.168.1.101::hislip0::INSTR")
+        sa.write('FREQ:MODE CW')
+        ampl = 11.5 # in dBm
+except:
+    pass
+    print "There was some problem with VISA or communicating with the spectrum analyzer, look in LOinput.py"
+
+
+
+def setfreq(freq=14.0):
     # some error checking
     try:
         freq = float(freq)
@@ -48,21 +62,28 @@ def setfreq(freq=14):
                 freq = low_freq
     
     # set the insturments
-    sa = visa.instrument("GPIB0::2::INSTR")
-    sa.write('CF0 ' + str(freq) + ' GH')
-    sa.write('L1 '  + str(ampl) + ' DM')
+    if sigGen=='Anritsu69247A':
+        sa.write('CF0 ' + str(freq) + ' GH')
+        sa.write('L1 '  + str(ampl) + ' DM')
+    elif sigGen=='RandS_SMB100A':
+        sa.write('SOUR:FREQ '+str(freq)+'GHz')
+        sa.write('SOUR:POW:LEV:IMM:AMPL '+str(ampl))
     return
     
 def RFon():
-    import visa
-    sa = visa.instrument("GPIB0::2::INSTR")
-    sa.write('RF1')
+    if sigGen=='Anritsu69247A':
+        sa.write('RF1')
+    elif sigGen=='RandS_SMB100A':
+        sa.write('OUTP ON')
+
     return
     
 def RFoff():
-    import visa
-    sa = visa.instrument("GPIB0::2::INSTR")
-    sa.write('RF0')
+    if sigGen=='Anritsu69247A':
+        sa.write('RF0')
+    elif sigGen=='RandS_SMB100A':
+        sa.write('OUTP OFF')
+
     return
     
 def rfon():
@@ -72,3 +93,8 @@ def rfon():
 def rfoff():
     RFoff()
     return
+
+if __name__ == "__main__":
+    from time import sleep
+    setfreq(660)
+    rfon()
