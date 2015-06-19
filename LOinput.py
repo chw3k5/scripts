@@ -16,7 +16,7 @@ try:
     elif sigGen=='RandS_SMB100A':
         sa = visa.instrument("TCPIP::192.168.1.101::hislip0::INSTR")
         sa.write('FREQ:MODE CW')
-        ampl = 11.5 # in dBm
+        ampl = 18.5 # in dBm
 except:
     pass
     print "There was some problem with VISA or communicating with the spectrum analyzer, look in LOinput.py"
@@ -96,5 +96,10 @@ def rfoff():
 
 if __name__ == "__main__":
     from time import sleep
-    setfreq(660)
+    # for freq in range(650,692,1):
+    #     setfreq(freq)
+    #     print freq
+    #     sleep(1)
     rfon()
+    setfreq(657)
+    rfoff()

@@ -772,10 +772,11 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
         prodatadir = local_copy(prodatadir)
     prodatadir = windir(prodatadir)
     if os.path.isdir(prodatadir):
+        None
         # remove old processed data
-        shutil.rmtree(prodatadir)
+        #shutil.rmtree(prodatadir)
         # make a folder for new processed data
-        os.makedirs(prodatadir)
+        #os.makedirs(prodatadir)
     else:
         # make a folder for new processed data
         os.makedirs(prodatadir)

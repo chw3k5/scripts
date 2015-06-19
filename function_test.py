@@ -45,7 +45,7 @@ do_measSIS_TP  = False # True or False
 do_setLOI      = False # True or False
 do_setSIS_Volt = False # True or False
 
-do_zeropots    = True # True of False
+do_zeropots    = False # True of False
 
 
 ############################
@@ -53,7 +53,7 @@ do_zeropots    = True # True of False
 ############################
 
 do_AllanVar       = False # True or False
-do_spike_function = True
+do_spike_function = False
 
 ####################################
 ###### From StepperControl.py ######
@@ -106,7 +106,7 @@ if do_measmag_w_offset:
 
 if do_setmag:
     from control import setmag
-    magpot = default_magpot # electromagnet potentiometer position
+    magpot = 100000 #default_magpot # electromagnet potentiometer position
     verbose = True  # True or False
     V_mag, mA_mag, pot_mag = setmag(magpot, verbose)
     print str(V_mag) + "=V_mag, " + str(mA_mag) + "=mA_mag, " + str(pot_mag) + "=pot_mag"
@@ -207,7 +207,7 @@ if do_setLOI:
 
 if do_setSIS_Volt:
     from PID import SIS_mV_PID
-    sispot_current, final_deriv = SIS_mV_PID(mV_set=1.2, mV_set_max=10, mV_set_min=-10,
+    sispot_current, final_deriv = SIS_mV_PID(mV_set=0.9, mV_set_max=10, mV_set_min=-10,
                 feedback=True, max_adjust_attempt=20, min_adjust_attempt=5,
                 sleep_per_set=2, meas_number=5, high_meas_after_diff=0.2,
                 min_diff_sispot=3,

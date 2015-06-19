@@ -217,7 +217,7 @@ def IFmsg(IFband):
 
 
 def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=False,
-              testmode=False, warmmode=False, do_set_mag_highlow=False,
+              testmode=False, warmmode=False, do_set_mag_highlow=False, turnRFoff=True,
               do_fastsweep=False, do_unpumpedsweep=False, fastsweep_feedback=False,
               SweepStart_feedTrue=65000, SweepStop_feedTrue=52000, SweepStep_feedTrue=100,
               SweepStart_feedFalse=65100, SweepStop_feedFalse=57000, SweepStep_feedFalse=100,
@@ -715,7 +715,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
                     pot_LO_list.append(sisPot_actual)
                     time_stamp_LO_list.append(time_stamp)
 
-                if verboseTop:
+                if False:
                     print "Using the LO power setting algorithm 'setLOI' the LO power has been set."
                     print "LO uA set value:" + str('%2.4f' % LOuA_thisloop) + "uA  LO actual value:" + str('%2.4f' % sisuA_actual) + "uA"
                     print "at " + str('%2.4f' % sismV_actual) + "mV and a pot of " + str(sisPot_actual)
@@ -1126,13 +1126,14 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
     if ((not testmode) and (not chopper_off)):
         GoForth(dist=forth_dist)
         DisableDrive()
-        stepper_close()
+        #stepper_close()
     if not testmode:
         zeropots(verbose)
         closetelnet()
     if not biastestmode:
-        RFoff()
-        print "The RF power to the LO has been turned off."
+        if turnRFoff:
+            RFoff()
+            print "The RF power to the LO has been turned off."
 
     if FinishedEmail:
         NowTime       = time.time()

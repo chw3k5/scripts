@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 from matplotlib import cm
 import os, shutil, numpy
 from datapro import YdataPro
-from profunc import windir
+from profunc import windir, local_copy
 from SetGrab import getYsweeps, tp_int_cut, LOuAset_cut, LOuAdiff_cut, mV_bias_cut_Y, LOfreq_cut
 from domath import make_monotonic, filter_on_occurrences
 from Plotting import xyplotgen2
@@ -65,7 +65,7 @@ max_tp_int = None # at most this, None is any
 min_LOuAset =  None # at least this, None is any
 max_LOuAset = None # at least this, None is any
 # The maximum difference between the set and measured LO pump power
-maxdiff_LOuA = 1 # None is any
+maxdiff_LOuA = None # None is any
 # select an LO freqency to look at
 LOfreq_to_get = None # this number is rounded to the near integer, None is any
 # reorder the Ysweeps list in terms of lowest to highest LOuA (meanSIS_uA)
@@ -79,18 +79,33 @@ mV_bias_max = 1.9 # at most this, None is any
 
 
 
-#########################################
-###### Yfactor versus LO frequency ######
-#########################################
+#######################################
+###### Yfactor versus everything ######
+#######################################
 do_Yfactor_versus_LO_freq = True
-do_max_Yfactor = True # False uses the average value for a bandwidth, True uses the maximum
-min_Y_factor = 0.9
-spec_bands = [1.39,1.45]#1.39,1.45]#,4,5]
-Y_LOfreq_colors = ['Crimson','Olive','GoldenRod','RoyalBlue','SaddleBrown','Red','Salmon','SandyBrown','Sienna',
-                   'SkyBlue','SlateBlue','SlateGrey','BlueViolet','Brown','CadetBlue','Chartreuse', 'Chocolate',
-                   'Coral','CornflowerBlue','Crimson','Cyan']
+do_Yfactor_versus_magpot  = False
 
-Y_LOfreq_plotdir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Y_LOfreq/')
+### Y factor related options
+# analysis options
+do_max_Yfactor = False # False uses the average value for a bandwidth, True uses the maximum
+min_Y_factor = 0.3
+spec_bands = [0,1,2,3,4,5]#[1.39,1.45]#1.39,1.45]#,4,5]
+
+# plot options
+plot_ylim_list_Yfactor_vs = [0.5, 2.5] # None or list of two [1.0, 3.0]
+ylabel_str_Yfactor_vs     = "Y Factor"
+
+Y_pm_color    = 'DarkOrchid'
+Y_spec_colors = ['Crimson','Olive','GoldenRod','RoyalBlue','SaddleBrown','Red','Salmon','SandyBrown','Sienna',
+                 'SkyBlue','SlateBlue','SlateGrey','BlueViolet','Brown','CadetBlue','Chartreuse', 'Chocolate',
+                 'Coral','CornflowerBlue','Crimson','Cyan']
+
+
+### dependent variable options
+# LOfreq
+Y_LOfreq_plotdir = local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Y_LOfreq/'))
+Y_LOfreq_xlim_list_Yfactor_versus = [645, 695] # None or list of two [645, 695]
+Y_LOfreq_xlabel_str_Yfactor_versus="LO frequency (GHz)"
 
 Y_LOfreq_ls = "-"
 Y_LOfreq_linw = 3
@@ -102,14 +117,29 @@ Y_LOfreq_legend_size = 10
 Y_LOfreq_legend_num_of_points = 3
 Y_LOfreq_legend_loc = 3
 
+# magpot
+Y_magpot_plotdir = local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Y_magpot/'))
+Y_magpot_xlim_list_Yfactor_versus = None# [65100, 90000] # None or list of two [645, 695]
+Y_magpot_xlabel_str_Yfactor_versus="electromagnet potentiometer"
+
+Y_magpot_ls = "-"
+Y_magpot_linw = 3
+Y_magpot_fmt = 'o'
+Y_magpot_markersize = 5
+Y_magpot_alpha = 1
+
+Y_magpot_legend_size = 10
+Y_magpot_legend_num_of_points = 3
+Y_magpot_legend_loc = 3
+
 
 
 
 ###########################################
 ###### Intersecting lines Parameters ######
 ###########################################
-do_intersecting_lines    = False
-int_lines_plotdir        = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/intersecting_lines/')
+do_intersecting_lines    = True
+int_lines_plotdir        = local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/intersecting_lines/'))
 
 intersecting_lines_behavior = 'Y_max' #'Y_max','Y_mV_band_ave'
 int_lines_mV_centers     = [0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8]#list(numpy.arange(0.5,2.0,0.1))
@@ -118,8 +148,8 @@ int_lines_mV_plus_minus  = 0.05
 # include_spec_data        = True
 # IFband_vector            = [1,2,3,4,5]
 
-show_popular_LOfreqs     = True
-popular_LOfreqs_min_occurrences = 5 # integer or None for any
+show_popular_LOfreqs     = False
+popular_LOfreqs_min_occurrences = 3 # integer or None for any
 popular_LOfreqs_max_occurrences = None # integer or None for any
 
 show_popular_meanmag_mA     = False
@@ -141,7 +171,7 @@ int_line_ls    = '-'
 ###### Shot Noise Parameters ######
 ###################################
 do_shot_noise = False
-shot_noise_plotdir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/shot_noise/')
+shot_noise_plotdir = local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/shot_noise/'))
 
 
 ###############################################################
@@ -149,12 +179,14 @@ shot_noise_plotdir = windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/shot_
 ###############################################################
 setnames = []
 #setnames.extend(['set4','set5','set6','set7','LOfreq'])
-setnames.extend(['Mar28/LOfreq_wspec','Mar28/LOfreq_wspec2','Mar28/moonshot','Mar28/Mag_sweep','Mar28/LOfreq'])
+#setnames.extend(['Mar28/LOfreq_wspec'])#,'Mar28/LOfreq_wspec2','Mar28/moonshot','Mar28/Mag_sweep','Mar28/LOfreq'])
 #setnames.extend(['Mar24_15/LO_power','Mar24_15/Yfactor_test'])
 #setnames.extend(['Nov05_14/Y_LOfreqMAGLOuA','Nov05_14/Y_MAG','Nov05_14/Y_MAG2','Nov05_14/Y_MAG3','Nov05_14/Y_standard'])
 #setnames.extend(['Oct20_14/LOfreq','Oct20_14/Y_LO_pow','Oct20_14/Y_MAG','Oct20_14/Y_MAG2','Oct20_14'])
-
-parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
+#setnames.extend(['Jun08_15/magSweep','Jun08_15/magSweep2','Jun08_15/magSweep3'])
+#setnames.extend(['Jun08_15/newBS_magSweep'])
+setnames.extend(['Jun08_15/LOfreq/657'])
+parent_folder = local_copy('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/')
 fullpaths = [windir(parent_folder + setname + '/') for setname in setnames]
 
 
@@ -224,52 +256,93 @@ if ((mV_bias_min is not None) and (mV_bias_max is not None)):
     Ysweeps = mV_bias_cut_Y(Ysweeps, mV_min=mV_bias_min, mV_max=mV_bias_max, verbose=verbose)
 
 
+def return_dependent_variable(dependent_variable_str, Ysweep):
+    dependent_variable = False
+    if dependent_variable_str == 'LOfreq':
+        dependent_variable = Ysweep.LOfreq
+    elif  dependent_variable_str == 'magpot':
+        dependent_variable = Ysweep.magpot
 
-#########################################
-###### Yfactor versus LO frequency ######
-#########################################
-testmode = True
-if do_Yfactor_versus_LO_freq:
-    fig, ax1 = plt.subplots()
-    ax1.set_xlabel("LO frequency (GHz)")
-    ax1.set_ylabel("Y Factor")
-    ax1.set_xlim([645, 695])
-    ax1.set_ylim([0.5, 2.5])
+    return dependent_variable
+
+
+
+#######################################
+###### Yfactor versus everything ######
+#######################################
+def Yfactor_vs(dependent_variable_str,
+               Y_dependent_variable_plotdir,
+               plot_xlim_list=None,
+               xlabel_str=None,
+               Y_dependent_variable_ls = "-",
+               Y_dependent_variable_linw = 3,
+               Y_dependent_variable_fmt = 'o',
+               Y_dependent_variable_markersize = 5,
+               Y_dependent_variable_alpha = 1,
+               Y_dependent_variable_legend_size = 10,
+               Y_dependent_variable_legend_num_of_points = 3,
+               Y_dependent_variable_legend_loc = 3):
+    if not os.path.isdir(Y_dependent_variable_plotdir): os.mkdir(Y_dependent_variable_plotdir)
+    testmode = True
     leglines  = []
     leglabels = []
 
+    fig, ax1 = plt.subplots()
+    if xlabel_str is not None:
+        ax1.set_xlabel(xlabel_str)
+    if ylabel_str_Yfactor_vs is not None:
+        ax1.set_ylabel(ylabel_str_Yfactor_vs)
+    if plot_xlim_list is not None:
+        ax1.set_xlim(plot_xlim_list)
+    if plot_ylim_list_Yfactor_vs is not None:
+        ax1.set_ylim(plot_ylim_list_Yfactor_vs)
+
     # get and plot the power meter data
-    pm_max_Yfactors        = []
-    pm_max_Yfactor_mVs     = []
-    pm_max_Yfactor_LOfreqs = []
+    pm_max_Yfactors                   = []
+    pm_max_Yfactor_mVs                = []
+    pm_max_Yfactor_dependent_variable = []
     for Ysweep in Ysweeps:
         pm_max_Yfactor_mV, pm_max_Yfactor = Ysweep.find_max_yfactor_pm()
-        LOfreq = Ysweep.LOfreq
+
+        # get the dependent variable
+        dependent_variable = return_dependent_variable(dependent_variable_str, Ysweep)
+
         if min_Y_factor <= pm_max_Yfactor:
             pm_max_Yfactors.append(pm_max_Yfactor)
             pm_max_Yfactor_mVs.append(pm_max_Yfactor_mV)
-            pm_max_Yfactor_LOfreqs.append(LOfreq)
+            pm_max_Yfactor_dependent_variable.append(dependent_variable)
         if testmode:
-            print  pm_max_Yfactor,':',LOfreq,'GHz :', pm_max_Yfactor_mV,' mV'
+            print  pm_max_Yfactor,':',dependent_variable,':'+dependent_variable_str+' :', pm_max_Yfactor_mV,' mV'
 
     # Sort all the data to make monotonic lines in the domain of LO frequency
-    list_of_lists = [pm_max_Yfactor_LOfreqs,pm_max_Yfactors,pm_max_Yfactor_mVs]
+    list_of_lists = [pm_max_Yfactor_dependent_variable,pm_max_Yfactors,pm_max_Yfactor_mVs]
     sorted_list_of_lists = make_monotonic(list_of_lists,reverse=False)
-    [pm_max_Yfactor_LOfreqs,pm_max_Yfactors,pm_max_Yfactor_mVs] = sorted_list_of_lists
+    [pm_max_Yfactor_dependent_variable,pm_max_Yfactors,pm_max_Yfactor_mVs] = sorted_list_of_lists
 
-    x_vector = pm_max_Yfactor_LOfreqs
+    x_vector = pm_max_Yfactor_dependent_variable
     y_vector = pm_max_Yfactors
-    color = 'DarkOrchid'
 
 
-    ax1.plot(x_vector,y_vector , linestyle=Y_LOfreq_ls, color=color, linewidth=Y_LOfreq_linw,
-                         marker=Y_LOfreq_fmt, markersize=Y_LOfreq_markersize, markerfacecolor=color, alpha=Y_LOfreq_alpha)
-    leglines.append(plt.Line2D(range(10), range(10), color=color, ls=Y_LOfreq_ls, linewidth=Y_LOfreq_linw,
-                               marker=Y_LOfreq_fmt, markersize=Y_LOfreq_markersize, markerfacecolor=color, alpha=Y_LOfreq_alpha))
-    leglabels.append("PM data 1.42 GHz IF band")
+    ax1.plot(x_vector, y_vector,
+             linestyle=Y_dependent_variable_ls,
+             color=Y_pm_color,
+             linewidth=Y_dependent_variable_linw,
+             marker=Y_dependent_variable_fmt,
+             markersize=Y_dependent_variable_markersize,
+             markerfacecolor=Y_pm_color, alpha=Y_dependent_variable_alpha)
+    leglines.append(plt.Line2D(range(10), range(10),
+                               color=Y_pm_color,
+                               ls=Y_dependent_variable_ls,
+                               linewidth=Y_dependent_variable_linw,
+                               marker=Y_dependent_variable_fmt,
+                               markersize=Y_dependent_variable_markersize,
+                               markerfacecolor=Y_pm_color,
+                               alpha=Y_dependent_variable_alpha))
+    leglabels.append("PM data")
 
 
 
+    len_spec_colors = len(Y_spec_colors)
     # get and plot the spectrum analyzer data
     for band_index in range(len(spec_bands)-1):
         low_freq = spec_bands[band_index]
@@ -278,51 +351,100 @@ if do_Yfactor_versus_LO_freq:
         sa_Yfactors = []
         sa_Yfactor_mVs = []
         sa_Yfactor_freqs = []
-        sa_Yfactor_LOfreqs = []
+        sa_Yfactor_dependent_variables = []
         for (index_Y,Ysweep) in list(enumerate(Ysweeps)):
             if Ysweep.spec_data_found:
-                sa_max_Yfactor, sa_max_Yfactor_mV, sa_Yfactor_freq, sa_ave_Yfactor = Ysweep.find_max_yfactor_spec(min_freq=low_freq,max_freq=high_freq)
-                LOfreq = Ysweep.LOfreq
+                sa_max_Yfactor, sa_max_Yfactor_mV, sa_Yfactor_freq, sa_ave_Yfactor \
+                    = Ysweep.find_max_yfactor_spec(min_freq=low_freq,max_freq=high_freq)
+
+                # get the dependent variable
+                dependent_variable = return_dependent_variable(dependent_variable_str, Ysweep)
 
                 if do_max_Yfactor:
                     sa_Yfactor = sa_max_Yfactor
                 else:
                     sa_Yfactor = sa_ave_Yfactor
-                if ((min_Y_factor <= sa_Yfactor) and (Ysweep.fullpath !=windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/LOfreq/'))):
+                if ((min_Y_factor <= sa_Yfactor)
+                    and (Ysweep.fullpath !=windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/LOfreq/'))):
+
                     sa_Yfactors.append(sa_Yfactor)
                     sa_Yfactor_mVs.append(sa_max_Yfactor_mV)
                     sa_Yfactor_freqs.append(sa_Yfactor_freq)
-                    sa_Yfactor_LOfreqs.append(LOfreq)
+                    sa_Yfactor_dependent_variables.append(dependent_variable)
+
                 if testmode:
-                    print 'sa_Yfactor:',sa_Yfactor, '  max_Yfactor_LOfreq:',LOfreq,'  max_Yfactor_mV:',sa_max_Yfactor_mV, '  Yfactor_freq:',sa_Yfactor_freq
-                    print Ysweep.fullpath
+                    print 'sa_Yfactor:',sa_Yfactor, '  max_Yfactor_dependent_variable:',dependent_variable,\
+                        '  max_Yfactor_mV:',sa_max_Yfactor_mV, '  Yfactor_freq:',sa_Yfactor_freq
                     #print index_Y," Y index", Ysweep.name
                     #print len(Ysweep.spec_freq_list[1]),'length of self.spec_freq_list[1]'
+        if sa_Yfactors != []:
+            # Sort all the data to make monotonic lines in the domain of LO frequency
+            list_of_lists = [sa_Yfactor_dependent_variables,sa_Yfactors,sa_Yfactor_mVs,sa_Yfactor_freqs]
+            sorted_list_of_lists = make_monotonic(list_of_lists,reverse=False)
+            [sa_Yfactor_dependent_variables,sa_Yfactors,sa_Yfactor_mVs,sa_Yfactor_freqs] = sorted_list_of_lists
 
-        # Sort all the data to make monotonic lines in the domain of LO frequency
-        list_of_lists = [sa_Yfactor_LOfreqs,sa_Yfactors,sa_Yfactor_mVs,sa_Yfactor_freqs]
-        sorted_list_of_lists = make_monotonic(list_of_lists,reverse=False)
-        [sa_Yfactor_LOfreqs,sa_Yfactors,sa_Yfactor_mVs,sa_Yfactor_freqs] = sorted_list_of_lists
+            x_vector = sa_Yfactor_dependent_variables
+            y_vector = sa_Yfactors
+            color = Y_spec_colors[band_index % len_spec_colors]
 
-
-
-        x_vector = sa_Yfactor_LOfreqs
-        y_vector = sa_Yfactors
-        color = Y_LOfreq_colors[band_index]
-
-        ax1.plot(x_vector,y_vector , linestyle=Y_LOfreq_ls, color=color, linewidth=Y_LOfreq_linw,
-                             marker=Y_LOfreq_fmt, markersize=Y_LOfreq_markersize, markerfacecolor=color, alpha=Y_LOfreq_alpha)
-        leglines.append(plt.Line2D(range(10), range(10), color=color, ls=Y_LOfreq_ls, linewidth=Y_LOfreq_linw,
-                                   marker=Y_LOfreq_fmt, markersize=Y_LOfreq_markersize, markerfacecolor=color, alpha=Y_LOfreq_alpha))
-        leglabels.append("SA data "+str(low_freq)+"-"+str(high_freq)+" GHz IF band")
+            ax1.plot(x_vector, y_vector,
+                     linestyle=Y_dependent_variable_ls,
+                     color=color,
+                     linewidth=Y_dependent_variable_linw,
+                     marker=Y_dependent_variable_fmt,
+                     markersize=Y_dependent_variable_markersize,
+                     markerfacecolor=color,
+                     alpha=Y_dependent_variable_alpha)
+            leglines.append(plt.Line2D(range(10), range(10),
+                                       color=color,
+                                       ls=Y_dependent_variable_ls,
+                                       linewidth=Y_dependent_variable_linw,
+                                       marker=Y_dependent_variable_fmt,
+                                       markersize=Y_dependent_variable_markersize,
+                                       markerfacecolor=color,
+                                       alpha=Y_dependent_variable_alpha))
+            leglabels.append("SA data "+str(low_freq)+"-"+str(high_freq)+" GHz IF band")
 
 
     # stuff to make the final plot look good
-    matplotlib.rcParams['legend.fontsize'] = Y_LOfreq_legend_size
-    plt.legend(tuple(leglines),tuple(leglabels), numpoints=Y_LOfreq_legend_num_of_points, loc=Y_LOfreq_legend_loc)
+    matplotlib.rcParams['legend.fontsize'] = Y_dependent_variable_legend_size
+    plt.legend(tuple(leglines),tuple(leglabels),
+               numpoints=Y_dependent_variable_legend_num_of_points,
+               loc=Y_dependent_variable_legend_loc)
 
-    plt.savefig(Y_LOfreq_plotdir+"Yfactor_versus_LOfreq.png")
+    plt.savefig(Y_dependent_variable_plotdir+"Yfactor_versus_"+dependent_variable_str+".png")
     plt.close('all')
+    return
+
+
+if any([do_Yfactor_versus_LO_freq, do_Yfactor_versus_magpot]):
+    if do_Yfactor_versus_LO_freq:
+        Yfactor_vs(dependent_variable_str='LOfreq',
+                   Y_dependent_variable_plotdir=Y_LOfreq_plotdir,
+                   plot_xlim_list=Y_LOfreq_xlim_list_Yfactor_versus,
+                   xlabel_str=Y_LOfreq_xlabel_str_Yfactor_versus,
+                   Y_dependent_variable_ls = Y_LOfreq_ls,
+                   Y_dependent_variable_linw = Y_LOfreq_linw,
+                   Y_dependent_variable_fmt = Y_LOfreq_fmt,
+                   Y_dependent_variable_markersize = Y_LOfreq_markersize,
+                   Y_dependent_variable_alpha = Y_LOfreq_alpha,
+                   Y_dependent_variable_legend_size = Y_LOfreq_legend_size,
+                   Y_dependent_variable_legend_num_of_points = Y_LOfreq_legend_num_of_points,
+                   Y_dependent_variable_legend_loc = Y_LOfreq_legend_loc)
+    if do_Yfactor_versus_magpot:
+        Yfactor_vs(dependent_variable_str='magpot',
+                   Y_dependent_variable_plotdir=Y_magpot_plotdir,
+                   plot_xlim_list=Y_magpot_xlim_list_Yfactor_versus,
+                   xlabel_str=Y_magpot_xlabel_str_Yfactor_versus,
+                   Y_dependent_variable_ls = Y_magpot_ls,
+                   Y_dependent_variable_linw = Y_magpot_linw,
+                   Y_dependent_variable_fmt = Y_magpot_fmt,
+                   Y_dependent_variable_markersize = Y_magpot_markersize,
+                   Y_dependent_variable_alpha = Y_magpot_alpha,
+                   Y_dependent_variable_legend_size = Y_magpot_legend_size,
+                   Y_dependent_variable_legend_num_of_points = Y_magpot_legend_num_of_points,
+                   Y_dependent_variable_legend_loc = Y_magpot_legend_loc)
+
 
 
 
@@ -391,7 +513,7 @@ if do_intersecting_lines:
 
                 m = Ysweep.intersectingL_m
                 b = Ysweep.intersectingL_b
-                temps=[-300,400]
+                temps=[-400,400]
                 powers=[]
                 for temp in temps:
                     powers.append((temp*m)+b)
@@ -432,7 +554,8 @@ if do_intersecting_lines:
                         local_leglabels.append(leglabels[sweep_index])
                         local_Ysweeps.append(Ysweep)
 
-                new_great_data_list.append((new_plot_title,local_Ysweeps, local_plot_list, local_leglines, local_leglabels))
+                new_great_data_list.append((new_plot_title, local_Ysweeps,
+                                            local_plot_list, local_leglines, local_leglabels))
         great_data_list = new_great_data_list
 
     # meanmag_mA
@@ -478,7 +601,8 @@ if do_intersecting_lines:
             LOuA_Ysweep_sort_list = []
             for Ysweep in Ysweeps:
                  LOuA_Ysweep_sort_list.append(numpy.mean(Ysweep.meanSIS_uA))
-            [new_LOuA_order,Ysweeps,plot_list, leglines, leglabels] = make_monotonic([LOuA_Ysweep_sort_list,Ysweeps,plot_list, leglines, leglabels])
+            [new_LOuA_order,Ysweeps,plot_list, leglines, leglabels] \
+                = make_monotonic([LOuA_Ysweep_sort_list,Ysweeps,plot_list, leglines, leglabels])
             new_great_data_list.append((plot_title, Ysweeps, plot_list, leglines, leglabels))
         great_data_list = new_great_data_list
 
@@ -520,13 +644,6 @@ if do_intersecting_lines:
                     print 'saving PNG file'
                 plt.savefig(plotfilename+'.png')
             plt.close("all")
-
-
-
-
-
-
-
 
 
 

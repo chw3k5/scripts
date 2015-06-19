@@ -215,18 +215,55 @@ def get_multi_band_spec(spec_filename, TP_filename, TPSampleFrequency, verbose=F
     return
 
 
+def LOfreqSweep():
+    from LOinput import setfreq
+    from time import sleep
+    from control import setmag_highlow, setSIS_only, setfeedback
+    sleep_time = 10
+    sisBias=59039
+    sisShot=55000
+    LOfreq_list = list(range(650,693))
+    freq_vector = [0.4,1.0,1.6,2.2,2.8,3.4,4.0,4.6,5.2]
+    test_dir = 'C:\\Users\\chwheele\\Google Drive\\Kappa\\NA38\\IVsweep\\IFsweep\\'
 
+    setfeedback(True)
+    setmag_highlow(100000)
+
+
+    if not os.path.isdir(test_dir):
+        os.mkdir(test_dir)
+    for LOfreq in LOfreq_list:
+        setfreq(LOfreq)
+
+        # biased SIS junction
+        setSIS_only(sispot=sisBias,feedback=True)
+        sleep(sleep_time)
+        for freq_index in range(len(freq_vector)-1):
+            getspecPlusTP(spec_filename=test_dir+str(LOfreq)+'spec_biased'+'.csv',
+                          TP_filename=test_dir+str(LOfreq)+'_biased.csv',
+                          TPSampleFrequency=100, verbose=True, linear_sc=True,
+                          freq_start=freq_vector[freq_index], freq_stop=freq_vector[freq_index+1], sweep_time='AUTO', video_band=30, resol_band=30, attenu=0,
+                          aveNum=16, lin_ref_lev=100)
+
+        # normal SIS junction for shot noise source
+        setSIS_only(sispot=sisShot,feedback=True)
+        sleep(sleep_time)
+        for freq_index in range(len(freq_vector)-1):
+            getspecPlusTP(spec_filename=test_dir+str(LOfreq)+'spec_biased'+'.csv',
+                          TP_filename=test_dir+str(LOfreq)+'_biased.csv',
+                          TPSampleFrequency=100, verbose=True, linear_sc=True,
+                          freq_start=freq_vector[freq_index], freq_stop=freq_vector[freq_index+1], sweep_time='AUTO', video_band=30, resol_band=30, attenu=0,
+                          aveNum=16, lin_ref_lev=100)
+
+
+    return
 #######################
 ###### Test Area ######
 #######################
 
 
 if __name__ == "__main__":
-    test_dir = 'C:\\Users\\chwheele\\Google Drive\\Kappa\\NA38\\IVsweep\\test\\spec_test\\'
-    freq_vector = [0,1,2,3,4,5]
-    for freq_index in range(len(freq_vector)-1):
-        getspecPlusTP(spec_filename=test_dir+'spec1.csv',
-                      TP_filename=test_dir+'1.csv',
-                      TPSampleFrequency=100, verbose=True, linear_sc=True,
-                      freq_start=freq_vector[freq_index], freq_stop=freq_vector[freq_index+1], sweep_time='AUTO', video_band=30, resol_band=30, attenu=0,
-                      aveNum=16, lin_ref_lev=100)
+    LOfreqSweep()
+
+
+
