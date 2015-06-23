@@ -20,8 +20,8 @@ SIS_feedon_high = 100000
 SIS_feedoff_low = 53000
 SIS_feedoff_high = 77000
 
-default_magpot = 89179 # 45 mA
-default_sispot = 56800 # 1.8 mV
+default_magpot = 100000 # 65 mA ### 89179 # 45 mA
+default_sispot = 59100 # 1.3 mV ### 56800 # 1.8 mV ### 59100 # 1.3 mV
 
 
 def opentelnet():

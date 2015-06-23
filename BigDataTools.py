@@ -3,7 +3,7 @@ from sys import platform
 import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib import cm
-import os, shutil, numpy
+import os, shutil, numpy, sys
 from datapro import YdataPro
 from profunc import windir, local_copy
 from SetGrab import getYsweeps, tp_int_cut, LOuAset_cut, LOuAdiff_cut, mV_bias_cut_Y, LOfreq_cut
@@ -45,15 +45,17 @@ mono_switcher_mV = True
 do_regrid_mV     = True
 regrid_mesh_mV   = 0.01
 do_conv_mV       = True
-sigma_mV         = 0.05
+sigma_mV         = 0.03
 min_cdf_mV       = 0.95
-remove_spikes    = True
-do_normspectra   = True
+remove_spikes    = False
+do_normspectra   = False
 norm_freq        = 1.42
 norm_band        = 0.060
 do_freq_conv     = True
 min_cdf_freq     = 0.90
 sigma_GHz        = 0.10
+
+
 
 ######################
 ### Parameter Cuts ###
@@ -82,12 +84,12 @@ mV_bias_max = 1.9 # at most this, None is any
 #######################################
 ###### Yfactor versus everything ######
 #######################################
-do_Yfactor_versus_LO_freq = True
+do_Yfactor_versus_LO_freq = False
 do_Yfactor_versus_magpot  = False
 
 ### Y factor related options
 # analysis options
-do_max_Yfactor = False # False uses the average value for a bandwidth, True uses the maximum
+do_max_Yfactor = False # False uses the average value for a bandwidth (spectral data), True uses the maximum
 min_Y_factor = 0.3
 spec_bands = [0,1,2,3,4,5]#[1.39,1.45]#1.39,1.45]#,4,5]
 
@@ -132,13 +134,72 @@ Y_magpot_legend_size = 10
 Y_magpot_legend_num_of_points = 3
 Y_magpot_legend_loc = 3
 
+########################################
+###### Anything verses Everything ######
+########################################
+do_LOuA_LOmV_AvsE=False
+do_LOuA_LOfreq_AvsE = True
 
+neutral_color_AvsE='Green'
+hot_color_AvsE='firebrick'
+cold_color_AvsE='blue'
+
+show_pairs_AvsE = True
+pair_color_AvsE = 'black'
+pair_AvsE_ls = '-'
+pair_AvsE_linw = 1
+pair_AvsE_alpha = 0.5
+
+show_error_AvsE = False
+error_marker_AvsE = '|'
+error_capsize_AvsE = 1
+error_ls_AvsE = 'None'
+error_linw_AvsE = 1
+
+### dependent variable options
+# LOuA_LOmV
+LOuA_LOmV_AvsE_plotdir = local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/LOuA_LOmV/'))
+
+LOuA_LOmV_AvsE_xlim_list = None#[1.2, 1.4] # None or list of two [645, 695]
+LOuA_LOmV_AvsE_xlabel_str="Voltage (mV)"
+
+LOuA_LOmV_AvsE_ylim_list = None#[0, 25] # None or list of two [645, 695]
+LOuA_LOmV_AvsE_ylabel_str="Current (uA)"
+
+LOuA_LOmV_AvsE_ls = ""
+LOuA_LOmV_AvsE_linw = 3
+LOuA_LOmV_AvsE_fmt = 'o'
+LOuA_LOmV_AvsE_markersize = 5
+LOuA_LOmV_AvsE_alpha = 0.7
+
+LOuA_LOmV_AvsE_legend_size = 10
+LOuA_LOmV_AvsE_legend_num_of_points = 3
+LOuA_LOmV_AvsE_legend_loc = 0
+
+# LOuA_LOfreq
+LOuA_LOfreq_AvsE_plotdir = local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/LOuA_LOfreq/'))
+
+LOuA_LOfreq_AvsE_xlim_list = None#[1.2, 1.4] # None or list of two [645, 695]
+LOuA_LOfreq_AvsE_xlabel_str="LO frequency (GHz)"
+
+LOuA_LOfreq_AvsE_ylim_list = None#[0, 25] # None or list of two [645, 695]
+LOuA_LOfreq_AvsE_ylabel_str="Current (uA)"
+
+LOuA_LOfreq_AvsE_ls = ""
+LOuA_LOfreq_AvsE_linw = 3
+LOuA_LOfreq_AvsE_fmt = 'o'
+LOuA_LOfreq_AvsE_markersize = 5
+LOuA_LOfreq_AvsE_alpha = 0.7
+
+LOuA_LOfreq_AvsE_legend_size = 10
+LOuA_LOfreq_AvsE_legend_num_of_points = 3
+LOuA_LOfreq_AvsE_legend_loc = 0
 
 
 ###########################################
 ###### Intersecting lines Parameters ######
 ###########################################
-do_intersecting_lines    = True
+do_intersecting_lines    = False
 int_lines_plotdir        = local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/intersecting_lines/'))
 
 intersecting_lines_behavior = 'Y_max' #'Y_max','Y_mV_band_ave'
@@ -183,13 +244,22 @@ setnames = []
 #setnames.extend(['Mar24_15/LO_power','Mar24_15/Yfactor_test'])
 #setnames.extend(['Nov05_14/Y_LOfreqMAGLOuA','Nov05_14/Y_MAG','Nov05_14/Y_MAG2','Nov05_14/Y_MAG3','Nov05_14/Y_standard'])
 #setnames.extend(['Oct20_14/LOfreq','Oct20_14/Y_LO_pow','Oct20_14/Y_MAG','Oct20_14/Y_MAG2','Oct20_14'])
-#setnames.extend(['Jun08_15/magSweep','Jun08_15/magSweep2','Jun08_15/magSweep3'])
+#setnames.extend(['Jun08_15/magSweep2','Jun08_15/magSweep3'])
 #setnames.extend(['Jun08_15/newBS_magSweep'])
-setnames.extend(['Jun08_15/LOfreq/657'])
-parent_folder = local_copy('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/')
+# possibleLOfreqs=range(650,693)
+# setnames.extend(['Jun08_15/LOfreq/'+str(freq) for freq in possibleLOfreqs])
+# possibleLOfreqs=range(650,693)
+# setnames.extend(['Jun08_15/bestLOfreq/'+str(freq) for freq in possibleLOfreqs])
+# possibleLOfreqs = [660,664,665,672,677,685]
+# setnames.extend(['Jun08_15/magsweep/'+str(freq) for freq in possibleLOfreqs])
+possibleLOfreqs=range(650,681)
+setnames.extend(['Jun08_15/standingWaveTest6/'+str(freq) for freq in possibleLOfreqs])
+
+
+parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
+fullpaths_raw = [windir(parent_folder + setname + '/') for setname in setnames]
+parent_folder = local_copy(parent_folder)
 fullpaths = [windir(parent_folder + setname + '/') for setname in setnames]
-
-
 print fullpaths
 ### MakeORclear_plotdir ###
 def makeORclear_plotdir(plotdir,clear_flag=clear_old_plots):
@@ -211,7 +281,7 @@ def makeORclear_plotdir(plotdir,clear_flag=clear_old_plots):
 ###### Do data processing ######
 ################################
 if process_data:
-    for fullpath in fullpaths:
+    for fullpath in fullpaths_raw:
         YdataPro(fullpath, verbose=verbose, search_4Ynums=search_4Ynums, search_str=search_str,
                  Ynums=Ynums, use_google_drive=False,
                  useOFFdata=False, Off_datadir='',
@@ -255,15 +325,56 @@ if sort_LOuA:
 if ((mV_bias_min is not None) and (mV_bias_max is not None)):
     Ysweeps = mV_bias_cut_Y(Ysweeps, mV_min=mV_bias_min, mV_max=mV_bias_max, verbose=verbose)
 
+def isNum(testVar):
+    try:
+        float(testVar)
+        return True
+    except:
+        return False
 
-def return_dependent_variable(dependent_variable_str, Ysweep):
-    dependent_variable = False
-    if dependent_variable_str == 'LOfreq':
-        dependent_variable = Ysweep.LOfreq
-    elif  dependent_variable_str == 'magpot':
-        dependent_variable = Ysweep.magpot
 
-    return dependent_variable
+
+def return_variable(variable_str, Ysweep):
+    variable = False
+    variable_std = False
+    if variable_str == 'LOfreq':
+        variable = Ysweep.LOfreq
+        variable_std = None
+    elif  variable_str == 'magpot':
+        variable = Ysweep.magpot
+        variable_std = None
+    elif variable_str == 'SIS_mV':
+            variable = Ysweep.meanSIS_mV
+            variable_std = Ysweep.stdSIS_mV
+    elif variable_str == 'SIS_uA':
+            variable = Ysweep.meanSIS_uA
+            variable_std = Ysweep.stdSIS_uA
+    return variable, variable_std
+
+def split_variable(K_vals,variables,variables_std=None):
+    [K_val1,K_val2] = K_vals
+    [var1,var2] = variables
+    if variables_std is None:
+        var1_std = None
+        var2_std = None
+    else:
+        [var1_std,var2_std] = variables_std
+
+    if ((250 < K_val1) and (K_val2 <= 250)):
+        variable_hot = var1
+        variable_std_hot = var1_std
+        variable_cold = var2
+        variable_std_cold = var2_std
+    elif ((K_val1 < 250) and (250 <= K_val2)):
+        variable_hot = var2
+        variable_std_hot = var2_std
+        variable_cold = var1
+        variable_std_cold = var1_std
+    else:
+        print "something is wrong with the hot/cold data assignment"
+        print 'script killed'
+        sys.exit()
+    return variable_hot, variable_std_hot, variable_cold, variable_std_cold
 
 
 
@@ -305,7 +416,7 @@ def Yfactor_vs(dependent_variable_str,
         pm_max_Yfactor_mV, pm_max_Yfactor = Ysweep.find_max_yfactor_pm()
 
         # get the dependent variable
-        dependent_variable = return_dependent_variable(dependent_variable_str, Ysweep)
+        dependent_variable, dependent_variable_std = return_variable(dependent_variable_str, Ysweep)
 
         if min_Y_factor <= pm_max_Yfactor:
             pm_max_Yfactors.append(pm_max_Yfactor)
@@ -358,7 +469,7 @@ def Yfactor_vs(dependent_variable_str,
                     = Ysweep.find_max_yfactor_spec(min_freq=low_freq,max_freq=high_freq)
 
                 # get the dependent variable
-                dependent_variable = return_dependent_variable(dependent_variable_str, Ysweep)
+                dependent_variable, dependent_variable_std = return_variable(dependent_variable_str, Ysweep)
 
                 if do_max_Yfactor:
                     sa_Yfactor = sa_max_Yfactor
@@ -449,8 +560,298 @@ if any([do_Yfactor_versus_LO_freq, do_Yfactor_versus_magpot]):
 
 
 
+########################################
+###### Anything versus everything ######
+########################################
+
+def anything_vs(independent_variable_str,
+                dependent_variable_str,
+                plotdir,
+                plot_xlim_list=None,
+                xlabel_str=None,
+                plot_ylim_list=None,
+                ylabel_str=None,
+                dVar_ls = "-",
+                dVar_linw = 3,
+                dVar_fmt = 'o',
+                dVar_markersize = 5,
+                dVar_alpha = 1,
+                dVar_legend_size = 10,
+                dVar_legend_num_of_points = 3,
+                dVar_legend_loc = 3):
+    if not os.path.isdir(plotdir): os.mkdir(plotdir)
+    leglines  = []
+    leglabels = []
+
+    fig, ax1 = plt.subplots()
+    if xlabel_str is not None:
+        ax1.set_xlabel(xlabel_str)
+    if ylabel_str is not None:
+        ax1.set_ylabel(ylabel_str)
+    if plot_xlim_list is not None:
+        ax1.set_xlim(plot_xlim_list)
+    if plot_ylim_list is not None:
+        ax1.set_ylim(plot_ylim_list)
 
 
+    independent_variable_hot = []
+    independent_variable_std_hot = []
+    independent_variable_cold = []
+    independent_variable_std_cold = []
+
+    independent_variable = []
+    independent_variable_std = []
+
+    dependent_variable_hot = []
+    dependent_variable_std_hot = []
+    dependent_variable_cold = []
+    dependent_variable_std_cold = []
+
+    dependent_variable = []
+    dependent_variable_std = []
+
+    for Ysweep in Ysweeps:
+        # get the independent variable information
+        indi_vari, indi_vari_std = return_variable(independent_variable_str, Ysweep)
+
+        # there is different beauvoir is the variable has one value or two values (one for hot and one for cold)
+        if isNum(indi_vari):
+             independent_variable.append(indi_vari)
+             if indi_vari_std is not None:
+                 independent_variable_std.append(indi_vari_std)
+        else:
+            variable_hot, variable_std_hot, variable_cold, variable_std_cold \
+                = split_variable(Ysweep.K_val,indi_vari,variables_std=indi_vari_std)
+            independent_variable_hot.append(variable_hot)
+            independent_variable_cold.append(variable_cold)
+            if variable_std_hot is not None:
+                independent_variable_std_hot.append(variable_std_hot)
+            if variable_std_cold is not None:
+                independent_variable_std_cold.append(variable_std_cold)
+
+
+        # get the dependent variable information
+        di_vari, di_vari_std = return_variable(dependent_variable_str, Ysweep)
+
+        # there is different beauvoir is the variable has one value or two values (one for hot and one for cold)
+        if isNum(di_vari):
+             dependent_variable.append(di_vari)
+             if di_vari_std is not None:
+                 dependent_variable_std.append(di_vari_std)
+        else:
+            variable_hot, variable_std_hot, variable_cold, variable_std_cold \
+                = split_variable(Ysweep.K_val,di_vari,variables_std=di_vari_std)
+            dependent_variable_hot.append(variable_hot)
+            dependent_variable_cold.append(variable_cold)
+            if variable_std_hot is not None:
+                dependent_variable_std_hot.append(variable_std_hot)
+            if variable_std_cold is not None:
+                dependent_variable_std_cold.append(variable_std_cold)
+
+
+
+    if ((independent_variable != []) and (dependent_variable != [])):
+        x_vector = dependent_variable
+        y_vector = independent_variable
+        ax1.plot(x_vector, y_vector,
+                 linestyle=dVar_ls,
+                 color=neutral_color_AvsE,
+                 linewidth=dVar_linw,
+                 marker=dVar_fmt,
+                 markersize=dVar_markersize,
+                 markerfacecolor=neutral_color_AvsE, alpha=dVar_alpha)
+        if dependent_variable_std != []:
+            x_error = dependent_variable_std
+            ax1.errorbar(x_vector, y_vector, xerr=x_error,
+                             marker='|',color=color, capsize=1, linestyle='None', elinewidth=dVar_linw)
+
+        leglines.append(plt.Line2D(range(10), range(10),
+                                   color=neutral_color_AvsE,
+                                   ls=dVar_ls,
+                                   linewidth=dVar_linw,
+                                   marker=dVar_fmt,
+                                   markersize=dVar_markersize,
+                                   markerfacecolor=neutral_color_AvsE,
+                                   alpha=dVar_alpha))
+        leglabels.append(independent_variable_str+"_"+dependent_variable_str)
+    else:
+        ### HOT ###
+        if (dependent_variable != []):
+            x_vectorHot = dependent_variable
+            if dependent_variable_std == []:
+                x_error_hot = None
+            else:
+                x_error_hot = dependent_variable_std
+        else:
+            x_vectorHot = dependent_variable_hot
+            if dependent_variable_std_hot == []:
+                x_error_hot = None
+            else:
+                x_error_hot = dependent_variable_std_hot
+
+        if (independent_variable != []):
+            y_vectorHot = independent_variable
+            if independent_variable_std == []:
+                y_error_hot = None
+            else:
+                y_error_hot = independent_variable_std
+        else:
+            y_vectorHot = independent_variable_hot
+            if independent_variable_std_hot == []:
+                y_error_hot = None
+            else:
+                y_error_hot = independent_variable_std_hot
+        ax1.plot(x_vectorHot, y_vectorHot,
+                 linestyle=dVar_ls,
+                 color=hot_color_AvsE,
+                 linewidth=dVar_linw,
+                 marker=dVar_fmt,
+                 markersize=dVar_markersize,
+                 markerfacecolor=hot_color_AvsE, alpha=dVar_alpha)
+
+        if (((y_error_hot is not None) or (x_error_hot is not None)) and (show_error_AvsE)):
+            ax1.errorbar(x_vectorHot, y_vectorHot,
+                         xerr=x_error_hot,yerr=y_error_hot,
+                         marker=error_marker_AvsE,
+                         color=cold_color_AvsE,
+                         capsize=error_capsize_AvsE,
+                         linestyle=error_ls_AvsE,
+                         elinewidth=error_linw_AvsE)
+
+        leglines.append(plt.Line2D(range(10), range(10),
+                                   color=hot_color_AvsE,
+                                   ls=dVar_ls,
+                                   linewidth=dVar_linw,
+                                   marker=dVar_fmt,
+                                   markersize=dVar_markersize,
+                                   markerfacecolor=hot_color_AvsE,
+                                   alpha=dVar_alpha))
+        leglabels.append(independent_variable_str+" vs "+dependent_variable_str+' hot')
+
+        ### COLD ###
+        if (dependent_variable != []):
+            x_vectorCold = dependent_variable
+            if dependent_variable_std == []:
+                x_error_cold = None
+            else:
+                x_error_cold = dependent_variable_std
+        else:
+            x_vectorCold = dependent_variable_cold
+            if dependent_variable_std_cold == []:
+                x_error_cold = None
+            else:
+                x_error_cold = dependent_variable_std_cold
+
+        if (independent_variable != []):
+            y_vectorCold = independent_variable
+            if independent_variable_std == []:
+                y_error_cold = None
+            else:
+                y_error_cold = independent_variable_std
+        else:
+            y_vectorCold = independent_variable_cold
+            if independent_variable_std_cold == []:
+                y_error_cold = None
+            else:
+                y_error_cold = independent_variable_std_cold
+        ax1.plot(x_vectorCold, y_vectorCold,
+                 linestyle=dVar_ls,
+                 color=cold_color_AvsE,
+                 linewidth=dVar_linw,
+                 marker=dVar_fmt,
+                 markersize=dVar_markersize,
+                 markerfacecolor=cold_color_AvsE, alpha=dVar_alpha)
+
+        if (((y_error_cold is not None) or (x_error_cold is not None)) and (show_error_AvsE)):
+            ax1.errorbar(x_vectorCold, y_vectorCold,
+                         xerr=x_error_cold,yerr=y_error_cold,
+                         marker=error_marker_AvsE,
+                         color=hot_color_AvsE,
+                         capsize=error_capsize_AvsE,
+                         linestyle=error_ls_AvsE,
+                         elinewidth=error_linw_AvsE)
+        leglines.append(plt.Line2D(range(10), range(10),
+                                   color=cold_color_AvsE,
+                                   ls=dVar_ls,
+                                   linewidth=dVar_linw,
+                                   marker=dVar_fmt,
+                                   markersize=dVar_markersize,
+                                   markerfacecolor=cold_color_AvsE,
+                                   alpha=dVar_alpha))
+        leglabels.append(independent_variable_str+" vs "+dependent_variable_str+' cold')
+
+        if show_pairs_AvsE:
+            list_len = len(x_vectorHot)
+            for index in range(list_len):
+                hotX = x_vectorHot[index]
+                hotY = y_vectorHot[index]
+                coldX = x_vectorCold[index]
+                coldY = y_vectorCold[index]
+                ax1.plot([hotX,coldX], [hotY,coldY],
+                         linestyle=pair_AvsE_ls,
+                         color=pair_color_AvsE,
+                         linewidth=pair_AvsE_linw,
+                         alpha=pair_AvsE_alpha)
+            leglines.append(plt.Line2D(range(10), range(10),
+                                       color=pair_color_AvsE,
+                                       ls=pair_AvsE_ls,
+                                       linewidth=pair_AvsE_linw,
+                                       alpha=pair_AvsE_alpha))
+            leglabels.append(independent_variable_str+" vs "+dependent_variable_str+' pair line')
+
+
+
+
+
+
+
+    # stuff to make the final plot look good
+    matplotlib.rcParams['legend.fontsize'] = dVar_legend_size
+    plt.legend(tuple(leglines),tuple(leglabels),
+               numpoints=dVar_legend_num_of_points,
+               loc=dVar_legend_loc)
+
+    plt.savefig(plotdir+independent_variable_str+"_"+dependent_variable_str+".png")
+    plt.close('all')
+    return
+
+
+
+
+
+if any([do_LOuA_LOmV_AvsE,do_LOuA_LOfreq_AvsE]):
+    if do_LOuA_LOmV_AvsE:
+        anything_vs(independent_variable_str='SIS_uA',
+                    dependent_variable_str='SIS_mV',
+                    plotdir=LOuA_LOmV_AvsE_plotdir,
+                    plot_xlim_list=LOuA_LOmV_AvsE_xlim_list,
+                    xlabel_str=LOuA_LOmV_AvsE_xlabel_str,
+                    plot_ylim_list=LOuA_LOmV_AvsE_ylim_list,
+                    ylabel_str=LOuA_LOmV_AvsE_ylabel_str,
+                    dVar_ls = LOuA_LOmV_AvsE_ls,
+                    dVar_linw = LOuA_LOmV_AvsE_linw,
+                    dVar_fmt = LOuA_LOmV_AvsE_fmt,
+                    dVar_markersize = LOuA_LOmV_AvsE_markersize,
+                    dVar_alpha = LOuA_LOmV_AvsE_alpha,
+                    dVar_legend_size = LOuA_LOmV_AvsE_legend_size,
+                    dVar_legend_num_of_points = LOuA_LOmV_AvsE_legend_num_of_points,
+                    dVar_legend_loc = LOuA_LOmV_AvsE_legend_loc)
+    if do_LOuA_LOfreq_AvsE:
+        anything_vs(independent_variable_str='SIS_uA',
+                    dependent_variable_str='LOfreq',
+                    plotdir=LOuA_LOfreq_AvsE_plotdir,
+                    plot_xlim_list=LOuA_LOfreq_AvsE_xlim_list,
+                    xlabel_str=LOuA_LOfreq_AvsE_xlabel_str,
+                    plot_ylim_list=LOuA_LOfreq_AvsE_ylim_list,
+                    ylabel_str=LOuA_LOfreq_AvsE_ylabel_str,
+                    dVar_ls = LOuA_LOfreq_AvsE_ls,
+                    dVar_linw = LOuA_LOfreq_AvsE_linw,
+                    dVar_fmt = LOuA_LOfreq_AvsE_fmt,
+                    dVar_markersize = LOuA_LOfreq_AvsE_markersize,
+                    dVar_alpha = LOuA_LOfreq_AvsE_alpha,
+                    dVar_legend_size = LOuA_LOfreq_AvsE_legend_size,
+                    dVar_legend_num_of_points = LOuA_LOfreq_AvsE_legend_num_of_points,
+                    dVar_legend_loc = LOuA_LOfreq_AvsE_legend_loc)
 
 
 

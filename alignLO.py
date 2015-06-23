@@ -14,11 +14,11 @@ sleep_time  =  1.0
 
 reset       = True  # there is no need to keep adjusting the magnet, sis voltage, and UCA voltage if you
                     # are doing multiple runs
-do_rawinput = False
+do_rawinput = True
 
 turn_off    = False
 magpot      = 100000 # pot position
-pot_sis     = default_sispot
+pot_sis     = 59100# default_sispot
 UCA_voltage =  0 # in Volts
 LOfreq_list =  [655,656,657,679,684]#list(range(650,655 )) # in GHz
 
@@ -170,12 +170,12 @@ for LOfreq in LOfreq_list:
         print MAX
         print " "
         time.sleep(sleep_time)
-
-    raw_input_var = \
-        raw_input('Current Frequency: '+str(LOfreq)+' GHz.\n'\
-                  'Press enter to continue or type ant text to exit')
-    if raw_input_var != '':
-        break
+    if do_rawinput:
+        raw_input_var = \
+            raw_input('Current Frequency: '+str(LOfreq)+' GHz.\n'\
+                      'Press enter to continue or type ant text to exit')
+        if raw_input_var != '':
+            break
 
 closetelnet()
 if turn_off:

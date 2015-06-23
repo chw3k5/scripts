@@ -1026,9 +1026,10 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
     yscale = abs(ylimR2 - ylimL2)
 
     ### Parameter Colors
+    K_val_color       = 'firebrick'
     LOpwr_color       = 'dodgerblue'
     mag_color         = 'coral'
-    LOfreq_color      = 'thistle'
+    LOfreq_color      = 'DarkOrchid'
     IFband_color      = 'aquamarine'
     TP_int_time_color = 'darkgreen'
 
@@ -1255,6 +1256,10 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                                  der1_int=der1_int, do_der1_conv=do_der1_conv, der1_min_cdf=der1_min_cdf, der1_sigma=der1_sigma,
                                  der2_int=der2_int, do_der2_conv=do_der2_conv, der2_min_cdf=der2_min_cdf, der2_sigma=der2_sigma,
                                  verbose=verbose)
+            plot_list, leglines_junk, leglabels_junk \
+                = xyplotgen(mV_Yfactor, mV_Yfactor*0+1, label='',
+                             plot_list=plot_list, leglines=leglines, leglabels=leglabels,
+                            color=Yfactor_color, linw=1, ls='-', scale_str='Yf' )
             if ax2_scaling[1] == 'Yf':
                 ax2_plot_list = plot_list
             else:
@@ -1534,6 +1539,10 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                 ypos = ylimR2+y_margin_top*y2size - yincrement
             else:
                 ypos = ylimR1+y_margin_top*y1size  - yincrement
+            if K_val is not None:
+                K_val_str = Params_2_str(K_val, '%3.0f')
+                plt.text(xpos, ypos, K_val_str + " K", color = K_val_color)
+                ypos -= yincrement
             if LOuAset is not None:
                 LOuAset_str = Params_2_str(LOuAset, '%2.3f')
                 plt.text(xpos, ypos, LOuAset_str + " uA LO", color = LOpwr_color)
@@ -1543,7 +1552,7 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                 plt.text(xpos, ypos, UCA_volt_str + " V  UCA", color = LOpwr_color)
                 ypos -= yincrement
             if meanSIS_mV is not None:
-                meanSIS_mV_str = Params_2_str(meanSIS_mV, '%2.2f')
+                meanSIS_mV_str = Params_2_str(meanSIS_mV, '%2.3f')
                 if stdSIS_mV is not None:
                     stdSIS_mV_str = Params_2_str(stdSIS_mV, '%2.2f', 'round')
                     plt.text(xpos, ypos, meanSIS_mV_str + " " + stdSIS_mV_str + " mV", color = LOpwr_color)

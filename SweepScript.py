@@ -12,7 +12,7 @@ from profunc import windir
 ### For Y factor sweeps ###
 ###########################
 ### For Y-factor data and Sweeps ###
-do_Ysweeps              = False
+do_Ysweeps              = True
 do_YdataPro             = True
 do_YfactotSweepsPlotter = True
 do_YSpectra_Plotter     = False
@@ -26,17 +26,21 @@ warning  = False
 
 parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
 
-LOfreq_list=[660,661,662,663,664,665,666,667,668,669,
-            670,671,672,673,674,675,676,677,678,679,
-            680,681,682,683,684,685,686,687,688,
-            690]
-            # [650,        653,654,655,656,657,658,659,
+
+
+            #                                     659,
+            # 660,661,    663,664,        667,668,669,
+            # 670,671,672,673,674,675,        678,
+            # 680,681]
+            # ,682,683,684,685,686,687,688,
+            # 690]
+
+
             # 660,661,662,663,664,665,666,667,668,669,
             # 670,671,672,673,674,675,676,677,678,679,
             # 680,681,682,683,684,685,686,687,688,
-            # 690]
-# LOfreq_list=list(range(650,655,1))
-
+            # 690,691,692
+LOfreq_list=range(650,693)
 for LOfreq in LOfreq_list:
     # The directory what the data is kept
     setnames = []
@@ -45,7 +49,7 @@ for LOfreq in LOfreq_list:
     # setnames.extend(['Mar24_15/LO_power','Mar24_15/Yfactor_test'])
     # setnames.extend(['Nov05_14/Y_LOfreqMAGLOuA','Nov05_14/Y_MAG','Nov05_14/Y_MAG2','Nov05_14/Y_MAG3','Nov05_14/Y_standard'])
     # setnames.extend(['Oct20_14/LOfreq','Oct20_14/Y_LO_pow','Oct20_14/Y_MAG','Oct20_14/Y_MAG2','Oct20_14'])
-    thisRun = 'Jun08_15/LOfreq/'+str(int(LOfreq))+'/'
+    thisRun = 'Jun08_15/standingWaveTest6/'+str(int(LOfreq))+'/'
     setnames.extend([thisRun])
     datadir = parent_folder + thisRun
 
@@ -66,12 +70,14 @@ for LOfreq in LOfreq_list:
               do_sisVsweep=False, sisV_feedback=True, high_res_meas=5,
               sisVsweep_start=1.5, sisVsweep_stop=2.25, sisVsweep_step=0.1,
               sisVsweep_list=[0.5,0.55,0.6,0.65,0.7,0.75],
-              sisPot_feedTrue_start=58000, sisPot_feedTrue_stop=54000, sisPot_feedTrue_step=200,
-              sisPot_feedTrue_list=[63518,  63140, 62762, 62384,
-                                    62006,  61628, 61250, 60872,
-                                    60393,  59924, 59461, 59039,
-                                    58549,  58111, 57638, 57173,
-                                    56775],
+              sisPot_feedTrue_start=70000, sisPot_feedTrue_stop=54000, sisPot_feedTrue_step=200,
+              sisPot_feedTrue_list=[63518,62006,60393,58549,56775],
+
+              # [63518,  63140, 62762, 62384,
+              #                       62006,  61628, 61250, 60872,
+              #                       60393,  59924, 59461, 59039,
+              #                       58549,  58111, 57638, 57173,
+              #                       56775],
 
 
 
@@ -93,11 +99,11 @@ for LOfreq in LOfreq_list:
               do_magisweep=False, mag_meas=10,
               magisweep_start=50, magisweep_stop=39, magisweep_step=-1,
               magisweep_list=[55],
-              magpotsweep_start=100000, magpotsweep_stop=65000-1, magpotsweep_step=-5000,
+              magpotsweep_start=110000, magpotsweep_stop=75000-1, magpotsweep_step=-1000,
               magpotsweep_list=[100000],
 
               do_LOuAsearch=False, do_LOuApresearch=False, LOuA_search_every_sweep=True,
-              UCA_meas=10,
+              UCA_meas=40,
               UCAsweep_min=0.00, UCAsweep_max=0.00, UCAsweep_step=0.05,
               UCAsweep_list=[0],
               LOuAsearch_start=30, LOuAsearch_stop=11, LOuAsearch_step=-1,
@@ -120,11 +126,12 @@ for LOfreq in LOfreq_list:
             search4Ynums = False
 
         if do_YdataPro:
-            YdataPro(datadir, verbose=True, search_4Ynums=search4Ynums, search_str='Y', Ynums=Ynums,
+            YdataPro(datadir, verbose=True, search_4Ynums=search4Ynums, removeOldProData=True,
+                     search_str='Y', Ynums=Ynums,
                      use_google_drive=use_google_drive,
                      useOFFdata=False, Off_datadir='',
-                     mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.1,
-                     do_conv_mV=True, sigma_mV=0.05, min_cdf_mV=0.95,
+                     mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01,
+                     do_conv_mV=True, sigma_mV=0.03, min_cdf_mV=0.95,
                      remove_spikes=True, do_normspectra=True,
                      regrid_mesh_mV_spec=0.2, norm_freq=norm_freq, norm_band=norm_band,
                      do_freq_conv=True, min_cdf_freq=0.90, sigma_GHz=0.10)
@@ -142,7 +149,7 @@ for LOfreq in LOfreq_list:
                                  plot_mVuA=True, plot_mVtp=True, plot_Yfactor=True, plot_Ntemp=False,
                                  find_lin_mVuA=False, find_lin_mVtp=False, find_lin_Yf=False,
                                  plot_fastmVuA=True, plot_fastmVtp=False, plot_fastmVpot=False,
-                                 hotfast_find_lin_mVuA=False, coldfast_find_lin_mVuA=False,
+                                 hotfast_find_lin_mVuA=True, coldfast_find_lin_mVuA=False,
                                  plot_unpumpmVuA=True, plot_unpumpmVtp=False, plot_unpumpmVpot=False,
                                  hotunpumped_find_lin_mVuA=True, coldunpumped_find_lin_mVuA=False,
                                  linif=0.3, der1_int=1, do_der1_conv=True, der1_min_cdf=0.95, der1_sigma=0.03,
@@ -156,5 +163,6 @@ for LOfreq in LOfreq_list:
                               find_best_Yfactors=True,
                               verbose=True,display_params=True,
                               show_plot=False, save_plot=True, do_eps=False)
+
 
 

@@ -755,7 +755,8 @@ def SweepDataPro(datadir, verbose=False, search_4Sweeps=True, search_str='Y', Sn
 
     return
 
-def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[], use_google_drive=True,
+def YdataPro(datadir, verbose=False, search_4Ynums=True, removeOldProData=False,
+             search_str='Y', Ynums=[], use_google_drive=True,
              useOFFdata=False, Off_datadir='',
              mono_switcher_mV=True, do_regrid_mV=True, regrid_mesh_mV=0.01,
              do_conv_mV=False, sigma_mV=0.03, min_cdf_mV=0.95,
@@ -772,11 +773,11 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, search_str='Y', Ynums=[
         prodatadir = local_copy(prodatadir)
     prodatadir = windir(prodatadir)
     if os.path.isdir(prodatadir):
-        None
-        # remove old processed data
-        #shutil.rmtree(prodatadir)
-        # make a folder for new processed data
-        #os.makedirs(prodatadir)
+        if removeOldProData:
+            # remove old processed data
+            shutil.rmtree(prodatadir)
+            # make a folder for new processed data
+            os.makedirs(prodatadir)
     else:
         # make a folder for new processed data
         os.makedirs(prodatadir)

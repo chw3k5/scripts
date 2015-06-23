@@ -262,6 +262,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
         from StepperControl import initialize, GoForth, GoBack, DisableDrive, stepper_close
     from control import default_sispot, default_magpot
 
+    sleepForStandMeas = 5
     stepper_vel = 0.5
     stepper_accel = 1
     forth_dist = 0.25
@@ -705,10 +706,12 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
                 # measure the SIS junction
                 if not sisPot_actual == default_sispot:
                     setSIS_only(default_sispot, feedback_actual, verbose, careful)
+                    time.sleep(sleepForStandMeas)
                     sisPot_actual = default_sispot
                 if verboseSet: sismsg(sisPot_actual)
                 for meas_index in range(UCA_meas):
-                    sismV_actual, sisuA_actual, sistp, sisPot_actual, time_stamp = measSIS_TP(default_sispot, feedback_actual, verbose, careful)
+                    sismV_actual, sisuA_actual, sistp, sisPot_actual, time_stamp \
+                        = measSIS_TP(default_sispot, feedback_actual, verbose, careful)
                     mV_LO_list.append(sismV_actual)
                     uA_LO_list.append(sisuA_actual)
                     tp_LO_list.append(sistp)

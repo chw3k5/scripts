@@ -7,7 +7,7 @@ from LabJack_control import LJ_streamTP
 
 extra_sleep_fraction = 0.05 # fraction of the total sweep time to add to waiting time for a singe sweep
 extra_sleep_float    = 1.0  # seconds added to total sweep time
-min_sleep_time       = 2.9
+min_sleep_time       = 10
 
 GPIB_str = "GPIB0::5::INSTR"
 
