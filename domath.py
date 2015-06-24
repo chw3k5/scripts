@@ -218,7 +218,7 @@ def regrid(data, mesh, verbose):
 ##################
 def conv(data, mesh, min_cdf, sigma, verbose):
     status = False
-    if ((not verbose == 'Y') or (not verbose == 'T') or (verbose == True)):
+    if verbose:
         print 'Doing convolution of data cdf = ' + str(min_cdf) + '  sigma = ' +str(sigma)
     sigmaSteps=math.ceil(sigma/mesh) # unitless, rounded up to nearest integer
     # Normal Kernel Calculation

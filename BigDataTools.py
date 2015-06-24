@@ -37,7 +37,7 @@ do_eps          = True
 
 
 # data processing
-process_data  = False
+process_data  = True
 Ynums         = None
 search_str    = 'Y'
 search_4Ynums = True

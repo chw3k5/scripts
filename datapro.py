@@ -418,7 +418,17 @@ def GetSpecData(datadir, specdataname, remove_spikes=False,
             freq = regrid_data[:,0]
             pwr  = regrid_data[:,1]
 
-            ### Normalization of spectrum analyzer data to that of the filtered power meter.
+
+
+            if do_freq_conv:
+                data_matrix = numpy.zeros((len(freq),2))
+                data_matrix[:,0]=freq
+                data_matrix[:,1]=pwr
+                conv_data, status = conv(data_matrix, freq_mesh, min_cdf_freq, sigma_GHz, verbose)
+                freq = conv_data[:,0]
+                pwr  = conv_data[:,1]
+
+                        ### Normalization of spectrum analyzer data to that of the filtered power meter.
             if do_norm:
                 inband_spec_pwr = []
                 # Find normalization band indexes
@@ -437,14 +447,6 @@ def GetSpecData(datadir, specdataname, remove_spikes=False,
                     ave_inband_spec_pwr = numpy.mean(inband_spec_pwr)
                     norm_scale = numpy.mean(tp)/ave_inband_spec_pwr
                     pwr=(pwr*norm_scale)
-
-            if do_freq_conv:
-                data_matrix = numpy.zeros((len(freq),2))
-                data_matrix[:,0]=freq
-                data_matrix[:,1]=pwr
-                conv_data, status = conv(data_matrix, freq_mesh, min_cdf_freq, sigma_GHz, verbose)
-                freq = conv_data[:,0]
-                pwr  = conv_data[:,1]
 
             spec_data_list_temp.append((freq,pwr,pot,mV_mean,tp,spike_list,spikes_inband,sweep_index))
             # save this processed data for analysis and plotting
