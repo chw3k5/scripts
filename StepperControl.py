@@ -67,12 +67,18 @@ if serial_port == '':
 SleepTime = 1.3
 initialize_sleep = 5
 
-st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1, timeout=2)
+
 
 
 ##################################
 ###### Standard Definitions ######
 ##################################
+def EnableDrive():
+    global st
+    st = serial.Serial(port=serial_port, baudrate=9600, bytesize=8, stopbits=1, timeout=2)
+    return
+
+
 
 def DisableDrive():
     # Disable drive

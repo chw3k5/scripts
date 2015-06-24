@@ -1,4 +1,4 @@
-import sys
+import sys, visa
 #freq = 0.0 # in GHz
 low_freq  = 13.541 # in GHz
 high_freq = 14.417 # in GHz
@@ -18,7 +18,6 @@ try:
         sa.write('FREQ:MODE CW')
         ampl = 18.5 # in dBm
 except:
-    pass
     print "There was some problem with VISA or communicating with the spectrum analyzer, look in LOinput.py"
 
 
@@ -102,4 +101,4 @@ if __name__ == "__main__":
     #     sleep(1)
     rfon()
     setfreq(657)
-    #rfoff()
+    rfoff()

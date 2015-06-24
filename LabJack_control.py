@@ -10,7 +10,7 @@
     #
 
 
-    #  lj.open(self, firstFound = True, serial = None, localId = None, devNumber = None, handleOnly = False, LJSocket = None)
+    #  LabJack.open(self, firstFound = True, serial = None, localId = None, devNumber = None, handleOnly = False, LJSocket = None)
 
     # configU3(self, LocalID = None, TimerCounterConfig = None, FIOAnalog = None, FIODirection = None, FIOState = None, EIOAnalog = None, EIODirection = None, EIOState = None, CIODirection = None, CIOState = None, DAC1Enable = None, DAC0 = None, DAC1 = None, TimerClockConfig = None, TimerClockDivisor = None, CompatibilityOptions = None )
 
@@ -33,10 +33,7 @@
 ##############################################
 ##############################################
 import time,os
-from sys import platform
-
 import u3
-
 # Caleb's programs
 from profunc import windir
 #########################
@@ -50,6 +47,18 @@ Resolution = 0 # 0,1,2, or 3 () is highest resolution, 3 is the lowest)
 # max measurments
 loop_max = 3600 # in loop number, big sets of data have to be broken into several packets per time
 
+
+def enableLabJack():
+    global LabJack
+    LabJack = u3.U3()        # initialize the interface; assumes a single U3 is plugged in to a USB port
+    return
+
+def disableLabJack():
+    LabJack.close()
+    return
+
+
+
 ############################
 ###### LabJackU3_DAQ0 ######
 ############################
@@ -57,9 +66,7 @@ loop_max = 3600 # in loop number, big sets of data have to be broken into severa
 def LabJackU3_DAQ0(UCA_voltage):
     status = False
     if (0 <= UCA_voltage) and (UCA_voltage <= 5):
-        lj = u3.U3()
-        lj.writeRegister(5000, UCA_voltage)
-        lj.close()
+        LabJack.writeRegister(5000, UCA_voltage)
         status = True
     else:
         print "UCA_voltage was not set properly, it was either greater than 5, less than 0, or not a number. UCA_voltage = "+str(UCA_voltage)+". Returning Status false"
@@ -71,9 +78,7 @@ def LabJackU3_DAQ0(UCA_voltage):
 ############################
 
 def LabJackU3_AIN0():
-    lj = u3.U3()
-    tp = lj.getAIN(0)
-    lj.close()
+    tp = LabJack.getAIN(0)
     return tp
 
 
@@ -94,34 +99,33 @@ def LJ_streamTP(filename, SampleFrequency, SampleTime, verbose):
     # sets the accuracy of the data. The smaller the number, the better
     # the accuracy, but the slower the sampling rate must be. See
     # http://labjack.com/support/u3/users-guide/3.2 for details.
-    from oldscripts.LabJack_config import wavenames
-    if platform == 'win32':
-        filename = windir(filename)
-    # Prepare the u3 interface for streaming
 
-    d = u3.U3()        # initialize the interface; assumes a single U3 is plugged in to a USB port
-    d.configU3()    # set default configuration
-    d.configIO( FIOAnalog = 1 )        # ask for analog inputs
+    from oldscripts.LabJack_config import wavenames
+    filename = windir(filename)
+    # Prepare the u3 interface for streaming
+    # it should be opened already # LabJack = u3.U3()
+    LabJack.configU3()    # set default configuration
+    LabJack.configIO( FIOAnalog = 1 )        # ask for analog inputs
 
     # In case the stream was left running from a previous execution
-    try: d.streamStop()
+    try: LabJack.streamStop()
     except: pass
 
 
-    d.streamConfig( NumChannels = NumChannels,
+    LabJack.streamConfig( NumChannels = NumChannels,
         PChannels = range(NumChannels),
         NChannels = [ 31 for x in range(NumChannels) ],
         Resolution = Resolution,
         SampleFrequency = SampleFrequency )
 
-    #d.packetsPerRequest = 1000
+    #LabJack.packetsPerRequest = 1000
 
     # Try to measure a data set.
     def measure():
         try:
-            for r in d.streamData():
+            for r in LabJack.streamData():
                 if r is not None:
-                    if r['errors'] or r['numPackets'] != d.packetsPerRequest or r['missed']:
+                    if r['errors'] or r['numPackets'] != LabJack.packetsPerRequest or r['missed']:
                         print "error: errors = '%s', numpackets = %d, missed = '%s'" % (r['errors'], r['numPackets'], r['missed'])
                     break
         finally:
@@ -141,7 +145,7 @@ def LJ_streamTP(filename, SampleFrequency, SampleTime, verbose):
             f.write( '\t'.join(wavenames) + '\n')
 
     # start the stream
-    d.streamStart()
+    LabJack.streamStart()
     loop = 0
 
     try:
@@ -161,7 +165,6 @@ def LJ_streamTP(filename, SampleFrequency, SampleTime, verbose):
                 print( "[%.4d %.2f s]" % (loop, diff_time))
 
     finally:
-        d.streamStop()
-        d.close()
+        LabJack.streamStop()
     return
 

@@ -252,7 +252,7 @@ setnames = []
 # setnames.extend(['Jun08_15/bestLOfreq/'+str(freq) for freq in possibleLOfreqs])
 # possibleLOfreqs = [660,664,665,672,677,685]
 # setnames.extend(['Jun08_15/magsweep/'+str(freq) for freq in possibleLOfreqs])
-possibleLOfreqs=range(650,681)
+possibleLOfreqs=range(650,693)
 setnames.extend(['Jun08_15/standingWaveTest6/'+str(freq) for freq in possibleLOfreqs])
 
 

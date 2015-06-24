@@ -141,9 +141,6 @@ def makeparamslist_center(lists):
         ordered_list = order_lists_around_center(a_list)
         #ordered_lists.ordered
 
-
-
-
     return master_lists
 
 def fbmsg(feedback):
@@ -217,7 +214,7 @@ def IFmsg(IFband):
 
 
 def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=False,
-              testmode=False, warmmode=False, do_set_mag_highlow=False, turnRFoff=True,
+              testMode=False, warmmode=False, do_set_mag_highlow=False, turnRFoff=True,
               do_fastsweep=False, do_unpumpedsweep=False, fastsweep_feedback=False,
               SweepStart_feedTrue=65000, SweepStop_feedTrue=52000, SweepStep_feedTrue=100,
               SweepStart_feedFalse=65100, SweepStop_feedFalse=57000, SweepStep_feedFalse=100,
@@ -255,10 +252,10 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
 
               sweepShape="rectangular",
               FinishedEmail=False, FiveMinEmail=False, PeriodicEmail=False,
-              seconds_per_email=1200, chopper_off=False, do_LOuApresearch=True, biastestmode=False,
+              seconds_per_email=1200, chopper_off=False, do_LOuApresearch=True, biasOnlyMode=False,
               warning=False):
 
-    if ((not testmode) and (not chopper_off)):
+    if ((not testMode) and (not chopper_off)):
         from StepperControl import initialize, GoForth, GoBack, DisableDrive, stepper_close
     from control import default_sispot, default_magpot
 
@@ -274,12 +271,12 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
     ###### Connect to the THz bias Computer ######
     ##############################################
 
-    if not testmode:
+    if not testMode:
         opentelnet()
 
     #try:
 
-    if biastestmode==True:
+    if biasOnlyMode==True:
         do_LOuAsearch    = False
         do_LOuApresearch = False
 
@@ -316,7 +313,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
     #### make the parameter lists from user specified parameters
     # SIS bias
     # set feedback for the script here
-    if testmode:
+    if testMode:
         do_sisVsweep = False
         do_magisweep = False
         do_LOuAsearch = False
@@ -398,8 +395,8 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
             magpot_list = magpotsweep_list
 
     # LO Frequency
-    if biastestmode:
-        LOfreq_list = ['biastestmode']
+    if biasOnlyMode:
+        LOfreq_list = ['biasOnlyMode']
     else:
         if LOfreqs_list is None:
             LOfreq_list = list(makeLists(LOfreq_start, LOfreq_stop, LOfreq_step))
@@ -412,9 +409,9 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
             print "do_LOuApresearch was changes to be False since the list of frequencies for this data run is greater than 1"
 
     # LO power
-    if biastestmode:
-        UCA_list  = ['biastestmode']
-        LOuA_list = ['biastestmode']
+    if biasOnlyMode:
+        UCA_list  = ['biasOnlyMode']
+        LOuA_list = ['biasOnlyMode']
     elif (do_LOuAsearch and do_LOuApresearch):
         if verboseTop:
             print "Finding SIS pot positions for each SIS current in 'LOuA_list'."
@@ -462,8 +459,8 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
         raw_input("Press Enter to continue, you have been warned")
 
     # IF bandwidth Center
-    if biastestmode:
-        IFband_list = ['biastestmode']
+    if biasOnlyMode:
+        IFband_list = ['biasOnlyMode']
     else:
         IFband_list = makeLists(IFband_start, IFband_stop, IFband_step)
     # fast and unpumped sweep settings
@@ -519,7 +516,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
     # if 300 K and 77 K measurements are being made, give files a Y number to make them easy to find as pairs
     if ( (min(K_list) < 90) and (250 < max(K_list)) ):
         do_Ynum = True
-        if ((not testmode) and (not chopper_off)):
+        if ((not testMode) and (not chopper_off)):
             initialize(vel=stepper_vel, accel=stepper_accel, verbose=verbose) # To start the chopper
         # this triggers the Y factor folder to be created
         Y_trigger = K_list[0]
@@ -568,7 +565,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
 
     ### Turn on the LO input power
     safe_freq = 672 # GHz
-    if (((not testmode) or (not warmmode)) and (not biastestmode)):
+    if (((not testMode) or (not warmmode)) and (not biasOnlyMode)):
         # make sure the LO input from the signal generator is turned 'on' and and is set to a safe frequency
         setfreq(safe_freq) # a safe frequency
         RFon()
@@ -578,7 +575,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
 
 
     ### Set the trigger (for certain parameters that are only collected for single time during a bias sweep)
-    sisVsweep_trigger = master_sisPot_list[0]
+    sisVsweep_trigger = sisPot_list[-1]
     first_loop = True
 
     ####################################################
@@ -614,7 +611,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
         # Move the chopper K_list (if needed)
         if not (K_thisloop == K_actual):
             if do_Ynum:
-                if ((not testmode) and (not first_loop)):
+                if ((not testMode) and (not first_loop)):
                     if  K_actual <= 150:
                         GoForth(dist=forth_dist)
                     elif 150 < K_actual:
@@ -632,7 +629,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
         # Set UCA Voltage for the LO (if needed)
         if doing_UCA_list: # UCA values are set
             if not (UCA_thisloop == UCA_actual):
-                if ((not testmode) and (not biastestmode)):
+                if ((not testMode) and (not biasOnlyMode)):
                     status = LabJackU3_DAQ0(UCA_thisloop)
                     if verboseSet:
                         UCAmsg(UCA_actual)
@@ -645,7 +642,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
             if ((not (LOuA_thisloop == LOuA_actual)) or ((LOuA_search_every_sweep) and (sisVsweep_trigger == sisPot_thisloop) and (K_actual>200))):
                 # if this if statement is true that the LO power will get set at the Set LO frequency below
                 if ((LOfreq_thisloop == LOfreq_actual)):
-                    if ((not testmode) and (not biastestmode)):
+                    if ((not testMode) and (not biasOnlyMode)):
                         UCA_thisloop, deriv_uA_UCAvoltage = LO_PID(uA_set=LOuA_thisloop, feedback=feedback_actual, verbose=verbose)
                         magpot_actual = default_magpot
                         sisPot_actual = default_sispot
@@ -669,7 +666,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
 
         # Set the LO frequency (if needed)
         if (not (LOfreq_thisloop == LOfreq_actual)):
-            if ((not testmode) and (not biastestmode)):
+            if ((not testMode) and (not biasOnlyMode)):
                 setfreq(LOfreq_thisloop)
             else:
                 print "Testmode is on, pretending to set frequency to ", LOfreq_thisloop
@@ -684,7 +681,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
                 print "Setting to LO frequency to", str_val, "GHz"
 
             if not doing_UCA_list:
-                if not testmode:
+                if not testMode:
                     UCA_thisloop, deriv_uA_UCAvoltage = LO_PID(uA_set=LOuA_thisloop, feedback=feedback_actual, verbose=verbose)
                 else:
                     print "Testmode is on, predending to search for the LO current"
@@ -702,7 +699,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
             tp_LO_list     = []
             pot_LO_list    = []
             time_stamp_LO_list = []
-            if not testmode:
+            if not testMode:
                 # measure the SIS junction
                 if not sisPot_actual == default_sispot:
                     setSIS_only(default_sispot, feedback_actual, verbose, careful)
@@ -728,12 +725,12 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
                     LOuAmsg(LOuA_actual)
                     UCAmsg(UCA_actual)
             else:
-                print "testmode on, pretending to measure the SIS junction to determine LO power"
+                print "testMode on, pretending to measure the SIS junction to determine LO power"
 
 
         # Set the SIS bias voltage by setting the pot position (if needed)
         if not (sisPot_thisloop == sisPot_actual):
-            if not testmode:
+            if not testMode:
                 setSIS_only(sisPot_thisloop, feedback_actual, verbose, careful)
                 sisPot_actual = sisPot_thisloop
                 if (verboseTop):
@@ -741,25 +738,25 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
                 elif verboseSet:
                     sismsg(sisPot_actual)
             else:
-                print 'testmode on, pretending to set the SIS pot'
+                print 'testMode on, pretending to set the SIS pot'
 
         # Set magnet (if needed)
         if not (magpot_thisloop == magpot_actual):
-            if not testmode:
+            if not testMode:
                 if do_set_mag_highlow: setmag_highlow(magpot_thisloop)
                 else: setmag_only(magpot_thisloop)
                 magpot_actual = magpot_thisloop
                 if (verboseTop): print "Magnet potentiometer position set to ", magpot_thisloop
                 elif verboseSet: magmsg(magpot_actual)
             else:
-                print 'testmode on, pretending to set the E-magnet pot'
+                print 'testMode on, pretending to set the E-magnet pot'
 
         # Get standard electromagnet data
         if sisVsweep_trigger == sisPot_thisloop:
             V_mag_list   = []
             mA_mag_list  = []
             pot_mag_list = []
-            if not testmode:
+            if not testMode:
                 # measure the electromagnet
                 for meas_index in range(mag_meas):
                     magV_actual, magmA_actual, magpot_actual = measmag(verbose)
@@ -767,7 +764,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
                     mA_mag_list.append(magmA_actual)
                     pot_mag_list.append(magpot_actual)
             else:
-                print "testmode on, pretending to measure the magnet"
+                print "testMode on, pretending to measure the magnet"
 
 
 
@@ -872,11 +869,11 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
                 feedback_actual = fastsweep_feedback
                 if verboseSet:
                     fbmsg(feedback_actual)
-                if not testmode:
+                if not testMode:
                     # do the sweep, get the data
                     pot_fast, mV_fast, uA_fast, tp_fast = getfastSISsweep(fSweepStart, fSweepStop, fSweepStep, verbose)
                 else:
-                    print "testmode on, pretending to do the fast SIS bias sweep"
+                    print "testMode on, pretending to do the fast SIS bias sweep"
                 # reset the feedback (if no umpumped measurement is to be made)
                 if not do_unpumpedsweep:
                     status = setfeedback(sisV_feedback)
@@ -899,12 +896,12 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
                 if verboseSet:
                     UCAmsg(UCA_actual)
 
-                if not testmode:
+                if not testMode:
                     # do the sweep, get the data
                     pot_unpump, mV_unpump, uA_unpump, tp_unpump \
                         = getfastSISsweep(fSweepStart, fSweepStop, fSweepStep, verbose)
                 else:
-                    print "testmode on, pretending to do the fast unpumped SIS bias sweep"
+                    print "testMode on, pretending to do the fast unpumped SIS bias sweep"
                 # reset the UCA voltage
                 status = LabJackU3_DAQ0(UCA_thisloop)
                 UCA_actual = UCA_thisloop
@@ -935,7 +932,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
         tp_sweep_list         = []
         pot_sweep_list        = []
         time_stamp_sweep_list = []
-        if not testmode:
+        if not testMode:
             for meas_index in range(high_res_meas):
                 mV_sweep, uA_sweep, tp_sweep, pot_sweep, time_stamp_sweep \
                     = measSIS_TP(sisPot_thisloop, sisV_feedback, verbose, careful)
@@ -956,7 +953,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
             else:
                 LJ_streamTP(TP_filename, TPSampleFrequency, TPSampleTime, verbose)
         else:
-            print "testmode on, pretending to take SIS bias data and the TP measurement"
+            print "testMode on, pretending to take SIS bias data and the TP measurement"
             n = open(TP_filename, 'w')
             n.close()
 
@@ -1126,14 +1123,14 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
         first_loop = False
 
     # turn things off after a run
-    if ((not testmode) and (not chopper_off)):
+    if ((not testMode) and (not chopper_off)):
         GoForth(dist=forth_dist)
         DisableDrive()
         #stepper_close()
-    if not testmode:
+    if not testMode:
         zeropots(verbose)
         closetelnet()
-    if not biastestmode:
+    if not biasOnlyMode:
         if turnRFoff:
             RFoff()
             print "The RF power to the LO has been turned off."
@@ -1152,13 +1149,13 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
         print " "
         print "The program BaisSweep.py has reached its end, congratulations!"
     # finally:
-    #     if ((not testmode) and (not chopper_off)):
+    #     if ((not testMode) and (not chopper_off)):
     #         DisableDrive()
     #         "The command to disable the Stepper Motor drives has been sent"
-    #     if not testmode:
+    #     if not testMode:
     #         zeropots(True)
     #         closetelnet()
-    #     if not biastestmode:
+    #     if not biasOnlyMode:
     #         RFoff()
     #         print "The RF power to the LO has been turned off."
     #     print "The 'finally' clause was raised since the code has run into an exception."
