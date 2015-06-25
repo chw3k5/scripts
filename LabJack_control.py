@@ -69,7 +69,8 @@ def LabJackU3_DAQ0(UCA_voltage):
         LabJack.writeRegister(5000, UCA_voltage)
         status = True
     else:
-        print "UCA_voltage was not set properly, it was either greater than 5, less than 0, or not a number. UCA_voltage = "+str(UCA_voltage)+". Returning Status false"
+        print "UCA_voltage was not set properly, it was either greater than 5,"+\
+              " less than 0, or not a number. UCA_voltage = "+str(UCA_voltage)+". Returning Status false"
     return status
 
 

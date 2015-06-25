@@ -1,4 +1,4 @@
-import sys, visa
+import sys
 #freq = 0.0 # in GHz
 low_freq  = 13.541 # in GHz
 high_freq = 14.417 # in GHz
@@ -18,7 +18,8 @@ try:
         sa.write('FREQ:MODE CW')
         ampl = 18.5 # in dBm
 except:
-    print "There was some problem with VISA or communicating with the spectrum analyzer, look in LOinput.py"
+    print 'Signal Generation Connection Warning'
+    print "There was some problem with VISA or communicating with the spectrum analyzer, look in LOinput.py\n"
 
 
 

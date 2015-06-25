@@ -519,7 +519,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
         if ((not testMode) and (not chopper_off)):
             initialize(vel=stepper_vel, accel=stepper_accel, verbose=verbose) # To start the chopper
         # this triggers the Y factor folder to be created
-        Y_trigger = K_list[0]
+        K_first = K_list[0]
         K_actual  = K_list[0]
     else:
         do_Ynum = False
@@ -800,7 +800,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, careful=F
 
             if sisVsweep_trigger == sisPot_thisloop:
                 # change the Y number if this is a new hot-cold pair
-                if Y_trigger == K_thisloop:
+                if K_first == K_thisloop:
                     if not first_loop:
                         Ynum     = Ynum + 1
                     Ynum_str = 'Y' + str('%04.f' % Ynum)

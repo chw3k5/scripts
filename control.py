@@ -22,7 +22,20 @@ SIS_feedoff_high = 77000
 
 default_magpot = 100000 # 65 mA ### 89179 # 45 mA
 default_sispot = 59100 # 1.3 mV ### 56800 # 1.8 mV ### 59100 # 1.3 mV
+default_LOfreq = 672 # GHz
+default_UCA    = 0 # V
+default_IF     = 2.3 # GHz
 
+
+
+zeropots_center_pos=65100
+zeropots_feedback=False
+zeropots_careful=False
+zeropots_max_count=20
+zeropots_do_mag=True
+zeropots_do_sis=True
+zeropots_do_LO=False
+UCA_voltage=5
 
 def opentelnet():
     global thzbiascomputer
@@ -424,7 +437,7 @@ def setSIS(sispot, feedback, verbose=False, careful=False):
     #time.sleep(sleep_per_meas)     
 
     
-    mV_sis, uA_sis, pot_sis = measSIS(verbose)
+    mV_sis, uA_sis, pot_sis = measSIS(verbose=True)
 
 
     return mV_sis, uA_sis, pot_sis
@@ -705,8 +718,6 @@ def measloop_SIS_TP(feedback,sispot=65100, sleep_per_set=1, meas_number=1, verbo
 ######################
   
 def zeropots(verbose=True):
-    from oldscripts.sisbias_config import zeropots_center_pos, zeropots_feedback, zeropots_careful, zeropots_max_count,\
-        zeropots_do_mag, zeropots_do_sis, zeropots_do_LO, UCA_voltage
     # from LOinput import RFoff
     status   = False
     finished = False  
@@ -776,7 +787,7 @@ def zeropots(verbose=True):
             UCA_voltage = 0
             if verbose:    
                 print "Print the UCA voltage was not properly set, it should be 0 or 5 (Volts)"
-                print "the safty feature in this scrip is setting it to: " + str(UCA_voltage) + " Volts"
+                print "the saftey feature in this scrip is setting it to: " + str(UCA_voltage) + " Volts"
                 
         LO_str = "UCA voltage was set to " + str(UCA_voltage) + " Volts "        
         if UCA_voltage == 0:
@@ -808,7 +819,6 @@ def zeropots(verbose=True):
     return status
 
 def zeroSISpot(verbose=True):
-    from oldscripts.sisbias_config import zeropots_center_pos, zeropots_feedback, zeropots_careful, zeropots_max_count
     finished = False
     count = 0
     status = False
@@ -832,7 +842,6 @@ def zeroSISpot(verbose=True):
 
 
 def zeroMAGpot(verbose=True):
-    from oldscripts.sisbias_config import zeropots_center_pos, zeropots_max_count
     finished = False
     count = 0
     status = False

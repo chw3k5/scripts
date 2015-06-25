@@ -59,11 +59,12 @@ elif platform == 'darwin':
                     if os.path.lexists(test_serial_port):
                         serial_port = test_serial_port
 if serial_port == '':
+    print 'StepperMoter Connection Warning'
     print 'The serial device that you are trying to use in stControl.py was NOT found under the expected paths.'
     print "check the device paths with 'ls /dev/cu*' (mac only) and make sure the device is plugged into the computer."
-    print "When adding new device locations they will need to be added to this script"
-    print 'killing the script'
-    sys.exit()
+    print "When adding new device locations they will need to be added to this script\n"
+
+
 SleepTime = 1.3
 initialize_sleep = 5
 

@@ -1,20 +1,46 @@
 __author__ = 'chwheele'
 import os, numpy, sys
-from control import default_magpot, default_sispot, setfeedback, setSIS, setmag_highlow
+from control import default_magpot, default_sispot, default_LOfreq, default_UCA,\
+    setfeedback, setSIS, setmag_highlow, setSIS_only, zeropots, closetelnet
+from LOinput import RFoff
+from LabJack_control import LabJackU3_DAQ0, disableLabJack
+from StepperControl import DisableDrive, stepper_close
 from profunc import windir
-from PID import SIS_mV_PID
+from PID import SIS_mV_PID, Emag_PID, LO_PID
+
+
+def sweepShutDown(testMode=False,biasOnlyMode=False,chopper_off=False):
+    print '\nEntering shut down sequence'
+    if testMode:
+        print 'testMode is on, there is nothing to shut down'
+    else:
+        print 'zeroing the THz computer potentiometers'
+        zeropots(True)
+        print 'closing THz computer connection'
+        closetelnet()
+        if not biasOnlyMode:
+            print 'turning off the signal generators output'
+            RFoff()
+            print 'closing LabJack connection'
+            disableLabJack()
+            if not chopper_off:
+                print 'Turning off the stepper drive'
+                DisableDrive()
+                print 'closing connection to stepper motor controller'
+                stepper_close()
+    print '\nshut down dance complete'
+    return
 
 
 def MakeSetDirs(datadir):
     # does the datadir exist? If not, we will make it!
-    rawdatadir = datadir+'rawdata/'
     datadir    = windir(datadir)
-    rawdatadir = windir(rawdatadir)
+    rawdatadir = windir(datadir+'rawdata/')
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
     if not os.path.isdir(rawdatadir):
         os.makedirs(rawdatadir)
-    return
+    return rawdatadir
 
 def makeLists(start, stop, step):
     step = abs(step)
@@ -48,14 +74,13 @@ def orderLists(master_list_input):
             print "The function orderLists needs a list of tuples\n"+ \
             "with each tuple containing (int, list). Something other than an int\n"+ \
             "was found: ", axis_num
-            sys.exit()
+
         if isinstance(single_list, list):
             unordered_lists.append(single_list)
         else:
             print "The function orderLists needs a list of tuples\n"+\
             "with each tuple containing (int, list). Something other than a list\n"+ \
             "was found: ", single_list
-            sys.exit()
 
     for n in range(num_of_lists):
         axis_num_count = axis_list.count(n)
@@ -66,14 +91,12 @@ def orderLists(master_list_input):
             print " Axis_nums should start with 0 and increment by one with each", \
             "axis having a unique number"
             print "see axis_list:", axis_list
-            sys.exit()
         elif 1 < axis_num_count:
             print "In the function oderLists the axis: ", n, " appears ", \
             axis_num_count, " times, it should be unique."
             print " Axis_nums should start with 0 and increment by one with each", \
             "axis having a unique number"
             print "see axis_list:", axis_list
-            sys.exit()
 
     ordered_lists = []
     for n in range(num_of_lists):
@@ -159,12 +182,17 @@ def magmsg(magpot):
 def sismsg(sisPot):
     try:
         str_val = str('%06.0f' % float(sisPot))
+        if int(sisPot) == int(default_sispot):
+             print "The SIS bias pot has ben set the default value: " , str_val
+        else:
+            print "The SIS bias pot has ben set to: " , str_val
     except TypeError:
         str_val = sisPot
-    if int(sisPot) == int(default_sispot):
-         print "The SIS bias pot has ben set the default value: " , str_val
-    else:
         print "The SIS bias pot has ben set to: " , str_val
+    except ValueError:
+        str_val = sisPot
+        print "The SIS bias pot has ben set to: " , str_val
+
     return
 
 def LOuAmsg(LOuA):
@@ -199,7 +227,7 @@ def IFmsg(IFband):
     print "The IF band width has been set to " , str_val , "GHz"
     return
 
-def getSISpotList(sisV_feedback,
+def getSISpotList(sisV_feedback,useTHzComputer=False,
                   do_sisVsweep=False, verbose=False, verboseTop=False, verboseSet=False,
                   sisVsweep_list=None,
                   sisVsweep_start=1.3, sisVsweep_stop=1.3, sisVsweep_step=0.1,
@@ -208,26 +236,31 @@ def getSISpotList(sisV_feedback,
                   sisPot_feedFalse_list=None,
                   sisPot_feedFalse_start=64000, sisPot_feedFalse_stop=64000, sisPot_feedFalse_step=200
                   ):
-    SISpot_List=None
+    SISpot_List=[]
 
     # set the feedback
-    setfeedback(feedback=sisV_feedback)
+    if useTHzComputer:setfeedback(feedback=sisV_feedback)
     feedback_actual = sisV_feedback
-    if verboseSet: fbmsg(feedback_actual)
+    if verboseSet:fbmsg(feedback_actual)
 
-    # set the magnet
-    setmag_highlow(default_magpot)
+    # set the magnet to default position
+    if useTHzComputer:setmag_highlow(default_magpot)
     magpot_actual = default_magpot
-    if verboseSet: magmsg(feedback_actual)
+    if verboseSet:magmsg(magpot_actual)
 
     # This mode takes a list of voltages and uses a PID program to find the corresponding pot positions
     if do_sisVsweep:
+        if useTHzComputer:
+            print "The SIS voltage Sweep is not available in test mode, select something else or turn off test mode"
+            print "Initiating systems shutdown"
+            sweepShutDown()
+            sys.exit()
         if verboseTop: print "Finding SIS pot positions for each magnet Voltage in 'sisV_list'."
         if sisVsweep_list is not None:
             sisV_list = sisVsweep_list
         else:
             sisV_list = makeLists(sisVsweep_start, sisVsweep_stop, sisVsweep_step)
-        sisPot_list = []
+        SISpot_List = []
         first_pot=65100
         deriv_mV_sispot = 1
         mV_first = 0
@@ -249,7 +282,7 @@ def getSISpotList(sisV_feedback,
                                                         min_diff_sispot=5,
                                                         first_pot=first_pot, second_pot=second_pot,
                                                         verbose=verbose)
-            sisPot_list.append(sisPot_actual)
+            SISpot_List.append(sisPot_actual)
             if verboseSet: sismsg(sisPot_actual)
             first_pot = sisPot_actual
             mV_first = sismV
@@ -257,29 +290,159 @@ def getSISpotList(sisV_feedback,
     # This mode just makes list of SIS pot positions based on a specified range of pot positions
     else:
         sisV_list = None
-        if feedback_actual:
+        if sisV_feedback:
             if sisPot_feedTrue_list is not None:
-                sisPot_list = sisPot_feedTrue_list
+                SISpot_List = sisPot_feedTrue_list
             else:
-                sisPot_list = makeLists(sisPot_feedTrue_start, sisPot_feedTrue_stop, sisPot_feedTrue_step)
+                SISpot_List = makeLists(sisPot_feedTrue_start, sisPot_feedTrue_stop, sisPot_feedTrue_step)
         else:
             if sisPot_feedFalse_list is not None:
-                sisPot_list=sisPot_feedFalse_list
+                SISpot_List=sisPot_feedFalse_list
             else:
-                sisPot_list = makeLists(sisPot_feedFalse_start, sisPot_feedFalse_stop, sisPot_feedFalse_step)
+                SISpot_List = makeLists(sisPot_feedFalse_start, sisPot_feedFalse_stop, sisPot_feedFalse_step)
     # round the sisPot list to integers, this is needed comparisons to triggers later on in the script
-    for Pot_index in range(len(sisPot_list)):
-        sisPot_list[Pot_index] = int(round(sisPot_list[Pot_index]))
+    for Pot_index in range(len(SISpot_List)):
+        SISpot_List[Pot_index] = int(round(SISpot_List[Pot_index]))
 
-    # set the SIS pot
-    mV_sis, uA_sis, sisPot_actual = setSIS(default_sispot, feedback_actual, verbose=False, careful=False)
-    if verboseSet: sismsg(sisPot_actual)
+    # set the SIS pot to the default position
+    if useTHzComputer:setSIS_only(default_sispot, feedback_actual, verbose=False, careful=False)
+    sisPot_actual = default_sispot
+    if verboseSet:sismsg(sisPot_actual)
 
+    SISpot_List = list(SISpot_List)
     return SISpot_List, feedback_actual, sisPot_actual, magpot_actual
 
+def getEmagPotList(useTHzComputer=False,
+                   do_magisweep=False,
+                   verbose=False, verboseTop=False, verboseSet=False,
+                   magisweep_list=None,
+                   magisweep_start=60.0, magisweep_stop=5.0, magisweep_step=-1.0,
+                   magpotsweep_list=None,
+                   magpotsweep_start=110000, magpotsweep_stop=70000, magpotsweep_step=-2000):
+    if do_magisweep:
+        if verboseTop:
+            print "Finding Electromagnet pot positions for each magnet current in 'magi_list'."
+        if magisweep_list is None:
+            magi_list = makeLists(magisweep_start, magisweep_stop, magisweep_step)
+        else:
+            magi_list = magisweep_list
+        EmagPotList  = []
+
+        for magi in magi_list:
+            magpot_actual, deriv_mA_magpot = Emag_PID(mA_set=magi,verbose=verbose)
+            EmagPotList .append(numpy.round(magpot_actual))
+            if verboseSet:magmsg(magpot_actual)
+        # arrange values from biggest to smallest
+        EmagPotList.sort()
+        if EmagPotList [-1] < EmagPotList [0]: EmagPotList  = reversed(EmagPotList )
+    else:
+        magi_list = None
+        if magpotsweep_list is None:
+            EmagPotList  = makeLists(magpotsweep_start, magpotsweep_stop, magpotsweep_step)
+        else:
+            EmagPotList  = magpotsweep_list
+
+    # set the magnet to default position
+    if useTHzComputer:setmag_highlow(default_magpot)
+    magpot_actual = default_magpot
+    if verboseSet:magmsg(magpot_actual)
+
+    return EmagPotList, magi_list, magpot_actual
+
+def getLOfreqList(biasOnlyMode=True,
+                  LOfreqs_list=None,
+                  LOfreq_start=650.0,
+                  LOfreq_stop=692.0,
+                  LOfreq_step=1.0):
+    if biasOnlyMode:
+        LOfreq_list = ['biasOnlyMode']
+    else:
+        if LOfreqs_list is None:
+            LOfreq_list = list(makeLists(LOfreq_start, LOfreq_stop, LOfreq_step))
+        else:
+            LOfreq_list = LOfreqs_list
+    return LOfreq_list
+
+def getLOpowList(sisV_feedback,useTHzComputer=False,
+                 testMode=True,
+                 biasOnlyMode=True,
+                 do_LOuAsearch=False,
+                 do_LOuApresearch=False,
+                 lenLOfreqList=1,
+                 verbose=False, verboseTop=False, verboseSet=False,
+                 LOuAsearch_list=None,
+                 LOuAsearch_start=16.0, LOuAsearch_stop=16.0, LOuAsearch_step=1.0,
+                 UCAsweep_list=None,
+                 UCAsweep_min=0.0, UCAsweep_max=3.8, UCAsweep_step=0.5
+                 ):
+    setLabJack=True
+    if (biasOnlyMode or testMode):
+        setLabJack=False
+
+    # set the UCA voltage to zero
+    if setLabJack: LabJackU3_DAQ0(default_UCA)
+    UCA_actual = default_UCA
+    if verboseSet:UCAmsg(UCA_actual)
+
+    # set the magnet to default position
+    if useTHzComputer:setmag_highlow(default_magpot)
+    magpot_actual = default_magpot
+    if verboseSet:magmsg(magpot_actual)
+
+    if useTHzComputer:setfeedback(feedback=sisV_feedback)
+    feedback_actual = sisV_feedback
+    if verboseSet:fbmsg(feedback_actual)
+
+    # set the SIS pot to the default position
+    if useTHzComputer:setSIS_only(default_sispot, feedback_actual, verbose=False, careful=False)
+    sisPot_actual = default_sispot
+    if verboseSet:sismsg(sisPot_actual)
+
+    if biasOnlyMode:
+        UCA_list  = ['biasOnlyMode']
+        LOuA_list = ['biasOnlyMode']
+    elif ((do_LOuAsearch) and (do_LOuApresearch) and (not testMode)):
+        if verboseTop:
+            print "Finding SIS pot positions for each SIS current in 'LOuA_list'."
+            print "This option is found when do_LOuAsearch and do_LOuApresearch are both True."
+            print "This list is discarded if both LO power (LOuA) and LO frequency are both changing in a single run"
+        if LOuAsearch_list is None:
+            LOuA_list = makeLists(LOuAsearch_start, LOuAsearch_stop, LOuAsearch_step)
+        else:
+            LOuA_list = LOuAsearch_list
+
+        UCA_list = []
+        for LOuA in LOuA_list:
+            UCA_actual, deriv_uA_UCAvoltage = LO_PID(uA_set=LOuA, feedback=feedback_actual, verbose=verbose)
+            if verboseTop: print "UCA = " + str(UCA_actual) + " V  for LOuA = " + str(LOuA) + " uA"
+            elif verboseSet:
+                LOuAmsg(LOuA)
+                UCAmsg(UCA_actual)
+
+         # set the UCA voltage to zero
+        LabJackU3_DAQ0(default_UCA)
+        UCA_actual = default_UCA
+        if verboseSet:UCAmsg(UCA_actual)
+
+    elif (do_LOuAsearch and (do_LOuApresearch == False)):
+        if LOuAsearch_list is None:
+            LOuA_list = makeLists(LOuAsearch_start, LOuAsearch_stop, LOuAsearch_step)
+        else:
+            LOuA_list = LOuAsearch_list
+        UCA_list  = None
+    else:
+        LOuA_list = None
+        if UCAsweep_list is None:
+            UCA_list  = makeLists(UCAsweep_min, UCAsweep_max, UCAsweep_step)
+        else:
+            UCA_list = UCAsweep_list
+    if ((1 < lenLOfreqList) and (do_LOuAsearch == False) and (1 < len(UCA_list))):
+        print "It is not recommended to step LO frequency and UCA voltage with in the same run."
+        print "LO power can change as a function of frequency"
+        if raw_input("Press Enter to continue or anything else to quit, you have been warned") != '':
+            print "Initiating systems shutdown"
+            sweepShutDown()
+            sys.exit()
 
 
-
-
-
-
+    return LOuA_list, UCA_list, feedback_actual, sisPot_actual, magpot_actual, UCA_actual
