@@ -1,5 +1,5 @@
 __author__ = 'chwheele'
-import os, numpy, sys
+import os, numpy, sys, time
 from control import default_magpot, default_sispot, default_LOfreq, default_UCA,\
     setfeedback, setSIS, setmag_highlow, setSIS_only, zeropots, closetelnet
 from LOinput import RFoff
@@ -7,9 +7,83 @@ from LabJack_control import LabJackU3_DAQ0, disableLabJack
 from StepperControl import DisableDrive, stepper_close
 from profunc import windir
 from PID import SIS_mV_PID, Emag_PID, LO_PID
+from datetime import datetime, timedelta
+from email_sender import email_caleb, email_groppi
 
+def GetTime(seconds):
+    sec = timedelta(seconds=int(seconds))
+    d = datetime(1,1,1) + sec
+    #"DAYS:HOURS:MIN:SEC"
+    time_str="%d:%d:%d:%d" % (d.day-1, d.hour, d.minute, d.second)
+    return time_str
 
-def sweepShutDown(testMode=False,biasOnlyMode=False,chopper_off=False):
+def sweepUpdateEmail(loopStartTime,loopsComplete,totalLoops,emailTime,
+                     seconds_per_email=1200,
+                     startTime=None,verbose=False,
+                     FiveMinEmail=False,PeriodicEmail=False,emailGroppi=False):
+    EmailTrigger = False
+    nowTime       = time.time()
+    loopElapsedTime   = nowTime - loopStartTime
+    if startTime is not None:
+        totalElapsedTime = nowTime - startTime
+        totalElapsedTime_str = GetTime(totalElapsedTime)
+    else:
+        totalElapsedTime_str = None
+    remainingTime = (loopElapsedTime/(loopsComplete+1))*(totalLoops-(loopsComplete))
+    finishTime = nowTime+remainingTime
+    loopElapsedTime_str = GetTime(loopElapsedTime)
+    remainingTime_str = GetTime(remainingTime)
+    localFinishTime_str = time.strftime('%d %H:%M:%S', time.localtime(finishTime))
+    if verbose:
+        print loopElapsedTime_str
+        if totalElapsedTime_str is not None:print totalElapsedTime_str
+        print remainingTime_str
+        print localFinishTime_str
+    # Email Options
+    if FiveMinEmail:
+        if 300 <= int(loopElapsedTime):
+            EmailTrigger = True
+            FiveMinEmail = False
+    if PeriodicEmail:
+        ElapsedEmailTime = nowTime - emailTime
+        if seconds_per_email < ElapsedEmailTime:
+            EmailTrigger = True
+
+    if EmailTrigger:
+        if totalElapsedTime_str is not None:email_str = 'The total elapsed time\n' +totalElapsedTime_str + '\n\n'
+        else: email_str=''
+        email_str += 'The sweep loop elapsed time\n' + loopElapsedTime +'\n\n'
+        email_str += 'The remaining time\n'+ remainingTime_str + '\n\n'
+        email_str += 'The estimated Finish time\n'+localFinishTime_str
+
+        email_caleb('Bias Sweep Update', email_str)
+        if emailGroppi:
+            email_groppi('Bias Sweep Update', email_str)
+        EmailTime = nowTime
+    return emailTime
+
+def finishedEmailSender(loopStartTime,startTime=None,emailGroppi=False):
+    nowTime       = time.time()
+    loopElapsedTime   = nowTime - loopStartTime
+    if startTime is not None:
+        totalElapsedTime = nowTime - startTime
+        totalElapsedTime_str = GetTime(totalElapsedTime)
+    else:
+        totalElapsedTime_str = None
+
+    loopElapsedTime_str = GetTime(loopElapsedTime)
+
+    localFinishTime_str = time.strftime('%d %H:%M:%S', time.localtime(nowTime))
+    email_str = 'The Finish time\n'+localFinishTime_str +'\n\n'
+    if totalElapsedTime_str is not None:email_str += 'The total elapsed time\n' +totalElapsedTime_str + '\n\n'
+    email_str += 'The sweep loop elapsed time\n' + loopElapsedTime_str +'\n\n'
+    email_str += "The program BaisSweep.py has reached its end, congratulations!"
+    email_caleb('Bias Sweep Finished '+localFinishTime_str, email_str)
+    if emailGroppi:
+        email_groppi('Bias Sweep Finished '+localFinishTime_str, email_str)
+    return
+
+def sweepShutDown(testMode=False,biasOnlyMode=False,chopper_off=False,turnRFoff=True):
     print '\nEntering shut down sequence'
     if testMode:
         print 'testMode is on, there is nothing to shut down'
@@ -19,8 +93,11 @@ def sweepShutDown(testMode=False,biasOnlyMode=False,chopper_off=False):
         print 'closing THz computer connection'
         closetelnet()
         if not biasOnlyMode:
-            print 'turning off the signal generators output'
-            RFoff()
+            if turnRFoff:
+                print 'turning off the signal generators output'
+                RFoff()
+            else:
+                print "THE RF SIGNAL IS STILL ON!"
             print 'closing LabJack connection'
             disableLabJack()
             if not chopper_off:
