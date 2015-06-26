@@ -14,7 +14,7 @@ def GetTime(seconds):
     sec = timedelta(seconds=int(seconds))
     d = datetime(1,1,1) + sec
     #"DAYS:HOURS:MIN:SEC"
-    time_str="%d:%d:%d:%d" % (d.day-1, d.hour, d.minute, d.second)
+    time_str="%d days : %d hours : %d minutes : %d seconds" % (d.day-1, d.hour, d.minute, d.second)
     return time_str
 
 def sweepUpdateEmail(loopStartTime,loopsComplete,totalLoops,emailTime,
@@ -33,12 +33,12 @@ def sweepUpdateEmail(loopStartTime,loopsComplete,totalLoops,emailTime,
     finishTime = nowTime+remainingTime
     loopElapsedTime_str = GetTime(loopElapsedTime)
     remainingTime_str = GetTime(remainingTime)
-    localFinishTime_str = time.strftime('%d %H:%M:%S', time.localtime(finishTime))
+    localFinishTime_str = time.strftime('%d   %H : %M : %S', time.localtime(finishTime))
     if verbose:
-        print loopElapsedTime_str
-        if totalElapsedTime_str is not None:print totalElapsedTime_str
-        print remainingTime_str
-        print localFinishTime_str
+        print 'The sweep loop elapsed time:',loopElapsedTime_str
+        if totalElapsedTime_str is not None:print 'The total elapsed time:     ',totalElapsedTime_str
+        print 'The remaining time:         ', remainingTime_str
+        print 'The estimated Finish time:  ',localFinishTime_str
     # Email Options
     if FiveMinEmail:
         if 300 <= int(loopElapsedTime):
@@ -80,7 +80,7 @@ def finishedEmailSender(loopStartTime,startTime=None,emailGroppi=False):
     email_str += "The program BaisSweep.py has reached its end, congratulations!"
     email_caleb('Bias Sweep Finished '+localFinishTime_str, email_str)
     if emailGroppi:
-        email_groppi('Bias Sweep Finished '+localFinishTime_str, email_str)
+        email_groppi('Bias Sweep Finished on: '+localFinishTime_str, email_str)
     return
 
 def sweepShutDown(testMode=False,biasOnlyMode=False,chopper_off=False,turnRFoff=True):

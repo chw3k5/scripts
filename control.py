@@ -37,6 +37,8 @@ zeropots_do_sis=True
 zeropots_do_LO=False
 UCA_voltage=5
 
+
+
 def opentelnet():
     global thzbiascomputer
     thzbiascomputer = telnetlib.Telnet('thzbias.sese.asu.edu', 9001)
@@ -719,6 +721,10 @@ def measloop_SIS_TP(feedback,sispot=65100, sleep_per_set=1, meas_number=1, verbo
   
 def zeropots(verbose=True):
     # from LOinput import RFoff
+    zeropots_do_mag=True
+    zeropots_do_sis=True
+    zeropots_do_LO=False
+    UCA_voltage=5
     status   = False
     finished = False  
     count = 0
