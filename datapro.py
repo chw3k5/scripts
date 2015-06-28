@@ -757,6 +757,62 @@ def SweepDataPro(datadir, verbose=False, search_4Sweeps=True, search_str='Y', Sn
 
     return
 
+def addInQuad(list_of_numbers):
+    quadSum = 0
+    for number in list_of_numbers:
+        quadSum += float(number)**2
+    magnitude=numpy.sqrt(quadSum)
+    return magnitude
+
+
+def raw2Yfactor(coldDir,hotDir,verbose=False):
+    hotDir = windir(hotDir+'sweep/')
+    coldDir = windir(coldDir+'sweep/')
+
+    hot_astrosweep_found, hot_sweep_pot, hot_sweep_mV_mean, hot_sweep_mV_std,\
+           hot_sweep_uA_mean, hot_sweep_uA_std, hot_sweep_TP_mean, hot_sweep_TP_std, hot_sweep_time_mean,\
+           hot_TP_int_time, hot_meas_num, hot_TP_num, hot_TP_freq = getrawdata(hotDir, verbose=verbose)
+
+    cold_astrosweep_found, cold_sweep_pot, cold_sweep_mV_mean, cold_sweep_mV_std,\
+           cold_sweep_uA_mean, cold_sweep_uA_std, cold_sweep_TP_mean, cold_sweep_TP_std, cold_sweep_time_mean,\
+           cold_TP_int_time, cold_meas_num, cold_TP_num, cold_TP_freq = getrawdata(coldDir, verbose=verbose)
+
+    Yfactor_len = len(cold_sweep_pot)
+
+    Yfactor=[]
+    yerror=[]
+    y_pot=[]
+    y_mV=[]
+    y_mVerror=[]
+    y_uA=[]
+    y_uAerror=[]
+    y_TP=[]
+    y_TPerror=[]
+    for yindex in range(Yfactor_len):
+        Yfactor.append(hot_sweep_TP_mean[yindex]/cold_sweep_TP_mean[yindex])
+        yerror.append(addInQuad([hot_sweep_TP_std[yindex],cold_sweep_TP_std[yindex]]))
+        if hot_sweep_pot[yindex] == cold_sweep_pot[yindex]:
+            y_pot.append(hot_sweep_pot[yindex])
+        else:
+            print 'Problem in raw2Yfactor in datapro.py. The cold and hot sweep pot position are different and they\n'+\
+                  'must be the same. hot_sweep_pot[yindex] =', hot_sweep_pot[yindex],\
+                  '    cold_sweep_pot[yindex] =', cold_sweep_pot[yindex]
+            print 'This is a script killer, sys.exit()'
+            sys.exit()
+        y_mV.append(numpy.mean([hot_sweep_mV_mean[yindex], cold_sweep_mV_mean[yindex]]))
+        y_mVerror.append(addInQuad([hot_sweep_mV_std[yindex], cold_sweep_mV_std[yindex]]))
+
+        y_uA.append(numpy.mean([hot_sweep_uA_mean[yindex],cold_sweep_uA_mean[yindex]]))
+        y_uAerror.append(addInQuad([hot_sweep_uA_std[yindex],cold_sweep_uA_std[yindex]]))
+
+        y_TP.append(numpy.mean([hot_sweep_TP_mean[yindex],cold_sweep_TP_mean[yindex]]))
+        y_TPerror.append(addInQuad([hot_sweep_TP_std[yindex],cold_sweep_TP_std[yindex]]))
+
+    return  Yfactor,yerror,y_pot,y_mV,y_mVerror,y_uA,y_uAerror,y_TP,y_TPerror
+
+
+
+
 def YdataPro(datadir, verbose=False, search_4Ynums=True, removeOldProData=False,
              search_str='Y', Ynums=[], use_google_drive=True,
              useOFFdata=False, Off_datadir='',
@@ -848,16 +904,29 @@ def YdataPro(datadir, verbose=False, search_4Ynums=True, removeOldProData=False,
         if (astrosweephot_found and astrosweepcold_found):
             if verbose:
                 print "doing Y factor calculation"
-            mV_Yfactor, Yfactor, status \
-                = data2Yfactor(hot_sweep_mV_mean, cold_sweep_mV_mean, off_tp,
-                               hot_sweep_TP_mean, cold_sweep_TP_mean, regrid_mesh_mV, verbose)
-            # save the results of the Y factor calculation 
-            o = open(prodata_Ydir + 'Ydata.csv', 'w')
-            o.write('mV_Yfactor,Yfactor\n')
 
-            for sweep_index in range(len(mV_Yfactor)):
-                o.write(str(mV_Yfactor[sweep_index]) + ',' + str(Yfactor[sweep_index]) + '\n')    
-            o.close()
+            Yfactor,yerror,y_pot,y_mV,y_mVerror,y_uA,y_uAerror,y_TP,y_TPerror\
+                    =raw2Yfactor(coldDir=colddir,hotDir=hotdir,verbose=verbose)
+            Yfile = open(prodata_Ydir + 'Ydata.csv', 'w')
+            Yfile.write('Yfactor,yerror,y_pot,y_mV,y_mVerror,y_uA,y_uAerror,y_TP,y_TPerror\n')
+            for yindex in range(len(Yfactor)):
+                Yfile.write(str(Yfactor[yindex])+','+str(yerror[yindex])+','+str(y_pot[yindex])\
+                            +','+str(y_mV[yindex])+','+str(y_mVerror[yindex])+','+\
+                            str(y_uA[yindex])+','+str(y_uAerror[yindex])+','+str(y_TP[yindex])\
+                            +','+str(y_TPerror[yindex])+'\n')
+            Yfile.close()
+
+            ###### OLD Y factor calculation
+            # mV_Yfactor, Yfactor, status \
+            #     = data2Yfactor(hot_sweep_mV_mean, cold_sweep_mV_mean, off_tp,
+            #                    hot_sweep_TP_mean, cold_sweep_TP_mean, regrid_mesh_mV, verbose)
+            # # save the results of the Y factor calculation
+            # o = open(prodata_Ydir + 'Ydata.csv', 'w')
+            # o.write('mV_Yfactor,Yfactor\n')
+            #
+            # for sweep_index in range(len(mV_Yfactor)):
+            #     o.write(str(mV_Yfactor[sweep_index]) + ',' + str(Yfactor[sweep_index]) + '\n')
+            # o.close()
 
         if (hotspecsweep_found and coldspecsweep_found):
             if verbose:

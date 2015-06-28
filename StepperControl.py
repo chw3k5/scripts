@@ -65,7 +65,7 @@ if serial_port == '':
     print "When adding new device locations they will need to be added to this script\n"
 
 
-SleepTime = 1.3
+SleepTime = 1.4
 initialize_sleep = 5
 
 

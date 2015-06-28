@@ -28,13 +28,25 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
                 = getmultiParams(paramsfile_list)
 
             # Astro Processed Data
-            self.Yfactor, self.mV_Yfactor, self.hot_mV_mean, self.cold_mV_mean, self.mV, \
+            self.Yfactor,self.yerror,self.y_pot,self.y_mV,self.y_mVerror,\
+            self.y_uA,self.y_uAerror,self.y_TP,self.y_TPerror,\
+            self.hot_mV_mean, self.cold_mV_mean, self.mV, \
             self.hot_mV_std, self.cold_mV_std, self.hot_uA_mean, self.cold_uA_mean, \
-            self.hot_uA_std, self.cold_uA_std, self.hot_tp_mean, self.cold_tp_mean,\
-            self.hot_tp_std, self.cold_tp_std,\
-            self.hot_time_mean, self.cold_time_mean, self.hot_pot, self.cold_pot,\
-            self.hotdatafound, self.colddatafound, self.Ydatafound\
+            self.hot_uA_std, self.cold_uA_std, self.hot_TP_mean, self.cold_TP_mean, self.hot_TP_std, self.cold_TP_std,\
+            self.hot_time_mean,self.cold_time_mean, self.hot_pot, self.cold_pot,\
+            self.hotdatafound, self.colddatafound,self.Ydatafound\
                 = getproYdata(proYdatadir)
+            # old version of how I recorded this data
+            self.mV_Yfactor=self.y_mV
+
+            # Old version of this function
+            # self.Yfactor, self.mV_Yfactor, self.hot_mV_mean, self.cold_mV_mean, self.mV, \
+            # self.hot_mV_std, self.cold_mV_std, self.hot_uA_mean, self.cold_uA_mean, \
+            # self.hot_uA_std, self.cold_uA_std, self.hot_tp_mean, self.cold_tp_mean,\
+            # self.hot_tp_std, self.cold_tp_std,\
+            # self.hot_time_mean, self.cold_time_mean, self.hot_pot, self.cold_pot,\
+            # self.hotdatafound, self.colddatafound, self.Ydatafound\
+            #     = getproYdata(proYdatadir)
 
             # Processed spectrometer data
             self.spec_data_found, self.spec_freq_list,self.spec_Yfactor_list,\

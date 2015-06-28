@@ -742,8 +742,15 @@ def getproYdata(datadir):
     cold_pot       = None
     colddatafound  = False
 
-    mV_Yfactor = None
     Yfactor    = None
+    yerror = None
+    y_pot = None
+    y_mV = None
+    y_mVerror = None
+    y_uA = None
+    y_uAerror = None
+    y_TP = None
+    y_TPerror = None
     Ydatafound = False
 
 
@@ -775,12 +782,20 @@ def getproYdata(datadir):
         Y_data = atpy.Table(Ydatafile, type="ascii", delimiter=",")
         Y_keys = Y_data.keys()
         Ydatafound = True
-        if 'mV_Yfactor' in Y_keys: mV_Yfactor = Y_data.mV_Yfactor
         if 'Yfactor'    in Y_keys: Yfactor    = Y_data.Yfactor
+        if 'yerror'     in Y_keys: yerror    = Y_data.yerror
+        if 'y_pot' in Y_keys: y_pot = Y_data.y_pot
+        if 'mV_Yfactor' in Y_keys: y_mV = Y_data.mV_Yfactor # An old verson of the code used this
+        if 'y_mV' in Y_keys: y_mV = Y_data.y_mV
+        if 'mVerror' in Y_keys: mVerror = Y_data.mVerror
+        if 'y_uA' in Y_keys: y_uA = Y_data.y_uA
+        if 'y_uAerror' in Y_keys: y_uAerror = Y_data.y_uAerror
+        if 'y_TP' in Y_keys: y_TP = Y_data.y_TP
+        if 'y_TPerror' in Y_keys: y_TPerror = Y_data.y_TPerror
 
-    # make sure all the Y mV data overlaps
-    if ((1 < len(list(hot_mV_mean))) and (1 < len(list(cold_mV_mean))) and (1 < len(list(mV_Yfactor)))
-        and (hotdatafound) and (colddatafound) and (Ydatafound)):
+    # make sure all the Hot and cold data overlaps (The Y data is on the raw data scale)
+    if ((1 < len(list(hot_mV_mean))) and (1 < len(list(cold_mV_mean)))
+        and (hotdatafound) and (colddatafound)):
         if 1 < len(hot_mV_mean):
             mesh = (hot_mV_mean[1]-hot_mV_mean[0])
         else:
@@ -790,23 +805,21 @@ def getproYdata(datadir):
             print "The function 'FindOverlap' failed in 'getproYdata' for file:", datadir
             print "Killing Script"
             sys.exit()
-        hot_end  = hot_start  + list_length
 
-        mV = hot_mV_mean[hot_start:hot_end]
-        status, mV_start, Yfactor_start, list_length = FindOverlap(mV, mV_Yfactor, mesh)
-        if not status:
-            print "The function 'FindOverlap' (2nd call) failed in 'getproYdata' for file:", datadir
-            print "Killing Script"
-            sys.exit()
+        # hot_end  = hot_start  + list_length
+        # mV = hot_mV_mean[hot_start:hot_end]
+        # status, mV_start, Yfactor_start, list_length = FindOverlap(mV, mV_Yfactor, mesh)
+        # if not status:
+        #     print "The function 'FindOverlap' (2nd call) failed in 'getproYdata' for file:", datadir
+        #     print "Killing Script"
+        #     sys.exit()
 
-        Yfactor_end = Yfactor_start + list_length
 
-        hot_start  += mV_start
-        cold_start += mV_start
+
         hot_end     = hot_start  + list_length
         cold_end    = cold_start + list_length
 
-        mV = mV[mV_start:list_length+mV_start]
+        mV = hot_mV_mean[hot_start:hot_end]
 
         hot_mV_mean   = hot_mV_mean[hot_start:hot_end]
         hot_mV_std    = hot_mV_std[hot_start:hot_end]
@@ -826,14 +839,13 @@ def getproYdata(datadir):
         cold_time_mean = cold_time_mean[cold_start:cold_end]
         cold_pot       = cold_pot[cold_start:cold_end]
 
-        Yfactor    = Yfactor[Yfactor_start:Yfactor_end]
-        mV_Yfactor = mV_Yfactor[Yfactor_start:Yfactor_end]
 
     else:
         mV = None
 
         
-    return Yfactor, mV_Yfactor, hot_mV_mean, cold_mV_mean, mV, \
+    return Yfactor,yerror,y_pot,y_mV,y_mVerror,y_uA,y_uAerror,y_TP,y_TPerror,\
+           hot_mV_mean, cold_mV_mean, mV, \
            hot_mV_std, cold_mV_std, hot_uA_mean, cold_uA_mean, \
            hot_uA_std, cold_uA_std, hot_TP_mean, cold_TP_mean, hot_TP_std, cold_TP_std,\
            hot_time_mean, cold_time_mean, hot_pot, cold_pot,\

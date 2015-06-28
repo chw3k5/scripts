@@ -4,7 +4,7 @@ from control import default_magpot, default_sispot, default_LOfreq, default_UCA,
     setfeedback, setSIS, setmag_highlow, setSIS_only, zeropots, closetelnet
 from LOinput import RFoff
 from LabJack_control import LabJackU3_DAQ0, disableLabJack
-from StepperControl import DisableDrive, stepper_close
+from StepperControl import DisableDrive, stepper_close, GoForth, GoBack
 from profunc import windir
 from PID import SIS_mV_PID, Emag_PID, LO_PID
 from datetime import datetime, timedelta
@@ -101,6 +101,8 @@ def sweepShutDown(testMode=False,biasOnlyMode=False,chopper_off=False,turnRFoff=
             print 'closing LabJack connection'
             disableLabJack()
             if not chopper_off:
+                GoBack()
+                #GoForth()
                 print 'Turning off the stepper drive'
                 DisableDrive()
                 print 'closing connection to stepper motor controller'

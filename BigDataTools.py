@@ -37,7 +37,7 @@ do_eps          = True
 
 
 # data processing
-process_data  = True
+process_data  = False
 Ynums         = None
 search_str    = 'Y'
 search_4Ynums = True
@@ -137,8 +137,8 @@ Y_magpot_legend_loc = 3
 ########################################
 ###### Anything verses Everything ######
 ########################################
-do_LOuA_LOmV_AvsE=False
-do_LOuA_LOfreq_AvsE = True
+do_LOuA_LOmV_AvsE=True
+do_LOuA_LOfreq_AvsE = False
 
 neutral_color_AvsE='Green'
 hot_color_AvsE='firebrick'
@@ -150,7 +150,7 @@ pair_AvsE_ls = '-'
 pair_AvsE_linw = 1
 pair_AvsE_alpha = 0.5
 
-show_error_AvsE = False
+show_error_AvsE = True
 error_marker_AvsE = '|'
 error_capsize_AvsE = 1
 error_ls_AvsE = 'None'
@@ -252,9 +252,9 @@ setnames = []
 # setnames.extend(['Jun08_15/bestLOfreq/'+str(freq) for freq in possibleLOfreqs])
 # possibleLOfreqs = [660,664,665,672,677,685]
 # setnames.extend(['Jun08_15/magsweep/'+str(freq) for freq in possibleLOfreqs])
-possibleLOfreqs=range(650,693)
-setnames.extend(['Jun08_15/standingWaveTest6/'+str(freq) for freq in possibleLOfreqs])
-
+# possibleLOfreqs=range(650,693)
+# setnames.extend(['Jun08_15/standingWaveTest6/'+str(freq) for freq in possibleLOfreqs])
+setnames.extend(['Jun08_15/biasSweep3Test'])
 
 parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
 fullpaths_raw = [windir(parent_folder + setname + '/') for setname in setnames]

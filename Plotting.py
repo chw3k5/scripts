@@ -1054,13 +1054,13 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
         ######################################
 
         ### Get The Astronomy Quality Processed Sweep Data
-        Yfactor, mV_Yfactor, hot_mV_mean, cold_mV_mean, mV, \
-        hot_mV_std, cold_mV_std, hot_uA_mean, cold_uA_mean, \
-        hot_uA_std, cold_uA_std, hot_TP_mean, cold_TP_mean,\
-        hot_TP_std, cold_TP_std,\
-        hot_time_mean, cold_time_mean, hot_pot, cold_pot,\
-        hotdatafound, colddatafound, Ydatafound\
-            = getproYdata(proYdatadir)
+        Yfactor,yerror,y_pot,mV_Yfactor,y_mVerror,y_uA,y_uAerror,y_TP,y_TPerror,\
+           hot_mV_mean, cold_mV_mean, mV, \
+           hot_mV_std, cold_mV_std, hot_uA_mean, cold_uA_mean, \
+           hot_uA_std, cold_uA_std, hot_TP_mean, cold_TP_mean, hot_TP_std, cold_TP_std,\
+           hot_time_mean, cold_time_mean, hot_pot, cold_pot,\
+           hotdatafound, colddatafound, Ydatafound\
+                = getproYdata(proYdatadir)
 
         ### the less processed raw data
         hotraw_mV_mean, coldraw_mV_mean, hotraw_mV_std, coldraw_mV_std,\
