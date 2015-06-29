@@ -51,10 +51,7 @@ wavenames=[]
 
 def enableLabJack():
     global LabJack
-    try:
-        LabJack = u3.U3()        # initialize the interface; assumes a single U3 is plugged in to a USB port
-    except:
-        pass
+    LabJack = u3.U3()        # initialize the interface; assumes a single U3 is plugged in to a USB port
     return
 
 def disableLabJack():

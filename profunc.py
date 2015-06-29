@@ -569,7 +569,8 @@ def getLJdata(filename):
         [junk,PM_range_str] = string.split(PM_str,'=')
         PM_range=int(PM_range_str)
     except:
-        [junk,TP_freq] = float(string.split(first_line,'='))
+        [junk,TP_freq_str] = string.split(first_line,'=')
+        TP_freq=float(TP_freq_str)
         PM_range=None
 
     mWcoeff = range2uW(PM_range)

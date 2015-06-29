@@ -23,7 +23,7 @@ def range2uW(inputRange):
         mWcoeff = 1000
     return mWcoeff
 
-def setRange(rangeNum=0,vebose=False):
+def setRange(rangeNum=0,verbose=False):
 
     # 0 : Auto range -70dBm to -20dBm
     # 1 : -70dBm - -60 dmB
@@ -34,17 +34,17 @@ def setRange(rangeNum=0,vebose=False):
     if rangeNum in rangeSet:
         HP437B.write('RM'+str(rangeNum)+'EN')
         if rangeNum == 0:
-            if vebose: print "Range of HP437B Power meter set to range 0: Auto range -70dBm to -20dBm"
+            if verbose: print "Range of HP437B Power meter set to range 0: Auto range -70dBm to -20dBm"
         elif rangeNum == 1:
-            if vebose: print "Range of HP437B Power meter set to range 1: -70dBm to -60 dmB"
+            if verbose: print "Range of HP437B Power meter set to range 1: -70dBm to -60 dmB"
         elif rangeNum == 2:
-            if vebose: print "Range of HP437B Power meter set to range 1: -60dBm to -50 dmB"
+            if verbose: print "Range of HP437B Power meter set to range 1: -60dBm to -50 dmB"
         elif rangeNum == 3:
-            if vebose: print "Range of HP437B Power meter set to range 1: -50dBm to -40 dmB"
+            if verbose: print "Range of HP437B Power meter set to range 1: -50dBm to -40 dmB"
         elif rangeNum == 4:
-            if vebose: print "Range of HP437B Power meter set to range 1: -40dBm to -30 dmB"
+            if verbose: print "Range of HP437B Power meter set to range 1: -40dBm to -30 dmB"
         elif rangeNum == 5:
-            if vebose: print "Range of HP437B Power meter set to range 1: -30dBm to -20 dmB"
+            if verbose: print "Range of HP437B Power meter set to range 1: -30dBm to -20 dmB"
     else:
         HP437B.write('RM0EN')
         print 'your selection of a range of rangeNum=',rangeNum
@@ -56,5 +56,5 @@ def setRange(rangeNum=0,vebose=False):
 
 if __name__ == '__main__':
     openHailingFrequencies()
-    setRange(2,vebose=True)
+    setRange(2,verbose=True)
     closeHailingFrequencies()

@@ -40,7 +40,7 @@ parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
             # 670,671,672,673,674,675,676,677,678,679,
             # 680,681,682,683,684,685,686,687,688,
             # 690,691,692
-LOfreq_list=range(650,651)
+LOfreq_list=range(650,693)
 for LOfreq in LOfreq_list:
     # The directory what the data is kept
     setnames = []
@@ -49,7 +49,7 @@ for LOfreq in LOfreq_list:
     # setnames.extend(['Mar24_15/LO_power','Mar24_15/Yfactor_test'])
     # setnames.extend(['Nov05_14/Y_LOfreqMAGLOuA','Nov05_14/Y_MAG','Nov05_14/Y_MAG2','Nov05_14/Y_MAG3','Nov05_14/Y_standard'])
     # setnames.extend(['Oct20_14/LOfreq','Oct20_14/Y_LO_pow','Oct20_14/Y_MAG','Oct20_14/Y_MAG2','Oct20_14'])
-    thisRun = 'Jun08_15/standingWaveTest8/'+str(int(LOfreq))+'/'
+    thisRun = 'Jun08_15/standingWaveTest9/'+str(int(LOfreq))+'/'
     setnames.extend([thisRun])
     datadir = parent_folder + thisRun
 
@@ -68,7 +68,7 @@ for LOfreq in LOfreq_list:
                   dwellTime_BenchmarkMag=5,
                   dwellTime_fastSweep=5,
                   dwellTime_unpumped=5,
-                  dwellTime_sisVsweep=1,
+                  dwellTime_sisVsweep=2,
 
                   # email options
                   FinishedEmail=do_email, FiveMinEmail=do_email, PeriodicEmail=do_email,
@@ -81,7 +81,7 @@ for LOfreq in LOfreq_list:
                   # measure the electromagnet and the SIS junction at their standard positions
                   benchSISmeasNum=10,benchMAGmeasNum=5,
                   # THz computer fast sweeps
-                  do_fastsweep=True, do_unpumpedsweep=True, fastsweep_feedback=False,
+                  do_fastsweep=False, do_unpumpedsweep=False, fastsweep_feedback=False,
                   SweepStart_feedTrue=65000, SweepStop_feedTrue=52000, SweepStep_feedTrue=500,
                   SweepStart_feedFalse=66100, SweepStop_feedFalse=57000, SweepStep_feedFalse=100,
 

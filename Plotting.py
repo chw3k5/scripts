@@ -339,7 +339,7 @@ def SimpleSweepPlot(datadir, search_4Snums=False, Snums='', verbose=False, show_
         ### Axis Labels ###
         ax1.set_xlabel('Voltage (mV)')
         ax1.set_ylabel('Current (uA)', color=ax1_color)
-        ax2.set_ylabel('Total Power (unscaled)', color=ax2_color)
+        ax2.set_ylabel('Total Power (uW)', color=ax2_color)
 
         ### Axis Ticks ###
         #for tl in ax1.get_yticklabels():
@@ -999,7 +999,7 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
     if str(ax1_scaling[1]) == 'uA':
         ax1_ylabel = 'Current (uA)'
     elif str(ax1_scaling[1]) == 'tp':
-        ax1_ylabel = 'Total Power (unscaled)'
+        ax1_ylabel = 'Total Power (uW)'
     else:
         ax1_ylabel = '('+str(ax1_scaling[1])+')'
     ax2_ylabel = 'Y-Factor'

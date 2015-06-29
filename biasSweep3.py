@@ -30,7 +30,7 @@ def singleSweepLoop(rawdir,
                     K_first,sisVsweep_trigger,
                     doing_UCA_list,useTHzComputer, do_Ynum,
 
-                    Ynum=0,sweepN=0,
+                    Ynum=0,sweepN=0,redoFlag=False,
 
                     verbose=True, verboseTop=True, verboseSet=True, #careful=False,
 
@@ -91,6 +91,7 @@ def singleSweepLoop(rawdir,
     makeBenchmarkMag=False
     fastSweepLoop = False
     unpumpedSweep=False
+    resetRange = None
     if SISpot_thisloop == 'benchmarkSIS':
         makeBenchmarkSIS=True
         SISpot_thisloop=default_sispot
@@ -268,10 +269,11 @@ def singleSweepLoop(rawdir,
             print "New sweep triggered "
             print SISpot_thisloop, "=  SISpot_thisloop"
             print "making directories"
-        if do_Ynum:
-            Ynum = Ynum + 1
-        else:
-            sweepN = sweepN + 1
+        if not redoFlag:
+            if do_Ynum:
+                Ynum = Ynum + 1
+            else:
+                sweepN = sweepN + 1
 
     if do_Ynum:
         Ynum_str = 'Y' + str('%04.f' % Ynum)
@@ -559,6 +561,28 @@ def singleSweepLoop(rawdir,
                 print meas_line
         sis_sweepData.close()
         # TP data from the LabJack is written if the 'Take Data' section of the script
+
+        # Test to see if the power meter needs to have its range reset
+        TP_filenames=[]
+        if do_Ynum:
+            if K_first != K_actual:
+                TP_filenames.append(TP_filename)
+                try:TP_filenames.append(TP_filename.replace('hot','cold'))
+                except:TP_filenames.append(TP_filename.replace('cold','hot'))
+        else:
+            TP_filenames.append(TP_filename)
+        if TP_filename != []:
+            aveTP = testPowerRange(TP_filenames)
+            mWcoeff=range2uW(PM_range)
+            mean_TP=numpy.mean(aveTP)
+            if mWcoeff < mean_TP:
+                resetRange=1
+            elif mean_TP < 0.1*mWcoeff:
+                resetRange=-1
+        # end of the bias sweep loop
+
+
+
     # end of the data taking and writing section of the script
 
 
@@ -569,18 +593,7 @@ def singleSweepLoop(rawdir,
     if any([verbose,verboseSet,verboseTop]):
         print ''
 
-    # end of the bias sweep loop
-    resetRange = 0
-    if do_Ynum:
-        if K_first != K_actual:
-            TP_filenames=[]
-            TP_filenames.append(TP_filename)
-            try:TP_filenames.append(TP_filename.replace('hot','cold'))
-            except:TP_filenames.append(TP_filename.replace('cold','hot'))
-            testPowerRange(TP_filenames)
 
-    else:
-        pass
 
 
 
@@ -767,7 +780,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=
                 if verboseSet: print "RF is on"
                 # Open communication with the HP437B power meter
                 openHailingFrequencies()
-                setRange(default_PMrange, verbose-verbose)
+                setRange(default_PMrange, verbose=verbose)
                 PM_range = default_PMrange
                 if verboseSet: print "the HP437B power meter has been set to the default range of:",default_PMrange
                 # Communication with the thing that sets the IF band pass would be here
@@ -974,6 +987,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=
         loopStartTime = time.time()
         emailTime = loopStartTime
         param_index = -1
+        redoFlag=False
         while True:
             param_index +=1
             if param_index == list_len:
@@ -1008,7 +1022,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=
                                   K_first,sisVsweep_trigger,
                                   doing_UCA_list,useTHzComputer, do_Ynum,
 
-                                  Ynum=Ynum,sweepN=sweepN,
+                                  Ynum=Ynum,sweepN=sweepN,redoFlag=redoFlag,
 
                                   verbose=verbose, verboseTop=verboseTop, verboseSet=verboseSet, #careful=False,
 
@@ -1047,7 +1061,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=
                                   do_magisweep=do_magisweep, mag_meas=mag_meas,
                                   magi_list=magi_list,EmagPotList=EmagPotList,
 
-                                  # setting the local ocsilattor pump power
+                                  # setting the local oscillator pump power
                                   do_LOuAsearch=do_LOuAsearch,  do_LOuApresearch=do_LOuApresearch,
                                   LOuA_search_every_sweep=LOuA_search_every_sweep,
                                   LOuA_list=LOuA_list,UCA_list=UCA_list,
@@ -1055,9 +1069,25 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=
                                   # stepper motor control options
                                   forth_dist = forth_dist, back_dist = back_dist)
 
+            redoFlag=False
+            if resetRange is not None:
+                new_PM_range=PM_range+resetRange
+                if new_PM_range in [1,2,3,4,5]:
+                    setRange(new_PM_range,verbose=verboseSet)
+                    PM_range=new_PM_range
+                    redoFlag=True
+                elif new_PM_range == 0:
+                    print "The most sensitive range of the power meter is currently set,"+\
+                          " the range lowering flag will be ignored."
+                elif new_PM_range == 6:
+                    print "The highest power range of the power meter is currently set,"+\
+                          " you my be damaging the power meter, add attenuators"
 
-
-
+            if redoFlag:
+                if do_Ynum:
+                    param_index-=2
+                else:
+                    param_index-=1
 
             ######################################
             ###### Email part of the script ######

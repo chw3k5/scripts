@@ -150,7 +150,7 @@ pair_AvsE_ls = '-'
 pair_AvsE_linw = 1
 pair_AvsE_alpha = 0.5
 
-show_error_AvsE = True
+show_error_AvsE = False
 error_marker_AvsE = '|'
 error_capsize_AvsE = 1
 error_ls_AvsE = 'None'
