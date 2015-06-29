@@ -12,7 +12,7 @@ from profunc import windir
 ### For Y factor sweeps ###
 ###########################
 ### For Y-factor data and Sweeps ###
-do_Ysweeps              = False
+do_Ysweeps              = True
 do_YdataPro             = True
 do_YfactotSweepsPlotter = True
 do_YSpectra_Plotter     = False
@@ -40,7 +40,7 @@ parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
             # 670,671,672,673,674,675,676,677,678,679,
             # 680,681,682,683,684,685,686,687,688,
             # 690,691,692
-LOfreq_list=range(650,693)
+LOfreq_list=range(650,651)
 for LOfreq in LOfreq_list:
     # The directory what the data is kept
     setnames = []
@@ -49,7 +49,7 @@ for LOfreq in LOfreq_list:
     # setnames.extend(['Mar24_15/LO_power','Mar24_15/Yfactor_test'])
     # setnames.extend(['Nov05_14/Y_LOfreqMAGLOuA','Nov05_14/Y_MAG','Nov05_14/Y_MAG2','Nov05_14/Y_MAG3','Nov05_14/Y_standard'])
     # setnames.extend(['Oct20_14/LOfreq','Oct20_14/Y_LO_pow','Oct20_14/Y_MAG','Oct20_14/Y_MAG2','Oct20_14'])
-    thisRun = 'Jun08_15/bestLOfreq/'+str(int(LOfreq))+'/'
+    thisRun = 'Jun08_15/standingWaveTest8/'+str(int(LOfreq))+'/'
     setnames.extend([thisRun])
     datadir = parent_folder + thisRun
 

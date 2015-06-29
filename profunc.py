@@ -2,12 +2,13 @@ import atpy
 import numpy
 import os, sys
 import shutil
-import random
+import random, string
 from sys import platform
 from domath import regrid, conv, FindOverlap # Caleb's Programs
 from operator import itemgetter
 import pickle
 import glob
+from HP437B import range2uW
 
 def windir(filepath):
     if platform == 'win32':
@@ -545,6 +546,7 @@ def getmagdata(filename):
     return V, mA, pot
     
 def getLJdata(filename):
+    PM_range = None
     rand_int = random.randint(0, 1000)
     if platform == 'win32':
         filename = windir(filename)
@@ -560,20 +562,23 @@ def getLJdata(filename):
     with open(tempfilename, 'w') as fout:
         fout.writelines(data[0:])
 
-    position=first_line.find('=', 0)
-    if not position == -1:
-        TP_freq = float(first_line[position+1:])
-    else:
-        TP_freq = []
-        print "The frequency of the total power measurment could not be found."
-        print "The function getLJdata in profunc.py was looking for a number after an equals sign '='."
-        print "Returning a null list"
+    try:
+        [freq_str,PM_str] = string.split(first_line,',')
+        [junk,TP_freq_str] = string.split(freq_str,'=')
+        TP_freq=float(TP_freq_str)
+        [junk,PM_range_str] = string.split(PM_str,'=')
+        PM_range=int(PM_range_str)
+    except:
+        [junk,TP_freq] = float(string.split(first_line,'='))
+        PM_range=None
+
+    mWcoeff = range2uW(PM_range)
 
     data = atpy.Table(tempfilename, type="ascii", delimiter=",")
-    TP = data.tp
+    TP = list(mWcoeff*numpy.array(data.tp))
     os.remove(tempfilename)
 
-    return TP, TP_freq
+    return TP, TP_freq, PM_range
 
 def renamespec(filename):
     if platform == 'win32':

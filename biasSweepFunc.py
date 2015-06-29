@@ -5,10 +5,18 @@ from control import default_magpot, default_sispot, default_LOfreq, default_UCA,
 from LOinput import RFoff
 from LabJack_control import LabJackU3_DAQ0, disableLabJack
 from StepperControl import DisableDrive, stepper_close, GoForth, GoBack
-from profunc import windir
+from HP437B import closeHailingFrequencies
+from profunc import windir, getLJdata
 from PID import SIS_mV_PID, Emag_PID, LO_PID
 from datetime import datetime, timedelta
 from email_sender import email_caleb, email_groppi
+
+def testPowerRange(TP_filenames):
+    aveTP=[]
+    for TP_filename in TP_filenames:
+        temp_TP, TP_freq,PM_range = getLJdata(TP_filename)
+        aveTP.append(numpy.mean(temp_TP))
+    return aveTP
 
 def GetTime(seconds):
     sec = timedelta(seconds=int(seconds))
@@ -100,6 +108,8 @@ def sweepShutDown(testMode=False,biasOnlyMode=False,chopper_off=False,turnRFoff=
                 print "THE RF SIGNAL IS STILL ON!"
             print 'closing LabJack connection'
             disableLabJack()
+            print "closing HP437B power meter connection"
+            closeHailingFrequencies()
             if not chopper_off:
                 GoBack()
                 #GoForth()

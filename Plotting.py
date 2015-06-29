@@ -1054,12 +1054,12 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
         ######################################
 
         ### Get The Astronomy Quality Processed Sweep Data
-        Yfactor,yerror,y_pot,mV_Yfactor,y_mVerror,y_uA,y_uAerror,y_TP,y_TPerror,\
-           hot_mV_mean, cold_mV_mean, mV, \
-           hot_mV_std, cold_mV_std, hot_uA_mean, cold_uA_mean, \
-           hot_uA_std, cold_uA_std, hot_TP_mean, cold_TP_mean, hot_TP_std, cold_TP_std,\
-           hot_time_mean, cold_time_mean, hot_pot, cold_pot,\
-           hotdatafound, colddatafound, Ydatafound\
+        Yfactor,yerror,y_pot,y_mV,y_mVerror,y_uA,y_uAerror,y_TP,y_TPerror,\
+        hot_mV_mean, cold_mV_mean, mV, \
+        hot_mV_std, cold_mV_std, hot_uA_mean, cold_uA_mean, \
+        hot_uA_std, cold_uA_std, hot_TP_mean, cold_TP_mean, hot_TP_std, cold_TP_std,\
+        hot_time_mean, cold_time_mean, hot_pot, cold_pot,\
+        hotdatafound, colddatafound, Ydatafound \
                 = getproYdata(proYdatadir)
 
         ### the less processed raw data
@@ -1220,10 +1220,10 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
 
         if ((Ydatafound) and (plot_Yfactor)):
             if ((Y_mV_min is not None) or (Y_mV_max is not None)):
-                status, trim_mV_Yfactor, trimmed_list = DataTrimmer(Y_mV_min, Y_mV_max, mV_Yfactor, [Yfactor])
+                status, trim_mV_Yfactor, trimmed_list = DataTrimmer(Y_mV_min, Y_mV_max, y_mV, [Yfactor])
                 trim_Yfactor = trimmed_list[0]
             else:
-                trim_mV_Yfactor = mV_Yfactor
+                trim_mV_Yfactor = y_mV
                 trim_Yfactor    = Yfactor
 
 
@@ -1245,7 +1245,7 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
 
             xscale_info.append((xscale_str,mV_Yfactor_min,mV_Yfactor_max))
             plot_list, leglines, leglabels \
-                = allstarplotgen(mV_Yfactor, Yfactor, y_std=y_std, std_num=std_num,
+                = allstarplotgen(y_mV, Yfactor, y_std=y_std, std_num=std_num,
                                  plot_list=plot_list, leglines=leglines, leglabels=leglabels,
                                  show_std=show_standdev, find_lin=find_lin_Yf,
                                  label=Yfactor_label, std_label=' sigma', lin_label='',
@@ -1257,7 +1257,7 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                                  der2_int=der2_int, do_der2_conv=do_der2_conv, der2_min_cdf=der2_min_cdf, der2_sigma=der2_sigma,
                                  verbose=verbose)
             plot_list, leglines_junk, leglabels_junk \
-                = xyplotgen(mV_Yfactor, mV_Yfactor*0+1, label='',
+                = xyplotgen(y_mV, y_mV*0+1, label='',
                              plot_list=plot_list, leglines=leglines, leglabels=leglabels,
                             color=Yfactor_color, linw=1, ls='-', scale_str='Yf' )
             if ax2_scaling[1] == 'Yf':
@@ -1581,11 +1581,11 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                 plt.text(xpos, ypos, 'max Y-factor ' +Yfactor_max_str + ' @ '+mV_Yfactor_max_str+' mV', color = Yfactor_color)
                 ypos -= yincrement
                 if Y_mV_min is None:
-                    Y_mV_range_min = min(mV_Yfactor)
+                    Y_mV_range_min = min(y_mV)
                 else:
                      Y_mV_range_min = Y_mV_min
                 if Y_mV_max is None:
-                    Y_mV_range_max = max(mV_Yfactor)
+                    Y_mV_range_max = max(y_mV)
                 else:
                      Y_mV_range_max = Y_mV_max
                 Y_mV_range_min_str = Params_2_str(Y_mV_range_min, '%1.2f')

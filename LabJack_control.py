@@ -34,6 +34,7 @@
 ##############################################
 import time,os
 import u3
+from HP437B import range2uW
 # Caleb's programs
 from profunc import windir
 #########################
@@ -46,11 +47,14 @@ NumChannels = 1
 Resolution = 0 # 0,1,2, or 3 () is highest resolution, 3 is the lowest)
 # max measurments
 loop_max = 3600 # in loop number, big sets of data have to be broken into several packets per time
-
+wavenames=[]
 
 def enableLabJack():
     global LabJack
-    LabJack = u3.U3()        # initialize the interface; assumes a single U3 is plugged in to a USB port
+    try:
+        LabJack = u3.U3()        # initialize the interface; assumes a single U3 is plugged in to a USB port
+    except:
+        pass
     return
 
 def disableLabJack():
@@ -86,8 +90,9 @@ def LabJackU3_AIN0():
 #########################
 ###### LJ_streamTP ######
 #########################
-def LJ_streamTP(filename, SampleFrequency, SampleTime, verbose):
-    # Peter N. Saeta, 2013 November 11
+def LJ_streamTP(filename, SampleFrequency, SampleTime, PM_range=None, verbose=False):
+    wavenames=['tp']
+    # Peter N. Sae]ta, 2013 November 11
     # is a genus
 
     # Caleb Wheeler found this code on the internet and used it like a
@@ -101,7 +106,6 @@ def LJ_streamTP(filename, SampleFrequency, SampleTime, verbose):
     # the accuracy, but the slower the sampling rate must be. See
     # http://labjack.com/support/u3/users-guide/3.2 for details.
 
-    from oldscripts.LabJack_config import wavenames
     filename = windir(filename)
     # Prepare the u3 interface for streaming
     # it should be opened already # LabJack = u3.U3()
@@ -140,7 +144,9 @@ def LJ_streamTP(filename, SampleFrequency, SampleTime, verbose):
             f.write( "\t".join( ['%.6f' % c[i] for c in chans] ) + '\n' )
     if not os.path.isfile(filename):
         with open(filename, 'w') as f:
-            f.write( "frequency=%d\n" % SampleFrequency)
+            f.write( "frequency=%d" % SampleFrequency)
+            if PM_range is not None:f.write(',PM_range=%d\n' % PM_range)
+            else:f.write('\n')
             if wavenames == []:
                 wavenames = ['wave%d' % n for n in range(NumChannels)]
             f.write( '\t'.join(wavenames) + '\n')

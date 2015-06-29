@@ -6,17 +6,18 @@ from profunc import windir, getYnums, getSnums
 from LabJack_control import LabJackU3_DAQ0, LJ_streamTP,enableLabJack, disableLabJack
 from control import  opentelnet, closetelnet, measmag, setmag_only,setmag_highlow, setfeedback, \
     setSIS_only, measSIS_TP, zeropots, mag_channel,\
-    default_magpot, default_sispot, default_LOfreq, default_UCA, default_IF
+    default_magpot, default_sispot, default_LOfreq, default_UCA, default_IF, default_PMrange
 from StepperControl import EnableDrive, initialize, GoForth, GoBack, DisableDrive, stepper_close
 from LOinput import RFon, RFoff, setfreq
 from email_sender   import email_caleb, text_caleb
 from fastSISsweep   import getfastSISsweep
 from getspec import get_multi_band_spec
 from PID import SIS_mV_PID, Emag_PID, LO_PID
+from HP437B import openHailingFrequencies, closeHailingFrequencies, setRange, range2uW
 from biasSweepFunc import MakeSetDirs, makeLists, orderLists,makeparamslist_Rec,  order_lists_around_center,\
     makeparamslist_center, fbmsg, Kmsg, magmsg, sismsg, LOuAmsg, UCAmsg, LOfreqmsg, IFmsg, \
     getSISpotList, getEmagPotList, getLOfreqList, getLOpowList, sweepShutDown, GetTime, \
-    sweepUpdateEmail, finishedEmailSender
+    sweepUpdateEmail, finishedEmailSender, testPowerRange
 
 
 
@@ -24,7 +25,7 @@ def singleSweepLoop(rawdir,
                     K_thisloop,SISpot_thisloop,magpot_thisloop,UCA_thisloop,
                     LOuA_thisloop,LOfreq_thisloop,IFband_thisloop,
                     K_actual,SISpot_actual,magpot_actual,UCA_actual,
-                    LOuA_actual,LOfreq_actual,IFband_actual,feedback_actual,
+                    LOuA_actual,LOfreq_actual,IFband_actual,feedback_actual,PM_range,
 
                     K_first,sisVsweep_trigger,
                     doing_UCA_list,useTHzComputer, do_Ynum,
@@ -533,7 +534,7 @@ def singleSweepLoop(rawdir,
                                     video_band=spec_video_band, resol_band=spec_resol_band, attenu=spec_attenu,
                                     lin_ref_lev=lin_ref_lev, aveNum=aveNum,)
             else:
-                LJ_streamTP(TP_filename, TPSampleFrequency, TPSampleTime, verbose)
+                LJ_streamTP(TP_filename, TPSampleFrequency, TPSampleTime,PM_range=PM_range, verbose=verbose)
         else:
             print "testMode on, pretending to take SIS bias data and the TP measurement"
             if (testMode and (testModeWaitTime is not None)):time.sleep(testModeWaitTime)
@@ -569,12 +570,24 @@ def singleSweepLoop(rawdir,
         print ''
 
     # end of the bias sweep loop
+    resetRange = 0
+    if do_Ynum:
+        if K_first != K_actual:
+            TP_filenames=[]
+            TP_filenames.append(TP_filename)
+            try:TP_filenames.append(TP_filename.replace('hot','cold'))
+            except:TP_filenames.append(TP_filename.replace('cold','hot'))
+            testPowerRange(TP_filenames)
+
+    else:
+        pass
 
 
 
+    return K_actual,SISpot_actual,magpot_actual,UCA_actual,LOuA_actual,\
+           LOfreq_actual,IFband_actual,feedback_actual,Ynum,sweepN,resetRange
 
 
-    return
 
 
 
@@ -715,6 +728,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=
             UCA_actual = default_UCA
             LOfreq_actual = default_LOfreq
             IFband_actual = default_IF
+            PM_range = default_PMrange
         else:
             ### Enable the THz bias computer
             opentelnet()
@@ -735,6 +749,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=
                 UCA_actual = default_UCA
                 LOfreq_actual = default_LOfreq
                 IFband_actual = default_IF
+                PM_range = default_PMrange
             else:
                 ### Open connection to the LabJack
                 enableLabJack()
@@ -747,9 +762,14 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=
                 setfreq(default_LOfreq)
                 LOfreq_actual = default_LOfreq
                 if verboseSet:LOfreqmsg(LOfreq_actual)
-                RFon()
-                # Enable the optical chopper
 
+                RFon()
+                if verboseSet: print "RF is on"
+                # Open communication with the HP437B power meter
+                openHailingFrequencies()
+                setRange(default_PMrange, verbose-verbose)
+                PM_range = default_PMrange
+                if verboseSet: print "the HP437B power meter has been set to the default range of:",default_PMrange
                 # Communication with the thing that sets the IF band pass would be here
                 IFband_actual = default_IF
                 if verboseSet:IFmsg(IFband_actual)
@@ -945,10 +965,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=
                     sweepN += 1
                 else:
                     break
-            sweepN -=1
-
-
-
+            sweepN-=1
 
         ####################################################
         ###### Start of Receiver Setting Control Loop ######
@@ -980,61 +997,65 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=
 
 
 
-            singleSweepLoop(rawdir,
-                             K_thisloop,sisPot_thisloop,magpot_thisloop,UCA_thisloop,
-                             LOuA_thisloop,LOfreq_thisloop,IFband_thisloop,
-                             K_actual,sisPot_actual,magpot_actual,UCA_actual,
-                             LOuA_actual,LOfreq_actual,IFband_actual,feedback_actual,
+            K_actual,SISpot_actual,magpot_actual,UCA_actual,LOuA_actual,\
+                LOfreq_actual,IFband_actual,feedback_actual,Ynum,sweepN,resetRange\
+                = singleSweepLoop(rawdir,
+                                  K_thisloop,sisPot_thisloop,magpot_thisloop,UCA_thisloop,
+                                  LOuA_thisloop,LOfreq_thisloop,IFband_thisloop,
+                                  K_actual,sisPot_actual,magpot_actual,UCA_actual,
+                                  LOuA_actual,LOfreq_actual,IFband_actual,feedback_actual,PM_range,
 
-                             K_first,sisVsweep_trigger,
-                             doing_UCA_list,useTHzComputer, do_Ynum,
+                                  K_first,sisVsweep_trigger,
+                                  doing_UCA_list,useTHzComputer, do_Ynum,
 
-                             Ynum=Ynum,sweepN=sweepN,
+                                  Ynum=Ynum,sweepN=sweepN,
 
-                             verbose=verbose, verboseTop=verboseTop, verboseSet=verboseSet, #careful=False,
+                                  verbose=verbose, verboseTop=verboseTop, verboseSet=verboseSet, #careful=False,
 
-                             # Parameter sweep behaviour
-                             testMode=testMode, testModeWaitTime=testModeWaitTime, chopper_off=chopper_off,
-                             biasOnlyMode=biasOnlyMode,
-                             dwellTime_BenchmarkSIS=dwellTime_BenchmarkSIS,
-                             dwellTime_BenchmarkMag=dwellTime_BenchmarkMag,
-                             dwellTime_fastSweep=dwellTime_fastSweep,dwellTime_unpumped=dwellTime_unpumped,
-                             dwellTime_sisVsweep=dwellTime_sisVsweep,
+                                  # Parameter sweep behaviour
+                                  testMode=testMode, testModeWaitTime=testModeWaitTime, chopper_off=chopper_off,
+                                  biasOnlyMode=biasOnlyMode,
+                                  dwellTime_BenchmarkSIS=dwellTime_BenchmarkSIS,
+                                  dwellTime_BenchmarkMag=dwellTime_BenchmarkMag,
+                                  dwellTime_fastSweep=dwellTime_fastSweep,dwellTime_unpumped=dwellTime_unpumped,
+                                  dwellTime_sisVsweep=dwellTime_sisVsweep,
 
-                             ## Benchmark Tests
-                             # THz computer fast sweeps
-                             do_fastsweep=do_fastsweep, do_unpumpedsweep=do_unpumpedsweep,
-                             fastsweep_feedback=fastsweep_feedback,
-                             # measure the electromagnet and the SIS junction at their standard positions
-                             benchSISmeasNum=benchSISmeasNum,benchMAGmeasNum=benchMAGmeasNum,
+                                  ## Benchmark Tests
+                                  # THz computer fast sweeps
+                                  do_fastsweep=do_fastsweep, do_unpumpedsweep=do_unpumpedsweep,
+                                  fastsweep_feedback=fastsweep_feedback,
+                                  # measure the electromagnet and the SIS junction at their standard positions
+                                  benchSISmeasNum=benchSISmeasNum,benchMAGmeasNum=benchMAGmeasNum,
 
-                             # mV sweep Parameters
-                             sisV_feedback=sisV_feedback,
-                             SISbiasMeasNum=SISbiasMeasNum,
+                                  # mV sweep Parameters
+                                  sisV_feedback=sisV_feedback,
+                                  SISbiasMeasNum=SISbiasMeasNum,
 
-                             # Fast sweeps
-                             fSweepStart=fSweepStart, fSweepStop=fSweepStop, fSweepStep=fSweepStep,
+                                  # Fast sweeps
+                                  fSweepStart=fSweepStart, fSweepStop=fSweepStop, fSweepStep=fSweepStep,
 
-                             # Powermeter read through LabJack
-                             TPSampleFrequency=TPSampleFrequency, TPSampleTime=TPSampleTime,
+                                  # Powermeter read through LabJack
+                                  TPSampleFrequency=TPSampleFrequency, TPSampleTime=TPSampleTime,
 
-                             # spectrum analyzer settings
-                             getspecs=getspecs, spec_linear_sc=spec_linear_sc, spec_freq_vector=spec_freq_vector,
-                             spec_sweep_time=spec_sweep_time, spec_video_band=spec_video_band,
-                             spec_resol_band=spec_resol_band,
-                             spec_attenu=spec_attenu, lin_ref_lev=lin_ref_lev, aveNum=aveNum,
+                                  # spectrum analyzer settings
+                                  getspecs=getspecs, spec_linear_sc=spec_linear_sc, spec_freq_vector=spec_freq_vector,
+                                  spec_sweep_time=spec_sweep_time, spec_video_band=spec_video_band,
+                                  spec_resol_band=spec_resol_band,
+                                  spec_attenu=spec_attenu, lin_ref_lev=lin_ref_lev, aveNum=aveNum,
 
-                             # Electromagnet Options
-                             do_magisweep=do_magisweep, mag_meas=mag_meas,
-                             magi_list=magi_list,EmagPotList=EmagPotList,
+                                  # Electromagnet Options
+                                  do_magisweep=do_magisweep, mag_meas=mag_meas,
+                                  magi_list=magi_list,EmagPotList=EmagPotList,
 
-                             # setting the local ocsilattor pump power
-                             do_LOuAsearch=do_LOuAsearch,  do_LOuApresearch=do_LOuApresearch,
-                             LOuA_search_every_sweep=LOuA_search_every_sweep,
-                             LOuA_list=LOuA_list,UCA_list=UCA_list,
+                                  # setting the local ocsilattor pump power
+                                  do_LOuAsearch=do_LOuAsearch,  do_LOuApresearch=do_LOuApresearch,
+                                  LOuA_search_every_sweep=LOuA_search_every_sweep,
+                                  LOuA_list=LOuA_list,UCA_list=UCA_list,
 
-                             # stepper motor control options
-                             forth_dist = forth_dist, back_dist = back_dist)
+                                  # stepper motor control options
+                                  forth_dist = forth_dist, back_dist = back_dist)
+
+
 
 
 
@@ -1043,7 +1064,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=
             ######################################
             emailTime = sweepUpdateEmail(loopStartTime=loopStartTime,loopsComplete=param_index+1,
                                          totalLoops=list_len,emailTime=emailTime,
-                                         seconds_per_email=1200,
+                                         seconds_per_email=seconds_per_email,
                                          startTime=startTime,verbose=verboseTop,
                                          FiveMinEmail=FiveMinEmail,
                                          PeriodicEmail=PeriodicEmail,                                 # except:

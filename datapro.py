@@ -219,7 +219,7 @@ def getrawdata(sweepdir, verbose=False):
             sweep_uA_mean.append(numpy.mean(temp_uA))
             sweep_uA_std.append(numpy.std(temp_uA))
             sweep_time_mean.append(numpy.mean(temp_time))
-            temp_TP, TP_freq = getLJdata(sweepdir + "TP" + str(sweep_index + 1) + '.csv')
+            temp_TP, TP_freq, PM_range = getLJdata(sweepdir + "TP" + str(sweep_index + 1) + '.csv')
             if sweep_index == 0:
                 TP_int_time    = len(temp_TP)/TP_freq
                 meas_num = len(temp_mV)

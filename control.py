@@ -25,6 +25,7 @@ default_sispot = 59100 # 1.3 mV ### 56800 # 1.8 mV ### 59100 # 1.3 mV
 default_LOfreq = 672 # GHz
 default_UCA    = 0 # V
 default_IF     = 2.3 # GHz
+default_PMrange= 2
 
 
 
