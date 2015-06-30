@@ -281,8 +281,9 @@ setnames = []
 
 #setnames.extend(['Jun08_15/standingWaveTest10'])
 
-setnames.extend(['Jun08_15/standingWaveTest_noChopper'])
+#setnames.extend(['Jun08_15/standingWaveTest_noChopper'])
 
+setnames.extend(['Jun08_15/standingWaveTest_noChopper_5papers'])
 
 parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
 fullpaths_raw = [windir(parent_folder + setname + '/') for setname in setnames]

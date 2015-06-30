@@ -6,7 +6,7 @@
     # then the python part
     # from http://labjack.com/support/labjackpython
     # download the link, for me it was: http://labjack.com/sites/default/files/2014/04/LabJackPython-4-24-2014.zip
-    # the after unpaking the package, go to that folder and type: "sudo python setup.py install" in the asme directory as setup.py
+    # the after unpaking the package, go to that folder and type: "sudo python setup.py install" in the same directory as setup.py
     #
 
 
@@ -68,6 +68,17 @@ def LabJackU3_DAQ0(UCA_voltage):
     status = False
     if (0 <= UCA_voltage) and (UCA_voltage <= 5):
         LabJack.writeRegister(5000, UCA_voltage)
+        status = True
+    else:
+        print "UCA_voltage was not set properly, it was either greater than 5,"+\
+              " less than 0, or not a number. UCA_voltage = "+str(UCA_voltage)+". Returning Status false"
+    return status
+
+
+def LabJackU3_DAQ1(UCA_voltage):
+    status = False
+    if (0 <= UCA_voltage) and (UCA_voltage <= 5):
+        LabJack.writeRegister(5001, UCA_voltage)
         status = True
     else:
         print "UCA_voltage was not set properly, it was either greater than 5,"+\
