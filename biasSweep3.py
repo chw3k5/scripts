@@ -601,7 +601,91 @@ def singleSweepLoop(rawdir,
            LOfreq_actual,IFband_actual,feedback_actual,Ynum,sweepN,resetRange
 
 
+def BiasSweepInit(verbose=True, verboseTop=True, verboseSet=True, warning=False,#careful=False,
+                  testMode=True, testModeWaitTime=None, warmmode=False, turnRFoff=True,
+                  chopper_off=False, biasOnlyMode=False,
+                  sisV_feedback=True,
+                  # stepper motor control options
+                  stepper_vel = 0.5, stepper_accel = 1):
+    ##############################################################################
+    ###### Enable some instruments that will be required to make this sweep ######
+    ##############################################################################
+    if ((testModeWaitTime is not None) and (verboseSet)):time.sleep(testModeWaitTime)
+    startTime = time.time()
+    ### A shut down procedure is executed at the end of the script not matter what exceptions are raised
+    try:
+        ##############################################################################
+        ###### Enable some instruments that will be required to make this sweep ######
+        ##############################################################################
+        if testMode:
+            feedback_actual = sisV_feedback
+            magpot_actual = default_magpot
+            sisPot_actual = default_sispot
+            UCA_actual = default_UCA
+            LOfreq_actual = default_LOfreq
+            IFband_actual = default_IF
+            PM_range = default_PMrange
+        else:
+            ### Enable the THz bias computer
+            opentelnet()
+            # set the feedback
+            setfeedback(feedback=sisV_feedback)
+            feedback_actual = sisV_feedback
+            if verboseSet:fbmsg(feedback_actual)
+            # set the magnet to default position
+            setmag_highlow(default_magpot)
+            magpot_actual = default_magpot
+            if verboseSet:magmsg(magpot_actual)
+            # set the SIS pot
+            setSIS_only(default_sispot, feedback_actual, verbose=False, careful=False)
+            sisPot_actual = default_sispot
+            if verboseSet:sismsg(sisPot_actual)
 
+            if biasOnlyMode:
+                UCA_actual = default_UCA
+                LOfreq_actual = default_LOfreq
+                IFband_actual = default_IF
+                PM_range = default_PMrange
+            else:
+                ### Open connection to the LabJack
+                enableLabJack()
+                # Turn off the UCA voltage (no attenuation)
+                LabJackU3_DAQ0(default_UCA)
+                UCA_actual = default_UCA
+                if verboseSet:UCAmsg(UCA_actual)
+
+                ### open communication to the signal generator and set the RF input to prescribed level and frequency
+                setfreq(default_LOfreq)
+                LOfreq_actual = default_LOfreq
+                if verboseSet:LOfreqmsg(LOfreq_actual)
+
+                RFon()
+                if verboseSet: print "RF is on"
+                # Open communication with the HP437B power meter
+                openHailingFrequencies()
+                setRange(default_PMrange, verbose=verbose)
+                PM_range = default_PMrange
+                if verboseSet: print "the HP437B power meter has been set to the default range of:",default_PMrange
+                # Communication with the thing that sets the IF band pass would be here
+                IFband_actual = default_IF
+                if verboseSet:IFmsg(IFband_actual)
+
+                if chopper_off:
+                    pass
+                else:
+                    if warning:
+                        raw_input("Place optical chopper in 300K position, hit anything to continue")
+                    EnableDrive()
+                    initialize(vel=stepper_vel, accel=stepper_accel, verbose=verbose)
+
+    except:
+        email_caleb('Dead Bias Sweep', 'The Bias sweep script has hit some sort of exception')
+        text_caleb('The Bias sweep script has hit some sort of exception')
+        sweepShutDown(testMode=testMode,biasOnlyMode=biasOnlyMode,chopper_off=chopper_off,turnRFoff=turnRFoff)
+
+
+
+    return startTime,feedback_actual,magpot_actual,sisPot_actual,UCA_actual,LOfreq_actual,IFband_actual,PM_range
 
 
 
@@ -678,8 +762,6 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=
     #import shutil
     #shutil.rmtree(datadir)
     if ((testModeWaitTime is not None) and (verboseSet)):time.sleep(testModeWaitTime)
-    startTime = time.time()
-
     ######################################
     ###### Test mode configurations ######
     ######################################
@@ -728,75 +810,17 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=
         temp_K_list.append(min(K_list))
         K_list = temp_K_list
 
+    startTime,feedback_actual,magpot_actual,sisPot_actual,UCA_actual,LOfreq_actual,IFband_actual,PM_range\
+        = BiasSweepInit(verbose=verbose, verboseTop=verboseTop, verboseSet=verboseSet, warning=warning,
+                        testMode=testMode, testModeWaitTime=testModeWaitTime, warmmode=warmmode, turnRFoff=turnRFoff,
+                        chopper_off=chopper_off, biasOnlyMode=biasOnlyMode,
+                        sisV_feedback=sisV_feedback,
+                        # stepper motor control options
+                        stepper_vel=stepper_vel, stepper_accel=stepper_accel)
+
     ### A shut down procedure is executed at the end of the script not matter what exceptions are raised
     # try:
     if True:
-        ##############################################################################
-        ###### Enable some instruments that will be required to make this sweep ######
-        ##############################################################################
-        if testMode:
-            feedback_actual = sisV_feedback
-            magpot_actual = default_magpot
-            sisPot_actual = default_sispot
-            UCA_actual = default_UCA
-            LOfreq_actual = default_LOfreq
-            IFband_actual = default_IF
-            PM_range = default_PMrange
-        else:
-            ### Enable the THz bias computer
-            opentelnet()
-            # set the feedback
-            setfeedback(feedback=sisV_feedback)
-            feedback_actual = sisV_feedback
-            if verboseSet:fbmsg(feedback_actual)
-            # set the magnet to default position
-            setmag_highlow(default_magpot)
-            magpot_actual = default_magpot
-            if verboseSet:magmsg(magpot_actual)
-            # set the SIS pot
-            setSIS_only(default_sispot, feedback_actual, verbose=False, careful=False)
-            sisPot_actual = default_sispot
-            if verboseSet:sismsg(sisPot_actual)
-
-            if biasOnlyMode:
-                UCA_actual = default_UCA
-                LOfreq_actual = default_LOfreq
-                IFband_actual = default_IF
-                PM_range = default_PMrange
-            else:
-                ### Open connection to the LabJack
-                enableLabJack()
-                # Turn off the UCA voltage (no attenuation)
-                LabJackU3_DAQ0(default_UCA)
-                UCA_actual = default_UCA
-                if verboseSet:UCAmsg(UCA_actual)
-
-                ### open communication to the signal generator and set the RF input to prescribed level and frequency
-                setfreq(default_LOfreq)
-                LOfreq_actual = default_LOfreq
-                if verboseSet:LOfreqmsg(LOfreq_actual)
-
-                RFon()
-                if verboseSet: print "RF is on"
-                # Open communication with the HP437B power meter
-                openHailingFrequencies()
-                setRange(default_PMrange, verbose=verbose)
-                PM_range = default_PMrange
-                if verboseSet: print "the HP437B power meter has been set to the default range of:",default_PMrange
-                # Communication with the thing that sets the IF band pass would be here
-                IFband_actual = default_IF
-                if verboseSet:IFmsg(IFband_actual)
-
-                if chopper_off:
-                    pass
-                else:
-                    if warning:
-                        raw_input("Place optical chopper in 300K position, hit anything to continue")
-                    EnableDrive()
-                    initialize(vel=stepper_vel, accel=stepper_accel, verbose=verbose)
-
-                    
-
         #######################################
         ###### Sort the sweep parameters ######
         #######################################

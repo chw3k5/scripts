@@ -137,7 +137,8 @@ Y_magpot_legend_loc = 3
 ########################################
 ###### Anything verses Everything ######
 ########################################
-do_LOuA_LOmV_AvsE=True
+do_LOuA_LOmV_AvsE=False
+do_LOmV_LOfreq_AvsE = True
 do_LOuA_LOfreq_AvsE = False
 
 neutral_color_AvsE='Green'
@@ -175,6 +176,27 @@ LOuA_LOmV_AvsE_alpha = 0.7
 LOuA_LOmV_AvsE_legend_size = 10
 LOuA_LOmV_AvsE_legend_num_of_points = 3
 LOuA_LOmV_AvsE_legend_loc = 0
+
+
+# LOmV_LOfreq
+LOmV_LOfreq_AvsE_plotdir = local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/LOmV_LOfreq/'))
+
+LOmV_LOfreq_AvsE_xlim_list = None#[1.2, 1.4] # None or list of two [645, 695]
+LOmV_LOfreq_AvsE_xlabel_str="LO frequency (GHz)"
+
+LOmV_LOfreq_AvsE_ylim_list = None#[0, 25] # None or list of two [645, 695]
+LOmV_LOfreq_AvsE_ylabel_str="Current (uA)"
+
+LOmV_LOfreq_AvsE_ls = ""
+LOmV_LOfreq_AvsE_linw = 3
+LOmV_LOfreq_AvsE_fmt = 'o'
+LOmV_LOfreq_AvsE_markersize = 5
+LOmV_LOfreq_AvsE_alpha = 0.7
+
+LOmV_LOfreq_AvsE_legend_size = 10
+LOmV_LOfreq_AvsE_legend_num_of_points = 3
+LOmV_LOfreq_AvsE_legend_loc = 0
+
 
 # LOuA_LOfreq
 LOuA_LOfreq_AvsE_plotdir = local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/LOuA_LOfreq/'))
@@ -252,8 +274,15 @@ setnames = []
 # setnames.extend(['Jun08_15/bestLOfreq/'+str(freq) for freq in possibleLOfreqs])
 # possibleLOfreqs = [660,664,665,672,677,685]
 # setnames.extend(['Jun08_15/magsweep/'+str(freq) for freq in possibleLOfreqs])
-possibleLOfreqs=range(650,693)
-setnames.extend(['Jun08_15/standingWaveTest8/'+str(freq) for freq in possibleLOfreqs])
+# standingWaveNums = [6,7,8,9]
+# for standingWaveNum in standingWaveNums:
+#     possibleLOfreqs=range(650,693)
+#     setnames.extend(['Jun08_15/standingWaveTest'+str(standingWaveNum)+'/'+str(freq) for freq in possibleLOfreqs])
+
+#setnames.extend(['Jun08_15/standingWaveTest10'])
+
+setnames.extend(['Jun08_15/standingWaveTest_noChopper'])
+
 
 parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
 fullpaths_raw = [windir(parent_folder + setname + '/') for setname in setnames]
@@ -352,7 +381,11 @@ def return_variable(variable_str, Ysweep):
 
 def split_variable(K_vals,variables,variables_std=None):
     [K_val1,K_val2] = K_vals
-    [var1,var2] = variables
+    if variables is None:
+        var1=None
+        var2=None
+    else:
+        [var1,var2] = variables
     if variables_std is None:
         var1_std = None
         var2_std = None
@@ -574,7 +607,7 @@ def anything_vs(independent_variable_str,
                 dVar_linw = 3,
                 dVar_fmt = 'o',
                 dVar_markersize = 5,
-                dVar_alpha = 1,
+                dVar_alpha = 1.0,
                 dVar_legend_size = 10,
                 dVar_legend_num_of_points = 3,
                 dVar_legend_loc = 3):
@@ -818,7 +851,7 @@ def anything_vs(independent_variable_str,
 
 
 
-if any([do_LOuA_LOmV_AvsE,do_LOuA_LOfreq_AvsE]):
+if any([do_LOuA_LOmV_AvsE,do_LOmV_LOfreq_AvsE,do_LOuA_LOfreq_AvsE]):
     if do_LOuA_LOmV_AvsE:
         anything_vs(independent_variable_str='SIS_uA',
                     dependent_variable_str='SIS_mV',
@@ -835,6 +868,24 @@ if any([do_LOuA_LOmV_AvsE,do_LOuA_LOfreq_AvsE]):
                     dVar_legend_size = LOuA_LOmV_AvsE_legend_size,
                     dVar_legend_num_of_points = LOuA_LOmV_AvsE_legend_num_of_points,
                     dVar_legend_loc = LOuA_LOmV_AvsE_legend_loc)
+    if do_LOmV_LOfreq_AvsE:
+        anything_vs(independent_variable_str='SIS_mV',
+                    dependent_variable_str='LOfreq',
+                    plotdir=LOmV_LOfreq_AvsE_plotdir,
+                    plot_xlim_list=LOmV_LOfreq_AvsE_xlim_list,
+                    xlabel_str=LOmV_LOfreq_AvsE_xlabel_str,
+                    plot_ylim_list=LOmV_LOfreq_AvsE_ylim_list,
+                    ylabel_str=LOmV_LOfreq_AvsE_ylabel_str,
+                    dVar_ls = LOmV_LOfreq_AvsE_ls,
+                    dVar_linw = LOmV_LOfreq_AvsE_linw,
+                    dVar_fmt = LOmV_LOfreq_AvsE_fmt,
+                    dVar_markersize = LOmV_LOfreq_AvsE_markersize,
+                    dVar_alpha = LOmV_LOfreq_AvsE_alpha,
+                    dVar_legend_size = LOmV_LOfreq_AvsE_legend_size,
+                    dVar_legend_num_of_points = LOmV_LOfreq_AvsE_legend_num_of_points,
+                    dVar_legend_loc = LOmV_LOfreq_AvsE_legend_loc)
+
+
     if do_LOuA_LOfreq_AvsE:
         anything_vs(independent_variable_str='SIS_uA',
                     dependent_variable_str='LOfreq',

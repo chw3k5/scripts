@@ -6,6 +6,7 @@ from datapro import SweepDataPro, YdataPro
 from profunc import local_copy
 from TestSweeper import testsweeps, protestsweeps, plottestsweeps
 from profunc import windir
+import random
 
 
 ###########################
@@ -22,7 +23,7 @@ norm_freq=2.3  # GHz
 norm_band=0.015 # GHz
 use_google_drive=False
 do_email = False
-warning  = False
+warning  = True
 
 parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
 
@@ -40,8 +41,11 @@ parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
             # 670,671,672,673,674,675,676,677,678,679,
             # 680,681,682,683,684,685,686,687,688,
             # 690,691,692
-LOfreq_list=range(650,693)
-for LOfreq in LOfreq_list:
+minFreq=650
+maxFreq=692
+numOfSweeps=100
+freqList=[(abs(minFreq-maxFreq)*random.random())+minFreq for index in range(numOfSweeps)]
+if True:
     # The directory what the data is kept
     setnames = []
     # setnames.extend(['set4','set5','set6','set7','LOfreq'])
@@ -49,7 +53,7 @@ for LOfreq in LOfreq_list:
     # setnames.extend(['Mar24_15/LO_power','Mar24_15/Yfactor_test'])
     # setnames.extend(['Nov05_14/Y_LOfreqMAGLOuA','Nov05_14/Y_MAG','Nov05_14/Y_MAG2','Nov05_14/Y_MAG3','Nov05_14/Y_standard'])
     # setnames.extend(['Oct20_14/LOfreq','Oct20_14/Y_LO_pow','Oct20_14/Y_MAG','Oct20_14/Y_MAG2','Oct20_14'])
-    thisRun = 'Jun08_15/standingWaveTest9/'+str(int(LOfreq))+'/'
+    thisRun = 'Jun08_15/standingWaveTest_noChopper_5papers/'
     setnames.extend([thisRun])
     datadir = parent_folder + thisRun
 
@@ -117,7 +121,7 @@ for LOfreq in LOfreq_list:
 
                   # Local Ocsillator frequency selector
                   LOfreq_start=650, LOfreq_stop=692, LOfreq_step=1,
-                  LOfreqs_list=[LOfreq],
+                  LOfreqs_list=freqList,
 
                   # Intermediate Frequency Band
                   IFband_start=norm_freq, IFband_stop=norm_freq, IFband_step=0.10,

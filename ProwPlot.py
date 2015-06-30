@@ -99,7 +99,7 @@ if do_sweeps:
 ### For Y factor sweeps ###
 ###########################
 ### For Y-factor data and Sweeps ###
-do_Ysweeps              = True
+do_Ysweeps              = False
 do_YdataPro             = True
 do_YfactotSweepsPlotter = True
 do_YSpectra_Plotter     = False
@@ -119,7 +119,7 @@ setnames = []
 # setnames.extend(['Nov05_14/Y_LOfreqMAGLOuA','Nov05_14/Y_MAG','Nov05_14/Y_MAG2','Nov05_14/Y_MAG3','Nov05_14/Y_standard'])
 # setnames.extend(['Oct20_14/LOfreq','Oct20_14/Y_LO_pow','Oct20_14/Y_MAG','Oct20_14/Y_MAG2','Oct20_14'])
 # setnames.extend(['Jun08_15/RandS'])
-setnames.extend(['Jun08_15/standingWaveTest/'])
+setnames.extend(['Jun08_15/standingWaveTest10/'])
 parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
 fullpaths = [windir(parent_folder + setname + '/') for setname in setnames]
 for datadir in fullpaths:
@@ -130,8 +130,8 @@ for datadir in fullpaths:
         search4Ynums = False
     if do_Ysweeps:
         sweep_num = start_num
-
-    BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=False,
+    if do_Ysweeps:
+        BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=False,
 
               # Parameter sweep behaviour
               Kaxis=0, sisVaxis=1, magaxis=3, LOpowaxis=2, LOfreqaxis=4, IFbandaxis=5,

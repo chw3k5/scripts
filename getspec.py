@@ -5,9 +5,10 @@ import os
 from profunc import windir
 from LabJack_control import LJ_streamTP
 
-extra_sleep_fraction = 0.05 # fraction of the total sweep time to add to waiting time for a singe sweep
-extra_sleep_float    = 1.0  # seconds added to total sweep time
-min_sleep_time       = 10
+extra_sleep_fraction = 0.01 # fraction of the total sweep time to add to waiting time for a singe sweep
+extra_sleep_float    = 0.0  # seconds added to total sweep time
+min_sleep_time       = 120
+maxDiffTime           = 120 # extra time given to finish a sweep (if needed) seconds
 
 GPIB_str = "GPIB0::5::INSTR"
 
@@ -92,6 +93,7 @@ def start_spec_grab(spec_filename,
     #################
     # trigger a new sweep to start
     sa.write('clrw tra')
+    #sa.write('TS')
     sweep_sleep = (sweep_time_float*aveNum)*(1+extra_sleep_fraction) + extra_sleep_float
     if sweep_sleep < min_sleep_time:
         sweep_sleep = min_sleep_time
@@ -102,11 +104,26 @@ def start_spec_grab(spec_filename,
 
     return sweep_sleep
 
-def finish_spec_grab(spec_filename,freq_start=0., freq_stop=5., verbose=False, linear_sc=False):
+def finish_spec_grab(spec_filename,freq_start=0., freq_stop=5., VAVG=1, verbose=False, linear_sc=False):
     freq_list=list(numpy.arange(freq_start, freq_stop,((freq_stop-freq_start)/600.0)))
     freq_list.append(freq_stop)
 
     # get the trace data from the sweep that was just preformed
+    finished=False
+    startTime=time.time()
+    while not finished:
+        diffTime = time.time() - startTime
+        sa.write('Done ?')
+        done_output = sa.read()
+        sa.write('VAVG ?')
+        avag_output=sa.read()
+        print avag_output
+        if (((int(done_output)==1) and (int(avag_output)==VAVG)) or (maxDiffTime < diffTime)):
+            finished=True
+        else:
+            time.sleep(1)
+            if verbose: print 'Extra spectra time'
+
     sa.write('tra?')
     #count = 0
     #while True:
@@ -164,9 +181,9 @@ def getspec(spec_filename,
                                   sweep_time=sweep_time, video_band=video_band,
                                   resol_band=resol_band, attenu=attenu,
                                   aveNum=aveNum, lin_ref_lev=lin_ref_lev)
-
-
-    finish_spec_grab(spec_filename, freq_start=freq_start, freq_stop=freq_stop,
+    if verbose:print "Sleeping for",sweep_sleep,'seconds'
+    time.sleep(sweep_sleep)
+    finish_spec_grab(spec_filename, freq_start=freq_start, freq_stop=freq_stop, VAVG=aveNum,
                      verbose=verbose, linear_sc=linear_sc)
 
     return
@@ -187,7 +204,7 @@ def getspecPlusTP(spec_filename, TP_filename, TPSampleFrequency, verbose=False, 
         # let the LabJack get total power data while the spectral sweep is taking place
         LJ_streamTP(TP_filename, TPSampleFrequency, sweep_sleep, verbose)
 
-    finish_spec_grab(spec_filename, freq_start=freq_start, freq_stop=freq_stop,
+    finish_spec_grab(spec_filename, freq_start=freq_start, freq_stop=freq_stop, VAVG=aveNum,
                  verbose=verbose, linear_sc=linear_sc)
 
     return
@@ -252,7 +269,8 @@ def LOfreqSweep():
             getspecPlusTP(spec_filename=test_dir+str(LOfreq)+'spec_biased'+'.csv',
                           TP_filename=test_dir+str(LOfreq)+'_biased.csv',
                           TPSampleFrequency=100, verbose=True, linear_sc=True,
-                          freq_start=freq_vector[freq_index], freq_stop=freq_vector[freq_index+1], sweep_time='AUTO', video_band=30, resol_band=30, attenu=0,
+                          freq_start=freq_vector[freq_index], freq_stop=freq_vector[freq_index+1], sweep_time='AUTO',
+                          video_band=30, resol_band=30, attenu=0,
                           aveNum=16, lin_ref_lev=100)
 
 
@@ -263,7 +281,18 @@ def LOfreqSweep():
 
 
 if __name__ == "__main__":
-    LOfreqSweep()
+    # LOfreqSweep()
+    freq_vector = [0,0.4,1.0,1.6,2.2,2.8,3.4,4.0,4.6,5.2,11.2,23.2]
+
+    for freq_index in range(len(freq_vector)-1):
+        spec_filename='C:\\Users\\chwheele\\Google Drive\\Kappa\\NA38\\IVsweep'+\
+                      '\\test\\testSpec'+str(freq_index+1)+'.csv'
+        TP_filename='C:\\Users\\chwheele\\Google Drive\\Kappa\\NA38\\IVsweep'+\
+                    '\\test\\testTP'+str(freq_index+1)+'.csv'
+        getspec(spec_filename=spec_filename, verbose=True, linear_sc=True,
+                freq_start=freq_vector[freq_index], freq_stop=freq_vector[freq_index+1], sweep_time='AUTO',
+                video_band=30, resol_band=30, attenu=0,
+                aveNum=16, lin_ref_lev=100)
 
 
 
