@@ -43,7 +43,7 @@ parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
             # 690,691,692
 minFreq=650
 maxFreq=692
-numOfSweeps=100
+numOfSweeps=1000
 freqList=[(abs(minFreq-maxFreq)*random.random())+minFreq for index in range(numOfSweeps)]
 if True:
     # The directory what the data is kept
@@ -53,7 +53,7 @@ if True:
     # setnames.extend(['Mar24_15/LO_power','Mar24_15/Yfactor_test'])
     # setnames.extend(['Nov05_14/Y_LOfreqMAGLOuA','Nov05_14/Y_MAG','Nov05_14/Y_MAG2','Nov05_14/Y_MAG3','Nov05_14/Y_standard'])
     # setnames.extend(['Oct20_14/LOfreq','Oct20_14/Y_LO_pow','Oct20_14/Y_MAG','Oct20_14/Y_MAG2','Oct20_14'])
-    thisRun = 'Jun08_15/standingWaveTest_noChopper_5papers/'
+    thisRun = 'Jun08_15/standingWaveTest_noChopper_5papers_24Voff_LJdisCon/'
     setnames.extend([thisRun])
     datadir = parent_folder + thisRun
 

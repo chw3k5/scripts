@@ -38,13 +38,13 @@ def setRange(rangeNum=0,verbose=False):
         elif rangeNum == 1:
             if verbose: print "Range of HP437B Power meter set to range 1: -70dBm to -60 dmB"
         elif rangeNum == 2:
-            if verbose: print "Range of HP437B Power meter set to range 1: -60dBm to -50 dmB"
+            if verbose: print "Range of HP437B Power meter set to range 2: -60dBm to -50 dmB"
         elif rangeNum == 3:
-            if verbose: print "Range of HP437B Power meter set to range 1: -50dBm to -40 dmB"
+            if verbose: print "Range of HP437B Power meter set to range 3: -50dBm to -40 dmB"
         elif rangeNum == 4:
-            if verbose: print "Range of HP437B Power meter set to range 1: -40dBm to -30 dmB"
+            if verbose: print "Range of HP437B Power meter set to range 4: -40dBm to -30 dmB"
         elif rangeNum == 5:
-            if verbose: print "Range of HP437B Power meter set to range 1: -30dBm to -20 dmB"
+            if verbose: print "Range of HP437B Power meter set to range 5: -30dBm to -20 dmB"
     else:
         HP437B.write('RM0EN')
         print 'your selection of a range of rangeNum=',rangeNum
