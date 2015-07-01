@@ -24,7 +24,7 @@ default_magpot = 100000 # 65 mA ### 89179 # 45 mA
 default_sispot = 59100 # 1.3 mV ### 56800 # 1.8 mV ### 59100 # 1.3 mV
 default_LOfreq = 672 # GHz
 default_UCA    = 0 # V
-default_IF     = 2.3 # GHz
+default_IF     = 2.3 # V
 default_PMrange= 2
 
 

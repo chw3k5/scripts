@@ -3,7 +3,7 @@ __author__ = 'chwheele'
 import os, sys, numpy, time
 # Caleb's Programs
 from profunc import windir, getYnums, getSnums
-from LabJack_control import LabJackU3_DAQ0, LJ_streamTP,enableLabJack, disableLabJack
+from LabJack_control import LabJackU3_DAQ0, LabJackU3_DAQ1, LJ_streamTP,enableLabJack, disableLabJack
 from control import  opentelnet, closetelnet, measmag, setmag_only,setmag_highlow, setfeedback, \
     setSIS_only, measSIS_TP, zeropots, mag_channel,\
     default_magpot, default_sispot, default_LOfreq, default_UCA, default_IF, default_PMrange
@@ -19,6 +19,43 @@ from biasSweepFunc import MakeSetDirs, makeLists, orderLists,makeparamslist_Rec,
     getSISpotList, getEmagPotList, getLOfreqList, getLOpowList, sweepShutDown, GetTime, \
     sweepUpdateEmail, finishedEmailSender, testPowerRange
 
+
+def setYorSnums(datadir,SISpot_List,do_Ynum):
+    ### post list-making initialization
+    # does the datadir exist? If not, we will make it!
+    rawdir = MakeSetDirs(datadir)
+
+    # Set the trigger This tells the program it needs to make directories
+    sisVsweep_trigger = SISpot_List[0]
+    Ynum=None
+    sweepN=None
+
+    if do_Ynum:
+        # find the higher integer Y number in this directory and set the new sweep to Ynum+1
+        Ynums = getYnums(rawdir)
+        # name this new data something different
+        Ynum = 1
+        while True:
+            format_Ynum = 'Y'+str('%04.f' % Ynum)
+            if format_Ynum in Ynums:
+                Ynum += 1
+            else:
+                break
+        Ynum -=1
+    else:
+        Snums = getSnums(rawdir)
+        # name this new data something different
+        sweepN = 1
+        while True:
+            format_sweepN = str('%05.f' % sweepN)
+            if format_sweepN in Snums:
+                sweepN += 1
+            else:
+                break
+        sweepN-=1
+
+
+    return Ynum,sweepN, rawdir, sisVsweep_trigger
 
 
 def singleSweepLoop(rawdir,
@@ -54,7 +91,7 @@ def singleSweepLoop(rawdir,
                     # Fast sweeps
                     fSweepStart=61000, fSweepStop=65100, fSweepStep=200,
 
-                    # Powermeter read through LabJack
+                    # Power meter read through LabJack
                     TPSampleFrequency=100, TPSampleTime=2,
 
                     # spectrum analyzer settings
@@ -66,7 +103,7 @@ def singleSweepLoop(rawdir,
                     do_magisweep=False, mag_meas=10,
                     magi_list=None,EmagPotList=None,
 
-                    # setting the local ocsilattor pump power
+                    # setting the local oscillator pump power
                     do_LOuAsearch=True,  do_LOuApresearch=False, LOuA_search_every_sweep=False,
                     LOuA_list=None,UCA_list=None,
 
@@ -248,11 +285,13 @@ def singleSweepLoop(rawdir,
             UCA_actual = UCA_thisloop
 
 
-    #### Not currently set to do anything
+    #####################################
     ####### Set IFband (if needed) ######
     #####################################
     if not IFband_thisloop == IFband_actual:
+        LabJackU3_DAQ1(IFband_thisloop)
         IFband_actual = IFband_thisloop
+        if verboseSet:IFmsg(IFband_actual)
 
     #########################################################################
     #########################################################################
@@ -654,6 +693,12 @@ def BiasSweepInit(verbose=True, verboseTop=True, verboseSet=True, warning=False,
                 UCA_actual = default_UCA
                 if verboseSet:UCAmsg(UCA_actual)
 
+                # tune the YIG filter to it default voltage
+                LabJackU3_DAQ1(default_IF)
+                IFband_actual = default_IF
+                if verboseSet:IFmsg(IFband=default_IF)
+
+
                 ### open communication to the signal generator and set the RF input to prescribed level and frequency
                 setfreq(default_LOfreq)
                 LOfreq_actual = default_LOfreq
@@ -742,6 +787,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=
 
               # Intermediate Frequency Band
               IFband_start=1.42, IFband_stop=1.42, IFband_step=0.10,
+              IFband_list=None,
 
               # Electromagnet Options
               do_magisweep=False, mag_meas=10,
@@ -893,7 +939,8 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=
         if biasOnlyMode:
             IFband_list = ['biasOnlyMode']
         else:
-            IFband_list = makeLists(IFband_start, IFband_stop, IFband_step)
+            if IFband_list is None:
+                IFband_list = makeLists(IFband_start, IFband_stop, IFband_step)
 
         ####### fast and unpumped sweep settings
         if fastsweep_feedback:
@@ -971,38 +1018,9 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=
                   "Search for 'Truth_list' in the code to find the source of this error."
             sys.exit()
 
+
         ### post list-making initialization
-        # does the datadir exist? If not, we will make it!
-        rawdir = MakeSetDirs(datadir)
-
-        # Set the trigger This tells the program it needs to make directories
-        sisVsweep_trigger = SISpot_List[0]
-        Ynum=None
-        sweepN=None
-
-        if do_Ynum:
-            # find the higher integer Y number in this directory and set the new sweep to Ynum+1
-            Ynums = getYnums(rawdir)
-            # name this new data something different
-            Ynum = 1
-            while True:
-                format_Ynum = 'Y'+str('%04.f' % Ynum)
-                if format_Ynum in Ynums:
-                    Ynum += 1
-                else:
-                    break
-            Ynum -=1
-        else:
-            Snums = getSnums(rawdir)
-            # name this new data something different
-            sweepN = 1
-            while True:
-                format_sweepN = str('%05.f' % sweepN)
-                if format_sweepN in Snums:
-                    sweepN += 1
-                else:
-                    break
-            sweepN-=1
+        Ynum,sweepN,rawdir,sisVsweep_trigger = setYorSnums(datadir,SISpot_List,do_Ynum)
 
         ####################################################
         ###### Start of Receiver Setting Control Loop ######
@@ -1121,8 +1139,10 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=
                                          seconds_per_email=seconds_per_email,
                                          startTime=startTime,verbose=verboseTop,
                                          FiveMinEmail=FiveMinEmail,
-                                         PeriodicEmail=PeriodicEmail,                                 # except:
-                                         emailGroppi=emailGroppi)                                     #     raise
+                                         PeriodicEmail=PeriodicEmail,
+                                         emailGroppi=emailGroppi)
+    # except:
+    #     raise
     #     # This should send some kind of fault email
     #     email_caleb('Dead Bias Sweep', 'The Bias sweep script has hit some sort of exception')
     #     text_caleb('The Bias sweep script has hit some sort of exception')
