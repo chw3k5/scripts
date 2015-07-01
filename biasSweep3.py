@@ -70,7 +70,7 @@ def singleSweepLoop(rawdir,
                     Ynum=0,sweepN=0,redoFlag=False,
 
                     verbose=True, verboseTop=True, verboseSet=True, #careful=False,
-
+                    sisPot_list2save=None,
                     # Parameter sweep behaviour
                     testMode=True, testModeWaitTime=None, chopper_off=True,
                     biasOnlyMode=False,
@@ -100,7 +100,7 @@ def singleSweepLoop(rawdir,
                     spec_attenu=0, lin_ref_lev=300, aveNum=1,
 
                     # Electromagnet Options
-                    do_magisweep=False, mag_meas=10,
+                    do_magisweep=False,
                     magi_list=None,EmagPotList=None,
 
                     # setting the local oscillator pump power
@@ -302,7 +302,7 @@ def singleSweepLoop(rawdir,
     #################################################################
     ###### Make the path of the data and write new directories ######
     #################################################################
-    if ((SISpot_thisloop==sisVsweep_trigger) and (K_first==K_actual)
+    if (((SISpot_thisloop==sisVsweep_trigger) or sisVsweep_trigger is None) and (K_first==K_actual)
         and (not any([makeBenchmarkSIS,makeBenchmarkMag, fastSweepLoop,unpumpedSweep]))):
         if verboseTop:
             print "New sweep triggered "
@@ -333,7 +333,7 @@ def singleSweepLoop(rawdir,
     ####################################
     ###### Write Data Params Data ######
     ####################################
-    if SISpot_thisloop == sisVsweep_trigger:
+    if (SISpot_thisloop == sisVsweep_trigger or sisVsweep_trigger is None):
         if do_magisweep:
             try:
                 magiset = magi_list[EmagPotList.index(magpot_thisloop)]
@@ -382,6 +382,15 @@ def singleSweepLoop(rawdir,
         params.write('IFband,' + str(IFband_thisloop) + '\n')
         params.write('mag_chan,' + str(mag_channel) + '\n')
         params.close()
+
+        ### record the SIS pot list
+
+        if sisPot_list2save is not None:
+            saveListFilename   = filepath + "sisPoList.csv"
+            h = open(saveListFilename,'w')
+            for writePot in sisPot_list2save:
+                h.write(str(writePot)+'\n')
+            h.close()
 
 
     #######################
@@ -698,7 +707,6 @@ def BiasSweepInit(verbose=True, verboseTop=True, verboseSet=True, warning=False,
                 IFband_actual = default_IF
                 if verboseSet:IFmsg(IFband=default_IF)
 
-
                 ### open communication to the signal generator and set the RF input to prescribed level and frequency
                 setfreq(default_LOfreq)
                 LOfreq_actual = default_LOfreq
@@ -724,9 +732,11 @@ def BiasSweepInit(verbose=True, verboseTop=True, verboseSet=True, warning=False,
                     initialize(vel=stepper_vel, accel=stepper_accel, verbose=verbose)
 
     except:
-        email_caleb('Dead Bias Sweep', 'The Bias sweep script has hit some sort of exception')
-        text_caleb('The Bias sweep script has hit some sort of exception')
+        raise
         sweepShutDown(testMode=testMode,biasOnlyMode=biasOnlyMode,chopper_off=chopper_off,turnRFoff=turnRFoff)
+        raise
+        # email_caleb('Dead Bias Sweep', 'The Bias sweep script has hit some sort of exception')
+        # text_caleb('The Bias sweep script has hit some sort of exception')
 
 
 
@@ -1100,7 +1110,7 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=
                                   spec_attenu=spec_attenu, lin_ref_lev=lin_ref_lev, aveNum=aveNum,
 
                                   # Electromagnet Options
-                                  do_magisweep=do_magisweep, mag_meas=mag_meas,
+                                  do_magisweep=do_magisweep,
                                   magi_list=magi_list,EmagPotList=EmagPotList,
 
                                   # setting the local oscillator pump power

@@ -54,10 +54,6 @@ def enableLabJack():
     LabJack = u3.U3()        # initialize the interface; assumes a single U3 is plugged in to a USB port
     return
 
-def disableLabJack():
-    LabJack.close()
-    return
-
 
 
 ############################
@@ -78,13 +74,20 @@ def LabJackU3_DAQ0(UCA_voltage):
 def LabJackU3_DAQ1(UCA_voltage):
     status = False
     if (0 <= UCA_voltage) and (UCA_voltage <= 5):
-        LabJack.writeRegister(5001, UCA_voltage)
+        LabJack.writeRegister(5002, UCA_voltage)
         status = True
     else:
         print "UCA_voltage was not set properly, it was either greater than 5,"+\
               " less than 0, or not a number. UCA_voltage = "+str(UCA_voltage)+". Returning Status false"
     return status
 
+
+def disableLabJack():
+    print "Zeroing LabJack 0-5V outputs and closing LabJack connection"
+    LabJackU3_DAQ0(0)
+    LabJackU3_DAQ1(0)
+    LabJack.close()
+    return
 
 ############################
 ###### LabJackU3_ANI0 ######
@@ -175,7 +178,6 @@ def LJ_streamTP(filename, SampleFrequency, SampleTime, PM_range=None, verbose=Fa
             diff_time = time.time() - start
             if SampleTime < diff_time:
                 finished = True
-
             if verbose:
                 print( "[%.4d %.2f s]" % (loop, diff_time))
 
@@ -183,3 +185,7 @@ def LJ_streamTP(filename, SampleFrequency, SampleTime, PM_range=None, verbose=Fa
         LabJack.streamStop()
     return
 
+if __name__ == '__main__':
+    enableLabJack()
+    time.sleep(1)
+    disableLabJack()

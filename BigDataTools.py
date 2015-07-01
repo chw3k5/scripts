@@ -274,16 +274,19 @@ setnames = []
 # setnames.extend(['Jun08_15/bestLOfreq/'+str(freq) for freq in possibleLOfreqs])
 # possibleLOfreqs = [660,664,665,672,677,685]
 # setnames.extend(['Jun08_15/magsweep/'+str(freq) for freq in possibleLOfreqs])
-standingWaveNums = [6,7,8,9]
-for standingWaveNum in standingWaveNums:
-    possibleLOfreqs=range(650,693)
-    setnames.extend(['Jun08_15/standingWaveTest'+str(standingWaveNum)+'/'+str(freq) for freq in possibleLOfreqs])
+# standingWaveNums = [6,7,8,9]
+# for standingWaveNum in standingWaveNums:
+#     possibleLOfreqs=range(650,693)
+#     setnames.extend(['Jun08_15/standingWaveTest'+str(standingWaveNum)+'/'+str(freq) for freq in possibleLOfreqs])
+#
+# setnames.extend(['Jun08_15/standingWaveTest10'])
+#
+# setnames.extend(['Jun08_15/standingWaveTest_noChopper'])
+#
+# setnames.extend(['Jun08_15/standingWaveTest_noChopper_5papers'])
 
-setnames.extend(['Jun08_15/standingWaveTest10'])
+setnames.extend(['Jun08_15/standingWaveTest_noChopper_5papers_24Voff_LJdisCon'])
 
-setnames.extend(['Jun08_15/standingWaveTest_noChopper'])
-
-setnames.extend(['Jun08_15/standingWaveTest_noChopper_5papers'])
 
 parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
 fullpaths_raw = [windir(parent_folder + setname + '/') for setname in setnames]

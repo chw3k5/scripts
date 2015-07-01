@@ -1,9 +1,11 @@
 __author__ = 'chwheele'
 import numpy, random, time
 from biasSweep3 import BiasSweepInit, singleSweepLoop,setYorSnums
-from profunc import windir,local_copy
-
-
+from profunc import windir,local_copy,  getSnums, getYnums, getParamDict, getSavedSISpotList,merge_dicts
+from domath import make_monotonic
+from HP437B import setRange
+from costFunc import cost4Y, readCostFile, generateFilenames
+from AliceFunctions import testGeneration
 
 """
 This is program created by Caleb Wheeler and Trevor Toland to help with the searching of the parameter space of THz
@@ -12,188 +14,145 @@ will save a graduate student (or other unsavory worker) from some of the effort 
 to search the parameter spaces of test receivers. The program is named Alice after Alice in Wonderland. Alice's dream
 is to be the greatest graduate student of all time.
 """
-
-
+testMode=False
+warning=False
+(verbose,verboseTop,verboseSet)=(True,True,True)
+do_inital_search=False
+K_list = [295,78]
 turnRFoff=False
 datadir=windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Alice/')
 ### map your parameter and watch them dance around the parameters plane
 
+### If a value is not in range list then is has constant value
+sisPot_list = []
+sisPotSetVal = 59100
+magPotSetVal = 100000
+UCAsetVal = 0
+LOfreqSetVal = 672
+IFvoltSetVal = 0
 
-rangeList=[(57000,65100,'sisPot'),(65100,100000,'magPot'),(0,5,'UCA'),(650,692,'LOfreq'),(3.5,3.5,'IF_volt')]
+sisPot_str='sisPot'
+magPot_str='magPot'
+UCA_str='UCA'
+LOfreq_str='LOfreq'
+IF_volt_str='IF_volt'
+generationNum_str='genNum'
+costY_str='costY'
+rangeList={sisPot_str:(57000,65100),magPot_str:(65100,100000),UCA_str:(0,5,),LOfreq_str:(650,692),IF_volt_str:(0,5)}
 dimSize = len(rangeList) # number of dimensions
 
-popNumber = 10*dimSize # active breeding population
+alivePopNum = 0*dimSize # active breeding population
+initPopNum  = alivePopNum
 iterMax = 1000 # maximum iterations
 F = 0.5 # DE step size [0,2]
-CR = 0.7 #  crossover probabililty  [0, 1]
-VTR = 1.e-6 # VTR		"Value To Reach" (stop when func < VTR)
-
-population=numpy.zeros((popNumber,dimSize))
-for dimIndex in range(dimSize):
-    (dimMax,dimMin,type_str)=rangeList[dimIndex]
-    if type_str == 'sisPot':
-        pass
-
-    for popIndex in range(popNumber):
-        population[popIndex,dimIndex]=(random.random()*abs(dimMin-dimMax))+min([dimMin,dimMax])
-
-print population
+CR = 0.7 #  crossover probability  [0, 1]
+Y2get = 1.8 # VTR		"Value To Reach" (stop when func < VTR)
 
 
 
+chopper_off=False
+if len(K_list)<2:chopper_off=True
+
+do_Ynum=False
+if 1 < len(K_list):
+    do_Ynum=True
+# seed the differential evolution algorithm with some new randomly generated data
+if do_inital_search:
+    initPopulation = []
+    for popIndex in range(initPopNum):
+        popMemberDict = {}
+        for key in rangeList.keys():
+            (maxValue,minValue)=rangeList[key]
+            if ((key == sisPot_str) or (key == magPot_str)):
+                popMemberDict[key]=int(numpy.round((random.random()*abs(maxValue-minValue))+min([maxValue,minValue])))
+            else:
+                popMemberDict[key]=(random.random()*abs(maxValue-minValue))+min([maxValue,minValue])
+        initPopulation.append(popMemberDict)
+
+    ### Turn everything on
+    startTime,feedback_actual,magpot_actual,sisPot_actual,UCA_actual,LOfreq_actual,IFband_actual,PM_range\
+        = BiasSweepInit(verbose=verbose, verboseTop=verboseTop, verboseSet=verboseSet, warning=warning,#careful=False,
+                        testMode=testMode, testModeWaitTime=1, warmmode=False, turnRFoff=turnRFoff,
+                        chopper_off=chopper_off, biasOnlyMode=False,
+                        sisV_feedback=True)
+
+    population2test=initPopulation
+    LOuA_actual=None
+    generationSize = alivePopNum
+    rawdir = testGeneration(datadir,K_list,sisPot_str,rangeList,generationSize, population2test,
+                       magPot_str, magPotSetVal, UCA_str, UCAsetVal, LOfreq_str, LOfreqSetVal,IF_volt_str,
+                       IFvoltSetVal, sisPotSetVal,
+                       sisPot_actual,magpot_actual,UCA_actual,LOuA_actual,LOfreq_actual,IFband_actual,feedback_actual,
+                       sisPot_list,
+                       verbose,verboseTop,verboseSet, testMode, chopper_off, Y2get, do_Ynum
+                       )
 
 
-### Turn everything on
-startTime,feedback_actual,magpot_actual,sisPot_actual,UCA_actual,LOfreq_actual,IFband_actual,PM_range\
-    = BiasSweepInit(verbose=True, verboseTop=True, verboseSet=True, warning=False,#careful=False,
-                    testMode=True, testModeWaitTime=None, warmmode=False, turnRFoff=turnRFoff,
-                    chopper_off=False, biasOnlyMode=False,
-                    sisV_feedback=True,
-                    # stepper motor control options
-                    stepper_vel = 0.5, stepper_accel = 1)
+# get the population data from the datadir file path
+Ynums = None
+Snums = None
 
+if do_Ynum:
+    Ynums = getYnums(rawdir)
+else:
+    Snums = getSnums(rawdir)
 
-# Find the best spot in the initial population
+testedPopulation = []
+for Ynum in Ynums:
+    hotRawDir, coldRawDir, proYdir = generateFilenames(datadir,Ynum)
+    costFile = proYdir+'costFunctionResults.csv'
+    hotParamsFile = proYdir+'hotproparams.csv'
+    coldParamsFile = proYdir+'coldproparams.csv'
+    sisPotListFile = hotRawDir+"sisPoList.csv"
 
+    hotParamDict = getParamDict(hotParamsFile)
+    coldParamsDict = getParamDict(coldParamsFile)
+    costDict = readCostFile(costFile)
 
+    savedsisPotList = getSavedSISpotList(sisPotListFile)
+    memberDict = {sisPot_str:savedsisPotList,
+                  magPot_str:hotParamDict['magpot'],
+                  UCA_str:hotParamDict['UCA_volt'],
+                  LOfreq_str:hotParamDict['LOfreq'],
+                  IF_volt_str:hotParamDict['IFband'],
+                  'Ynum':Ynum,
+                  'proYdir':proYdir,
+                  generationNum_str:0}
+    memberDict = merge_dicts(memberDict,costDict)
+    testedPopulation.append(memberDict)
 
-### post list-making initialization
-Ynum,sweepN,rawdir,sisVsweep_trigger = setYorSnums(datadir=datadir,SISpot_List=None,do_Ynum=True)
-
-####################################################
-###### Start of Receiver Setting Control Loop ######
-####################################################
-LOuA_actual=None
-loopStartTime = time.time()
-emailTime = loopStartTime
-param_index = -1
-redoFlag=False
-while True:
-    param_index +=1
-    if param_index == list_len:
-        break
-###########################
-##### Set parameters ######
-###########################
-    ### unpack the values from the parameter lists
-    K_thisloop      = master_K_list[param_index]
-    sisPot_thisloop = master_sisPot_list[param_index]
-    magpot_thisloop = master_magpot_list[param_index]
-    if doing_UCA_list:
-        UCA_thisloop    = master_UCA_list[param_index]
-        LOuA_thisloop = None
-    else:
-        LOuA_thisloop   = master_LOuA_list[param_index]
-        UCA_thisloop = None
-
-    LOfreq_thisloop = master_LOfreq_list[param_index]
-    IFband_thisloop = master_IFband_list[param_index]
+# rank by lowest to highest 'costY'
+Ycosts = [memberDict[costY_str] for memberDict in testedPopulation]
+[Ycosts,testedPopulation] = make_monotonic(list_of_lists=[Ycosts,testedPopulation],reverse=False)
+print testedPopulation
 
 
 
-    K_actual,SISpot_actual,magpot_actual,UCA_actual,LOuA_actual,\
-        LOfreq_actual,IFband_actual,feedback_actual,Ynum,sweepN,resetRange\
-        = singleSweepLoop(rawdir,
-                          K_thisloop,sisPot_thisloop,magpot_thisloop,UCA_thisloop,
-                          LOuA_thisloop,LOfreq_thisloop,IFband_thisloop,
-                          K_actual,sisPot_actual,magpot_actual,UCA_actual,
-                          LOuA_actual,LOfreq_actual,IFband_actual,feedback_actual,PM_range,
+if not do_inital_search:
+    ### Turn everything on
+    startTime,feedback_actual,magpot_actual,sisPot_actual,UCA_actual,LOfreq_actual,IFband_actual,PM_range\
+        = BiasSweepInit(verbose=verbose, verboseTop=verboseTop, verboseSet=verboseSet, warning=warning,#careful=False,
+                        testMode=testMode, testModeWaitTime=1, warmmode=False, turnRFoff=turnRFoff,
+                        chopper_off=chopper_off, biasOnlyMode=False,
+                        sisV_feedback=True)
 
-                          K_first,sisVsweep_trigger,
-                          doing_UCA_list,useTHzComputer, do_Ynum,
 
-                          Ynum=Ynum,sweepN=sweepN,redoFlag=redoFlag,
 
-                          verbose=verbose, verboseTop=verboseTop, verboseSet=verboseSet, #careful=False,
-
-                          # Parameter sweep behaviour
-                          testMode=testMode, testModeWaitTime=testModeWaitTime, chopper_off=chopper_off,
-                          biasOnlyMode=biasOnlyMode,
-                          dwellTime_BenchmarkSIS=dwellTime_BenchmarkSIS,
-                          dwellTime_BenchmarkMag=dwellTime_BenchmarkMag,
-                          dwellTime_fastSweep=dwellTime_fastSweep,dwellTime_unpumped=dwellTime_unpumped,
-                          dwellTime_sisVsweep=dwellTime_sisVsweep,
-
-                          ## Benchmark Tests
-                          # THz computer fast sweeps
-                          do_fastsweep=do_fastsweep, do_unpumpedsweep=do_unpumpedsweep,
-                          fastsweep_feedback=fastsweep_feedback,
-                          # measure the electromagnet and the SIS junction at their standard positions
-                          benchSISmeasNum=benchSISmeasNum,benchMAGmeasNum=benchMAGmeasNum,
-
-                          # mV sweep Parameters
-                          sisV_feedback=sisV_feedback,
-                          SISbiasMeasNum=SISbiasMeasNum,
-
-                          # Fast sweeps
-                          fSweepStart=fSweepStart, fSweepStop=fSweepStop, fSweepStep=fSweepStep,
-
-                          # Powermeter read through LabJack
-                          TPSampleFrequency=TPSampleFrequency, TPSampleTime=TPSampleTime,
-
-                          # spectrum analyzer settings
-                          getspecs=getspecs, spec_linear_sc=spec_linear_sc, spec_freq_vector=spec_freq_vector,
-                          spec_sweep_time=spec_sweep_time, spec_video_band=spec_video_band,
-                          spec_resol_band=spec_resol_band,
-                          spec_attenu=spec_attenu, lin_ref_lev=lin_ref_lev, aveNum=aveNum,
-
-                          # Electromagnet Options
-                          do_magisweep=do_magisweep, mag_meas=mag_meas,
-                          magi_list=magi_list,EmagPotList=EmagPotList,
-
-                          # setting the local oscillator pump power
-                          do_LOuAsearch=do_LOuAsearch,  do_LOuApresearch=do_LOuApresearch,
-                          LOuA_search_every_sweep=LOuA_search_every_sweep,
-                          LOuA_list=LOuA_list,UCA_list=UCA_list,
-
-                          # stepper motor control options
-                          forth_dist = forth_dist, back_dist = back_dist)
-
-    redoFlag=False
-    if resetRange is not None:
-        new_PM_range=PM_range+resetRange
-        if new_PM_range in [1,2,3,4,5]:
-            setRange(new_PM_range,verbose=verboseSet)
-            PM_range=new_PM_range
-            redoFlag=True
-        elif new_PM_range == 0:
-            print "The most sensitive range of the power meter is currently set,"+\
-                  " the range lowering flag will be ignored."
-        elif new_PM_range == 6:
-            print "The highest power range of the power meter is currently set,"+\
-                  " you my be damaging the power meter, add attenuators"
-
-    if redoFlag:
-        if do_Ynum:
-            param_index-=2
-        else:
-            param_index-=1
-
-    ######################################
-    ###### Email part of the script ######
-    ######################################
-    emailTime = sweepUpdateEmail(loopStartTime=loopStartTime,loopsComplete=param_index+1,
-                                 totalLoops=list_len,emailTime=emailTime,
-                                 seconds_per_email=seconds_per_email,
-                                 startTime=startTime,verbose=verboseTop,
-                                 FiveMinEmail=FiveMinEmail,
-                                 PeriodicEmail=PeriodicEmail,
-                                 emailGroppi=emailGroppi)
 # except:
 #     raise
 #     # This should send some kind of fault email
 #     email_caleb('Dead Bias Sweep', 'The Bias sweep script has hit some sort of exception')
 #     text_caleb('The Bias sweep script has hit some sort of exception')
 # # turn Everything off
-# finally:
-sweepShutDown(testMode=testMode,biasOnlyMode=biasOnlyMode,chopper_off=chopper_off,turnRFoff=turnRFoff)
-if FinishedEmail:
-    finishedEmailSender(loopStartTime=loopStartTime,startTime=startTime,emailGroppi=emailGroppi)
-
-
-
-# end of the gaint try statement
-if (verbose or verboseTop):
-print "\nThe program Alice has finished her walk"
+# # finally:
+#     sweepShutDown(testMode=testMode,biasOnlyMode=biasOnlyMode,chopper_off=chopper_off,turnRFoff=turnRFoff)
+#     if FinishedEmail:
+#         finishedEmailSender(loopStartTime=loopStartTime,startTime=startTime,emailGroppi=emailGroppi)
+#
+#
+#
+#     # end of the giant try statement
+#     if (verbose or verboseTop):
+#     print "\nThe program Alice has finished her walk"
 
 

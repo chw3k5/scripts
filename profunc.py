@@ -28,6 +28,85 @@ def local_copy(filepath):
     newfilepath = filepath.replace('Google Drive', 'local_kappa_data')
     return newfilepath
 
+def getSavedSISpotList(fileName):
+    potList = None
+    with open(fileName) as f:
+        potData = f.readlines()
+    for potDatum in potData:
+        if potList is None:
+            potList = []
+        potValue = potDatum.replace('\n','')
+        potList.append(int(potValue))
+    return potList
+
+def merge_dicts(*dict_args):
+    '''
+    Given any number of dicts, shallow copy and merge into a new dict,
+    precedence goes to key value pairs in latter dicts.
+    '''
+    result = {}
+    for dictionary in dict_args:
+        result.update(dictionary)
+    return result
+
+
+def getParamDict(paramsFile):
+    paramsFile = windir(paramsFile)
+
+    # Update this with new definitions
+    header_str = 'param'
+    temperature_str = 'temp'
+    magCurrentSearch_str = 'magisweep'
+    magCurrent_str = 'magiset'
+    magPot_str = 'magpot'
+    LOuAsearch = 'LOuAsearch'
+    LOuAset_str = 'LOuAset'
+    LOuAsetPot_str = 'LOuA_set_pot'
+    LOuAmagPot_str = 'LOuA_magpot'
+    LOfreq_str = 'LOfreq'
+    IFband_str = 'IFband'
+    magChan_str = 'mag_chan'
+    meanMagV_str = 'meanmag_V'
+    stdMagV_str = 'stdmag_V'
+    meanMagmA_str =  'meanmag_mA'
+    stdMagmA_str = 'stdmag_mA'
+    UCA_volt_str =  'UCA_volt'
+    TP_freq_str = 'TP_freq'
+    TPnum_str = 'TP_num'
+    TPintTime_str = 'TP_int_time'
+    measNum_str = 'meas_num'
+    delTime_str = 'del_time'
+    sisPot_str = 'SIS_pot'
+    std_sisTP_str =  'stdSIS_tp'
+    mean_sisTP_str = 'meanSIS_tp'
+    std_sis_uA_str = 'stdSISuA'
+    meanSIS_uA_str = 'meanSIS_uA'
+    stdSISmV_str = 'stdSIS_mV'
+    meanSISmV_str = 'meanSIS_mV'
+
+    # Update this with new definitions
+    list_of_strings = [header_str, temperature_str, magCurrentSearch_str, magCurrent_str, magPot_str, LOuAsearch,
+                       LOuAset_str, LOuAsetPot_str, LOuAmagPot_str, LOfreq_str, IFband_str, magChan_str, meanMagV_str,
+                       stdMagV_str, meanMagmA_str, stdMagmA_str, UCA_volt_str, TP_freq_str, TPnum_str, TPintTime_str,
+                       measNum_str, delTime_str, sisPot_str, std_sisTP_str, mean_sisTP_str, std_sis_uA_str,
+                       meanSIS_uA_str, stdSISmV_str, meanSISmV_str]
+
+    with open(paramsFile) as f:
+        paramsData = f.readlines()
+    paramsDict = {}
+    for singleLine in paramsData:
+        (dataType,value)=singleLine.split(',')
+        value = value.replace('\n','')
+        paramsDict[dataType]=value
+        if dataType in list_of_strings:
+            paramsDict[dataType]=value
+        else:
+            print 'Data type not valid for definition getParamsDict in profunc.py '
+            print "dataType:",dataType
+            print 'value:', value
+
+    return paramsDict
+
 def getparams(filename):
     if platform == 'win32':
         filename = windir(filename)

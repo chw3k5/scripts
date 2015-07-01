@@ -6,12 +6,12 @@ import os, numpy, sys, glob, shutil
 from sys import platform
 import pickle
 
-def ParamsProcessing(dirnames, proparamsfile, verbose):
+def ParamsProcessing(dirname, proparamsfile, verbose):
     params_found        = False
     standSISdata_found  = False
     standmagdata_found  = False
     ###### Processing Params file ######
-    paramsfile = dirnames + 'params.csv'
+    paramsfile = dirname + 'params.csv'
     if os.path.isfile(paramsfile):
         params_found  = True
         # load the params file for the data
@@ -19,7 +19,7 @@ def ParamsProcessing(dirnames, proparamsfile, verbose):
             = getparams(paramsfile)
     
     ##### Processing Standard SIS bias measurments ######
-    standSISdatafile = dirnames + 'sisdata.csv'
+    standSISdatafile = dirname + 'sisdata.csv'
     if os.path.isfile(standSISdatafile):
         standSISdata_found  = True
         # load the standard SIS bias measurments for the data
@@ -27,7 +27,7 @@ def ParamsProcessing(dirnames, proparamsfile, verbose):
         standSISdata_time = getSISdata(standSISdatafile)
     
     ###### Processing Standard eletromagnet measurments ######
-    standmagdatafile = dirnames + 'magdata.csv'
+    standmagdatafile = dirname + 'magdata.csv'
     if os.path.isfile(standmagdatafile):
         standmagdata_found  = True
         # load the standard electromagnet measurments for the data
@@ -49,7 +49,7 @@ def ParamsProcessing(dirnames, proparamsfile, verbose):
             n.write('magpot,' +  str(magpot) + '\n')
     if standmagdata_found:
         ########
-        m_magoffset, b_magoffset = fetchoffset(filename=str(mag_chan)+'mA_biascom-mA_meas.csv', mag_channel=mag_chan, path=dirnames)
+        m_magoffset, b_magoffset = fetchoffset(filename=str(mag_chan)+'mA_biascom-mA_meas.csv', mag_channel=mag_chan, path=dirname)
         n.write('mag_chan,'   + str(mag_chan)                    + '\n')
         n.write('meanmag_V,'  + str((numpy.mean(standmagdata_V)*m_magoffset)+b_magoffset) + '\n')
         n.write('stdmag_V,'   + str((numpy.std(standmagdata_V)*m_magoffset)+b_magoffset)   + '\n')

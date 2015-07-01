@@ -40,12 +40,12 @@ def make_monotonic(list_of_lists,reverse=False):
     # pack the data into the correct format
     sort_matrix = [list(x) for x in zip(*list_of_lists)]
     # sort
-    sorted_martix = numpy.array(sorted(sort_matrix, key=itemgetter(0)))
-    # Unpack and reverse
+    sorted_martix_lists = sorted(sort_matrix, key=itemgetter(0))
     if reverse:
-        sorted_list_of_lists = [list(x).reverse() for x in zip(*sorted_martix)]
-    else:
-        sorted_list_of_lists = [list(x)           for x in zip(*sorted_martix)]
+        sorted_martix_lists.reverse()
+    sorted_martix = numpy.array(sorted_martix_lists)
+    # Unpack and reverse
+    sorted_list_of_lists = [list(x) for x in zip(*sorted_martix)]
     return sorted_list_of_lists
 
 
