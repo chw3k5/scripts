@@ -1,7 +1,7 @@
 __author__ = 'chwheele'
 
 
-from profunc import windir, local_copy
+from profunc import windir, local_copy, merge_dicts
 from datapro import raw2Yfactor, ParamsProcessing
 import numpy, os, atpy
 
@@ -73,6 +73,8 @@ def cost4Y(popMember,datadir,Y2get=1.8,verbose=False):
         costDict = {costY_str:foundYcost}
     writeCostFile(costDict,costFile)
 
-    return
+    popMember = merge_dicts(popMember,costDict)
+
+    return popMember
 
 

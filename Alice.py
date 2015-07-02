@@ -1,11 +1,12 @@
 __author__ = 'chwheele'
 import numpy, random, time
-from biasSweep3 import BiasSweepInit, singleSweepLoop,setYorSnums
-from profunc import windir,local_copy,  getSnums, getYnums, getParamDict, getSavedSISpotList,merge_dicts
+from biasSweep3 import BiasSweepInit, singleSweepLoop,setYorSnums, sweepShutDown
+from profunc import windir,local_copy,  getSnums, getYnums, getParamDict, getSavedSISpotList, merge_dicts
 from domath import make_monotonic
 from HP437B import setRange
 from costFunc import cost4Y, readCostFile, generateFilenames
 from AliceFunctions import testGeneration
+from diffEvo import differentialEvolution
 
 """
 This is program created by Caleb Wheeler and Trevor Toland to help with the searching of the parameter space of THz
@@ -17,19 +18,20 @@ is to be the greatest graduate student of all time.
 testMode=False
 warning=False
 (verbose,verboseTop,verboseSet)=(True,True,True)
-do_inital_search=False
+do_inital_search=True
+survivalOrFittest=False
 K_list = [295,78]
 turnRFoff=False
-datadir=windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Alice/')
+datadir=windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Alice/LOfreq/')
 ### map your parameter and watch them dance around the parameters plane
 
 ### If a value is not in range list then is has constant value
-sisPot_list = []
 sisPotSetVal = 59100
+sisPot_list = [sisPotSetVal]
 magPotSetVal = 100000
 UCAsetVal = 0
 LOfreqSetVal = 672
-IFvoltSetVal = 0
+IFvoltSetVal = 4
 
 sisPot_str='sisPot'
 magPot_str='magPot'
@@ -38,20 +40,26 @@ LOfreq_str='LOfreq'
 IF_volt_str='IF_volt'
 generationNum_str='genNum'
 costY_str='costY'
-rangeList={sisPot_str:(57000,65100),magPot_str:(65100,100000),UCA_str:(0,5,),LOfreq_str:(650,692),IF_volt_str:(0,5)}
+#rangeList={sisPot_str:(57000,65100),magPot_str:(65100,100000),UCA_str:(0,5,),LOfreq_str:(650,692),IF_volt_str:(0,5)}
+rangeList={LOfreq_str:(650,692)}
 dimSize = len(rangeList) # number of dimensions
 
-alivePopNum = 0*dimSize # active breeding population
-initPopNum  = alivePopNum
-iterMax = 1000 # maximum iterations
+generationSize = 10*dimSize # active breeding population
+initPopNum  = generationSize+30
+interationMax = 20 # maximum iterations
 F = 0.5 # DE step size [0,2]
-CR = 0.7 #  crossover probability  [0, 1]
-Y2get = 1.8 # VTR		"Value To Reach" (stop when func < VTR)
+crossOverProb = 0.7 #  crossover probability  [0, 1]
+Y2get = 2.0 # VTR		"Value To Reach" (stop when func < VTR)
+strategyDE = 1 # [1,2,3,4,5] are the options
+euthanizeGrandPaAfter = 5
 
 
+interation = 0
 
 chopper_off=False
 if len(K_list)<2:chopper_off=True
+
+rawdir=datadir+'rawdata/'
 
 do_Ynum=False
 if 1 < len(K_list):
@@ -69,6 +77,7 @@ if do_inital_search:
                 popMemberDict[key]=(random.random()*abs(maxValue-minValue))+min([maxValue,minValue])
         initPopulation.append(popMemberDict)
 
+
     ### Turn everything on
     startTime,feedback_actual,magpot_actual,sisPot_actual,UCA_actual,LOfreq_actual,IFband_actual,PM_range\
         = BiasSweepInit(verbose=verbose, verboseTop=verboseTop, verboseSet=verboseSet, warning=warning,#careful=False,
@@ -78,15 +87,14 @@ if do_inital_search:
 
     population2test=initPopulation
     LOuA_actual=None
-    generationSize = alivePopNum
-    rawdir = testGeneration(datadir,K_list,sisPot_str,rangeList,generationSize, population2test,
+    updatedPopMembers\
+        = testGeneration(datadir,K_list,sisPot_str,rangeList,initPopNum, population2test,
                        magPot_str, magPotSetVal, UCA_str, UCAsetVal, LOfreq_str, LOfreqSetVal,IF_volt_str,
                        IFvoltSetVal, sisPotSetVal,
                        sisPot_actual,magpot_actual,UCA_actual,LOuA_actual,LOfreq_actual,IFband_actual,feedback_actual,
                        sisPot_list,
-                       verbose,verboseTop,verboseSet, testMode, chopper_off, Y2get, do_Ynum
+                       verbose,verboseTop,verboseSet, testMode, chopper_off, Y2get, do_Ynum,PM_range,interation
                        )
-
 
 # get the population data from the datadir file path
 Ynums = None
@@ -117,24 +125,79 @@ for Ynum in Ynums:
                   IF_volt_str:hotParamDict['IFband'],
                   'Ynum':Ynum,
                   'proYdir':proYdir,
-                  generationNum_str:0}
+                  generationNum_str:interation}
     memberDict = merge_dicts(memberDict,costDict)
     testedPopulation.append(memberDict)
 
 # rank by lowest to highest 'costY'
 Ycosts = [memberDict[costY_str] for memberDict in testedPopulation]
 [Ycosts,testedPopulation] = make_monotonic(list_of_lists=[Ycosts,testedPopulation],reverse=False)
-print testedPopulation
+
+if generationSize < len(testedPopulation):
+    parentPopulation=testedPopulation[:generationSize]
+else:
+    parentPopulation = testedPopulation
+
+allPopulation = testedPopulation
 
 
-
-if not do_inital_search:
+if (not do_inital_search):
     ### Turn everything on
     startTime,feedback_actual,magpot_actual,sisPot_actual,UCA_actual,LOfreq_actual,IFband_actual,PM_range\
         = BiasSweepInit(verbose=verbose, verboseTop=verboseTop, verboseSet=verboseSet, warning=warning,#careful=False,
                         testMode=testMode, testModeWaitTime=1, warmmode=False, turnRFoff=turnRFoff,
                         chopper_off=chopper_off, biasOnlyMode=False,
                         sisV_feedback=True)
+
+
+#########################################
+### Great differential evolution loop ###
+#########################################
+
+while interation <= interationMax:
+    interation+=1
+    print "##########################"
+    print "###### Generation "+str(interation)+" ######"
+    print "##########################"
+    # the best population should be the first member of the list
+    mutantPop,parentPopulation \
+        = differentialEvolution(parentPopulation,rangeList,crossOverProb=crossOverProb,strategy=strategyDE,F=F)
+
+    LOuA_actual=None
+    testedMutantPop = \
+        testGeneration(datadir,K_list,sisPot_str,rangeList,generationSize, mutantPop,
+                       magPot_str, magPotSetVal, UCA_str, UCAsetVal, LOfreq_str, LOfreqSetVal,IF_volt_str,
+                       IFvoltSetVal, sisPotSetVal,
+                       sisPot_actual,magpot_actual,UCA_actual,LOuA_actual,LOfreq_actual,IFband_actual,feedback_actual,
+                       sisPot_list,
+                       verbose,verboseTop,verboseSet, testMode, chopper_off, Y2get, do_Ynum,PM_range,interation)
+
+
+    # rank by lowest to highest 'costY'
+    if survivalOrFittest:
+        Ycosts = [memberDict[costY_str] for memberDict in testedMutantPop]
+        [Ycosts,testedMutantPop] = make_monotonic(list_of_lists=[Ycosts,testedMutantPop],reverse=False)
+    else:
+        newParentList=[]
+        for popIndex in range(generationSize):
+            parentMember=parentPopulation[popIndex]
+            mutantMember=testedMutantPop[popIndex]
+            mutantMember[generationNum_str]=interation
+
+            parentYcost = parentMember[costY_str]
+            mutantYcost = mutantMember[costY_str]
+
+            parentGenNum = parentMember[generationNum_str]
+            mutantGenNum = mutantMember[generationNum_str]
+
+            genDiff = mutantGenNum-parentGenNum
+            if verboseTop: print "parentYcost:",parentYcost,'  mutantYcost:',mutantYcost
+            if ((mutantYcost < parentYcost) or (euthanizeGrandPaAfter <= genDiff)):
+                newParentList.append(mutantMember)
+                if verboseTop: print "Mutant Replace Parents"
+            else:
+                newParentList.append(parentMember)
+    parentPopulation = newParentList
 
 
 
@@ -145,10 +208,10 @@ if not do_inital_search:
 #     text_caleb('The Bias sweep script has hit some sort of exception')
 # # turn Everything off
 # # finally:
-#     sweepShutDown(testMode=testMode,biasOnlyMode=biasOnlyMode,chopper_off=chopper_off,turnRFoff=turnRFoff)
-#     if FinishedEmail:
-#         finishedEmailSender(loopStartTime=loopStartTime,startTime=startTime,emailGroppi=emailGroppi)
-#
+sweepShutDown(testMode=testMode,biasOnlyMode=False,chopper_off=chopper_off,turnRFoff=turnRFoff)
+# if FinishedEmail:
+#     finishedEmailSender(loopStartTime=loopStartTime,startTime=startTime,emailGroppi=emailGroppi)
+
 #
 #
 #     # end of the giant try statement

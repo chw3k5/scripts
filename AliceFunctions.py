@@ -1,14 +1,16 @@
 from biasSweep3 import singleSweepLoop, setYorSnums
 from costFunc import cost4Y
 from HP437B import setRange
+generationNum_str='genNum'
 
 def testGeneration(datadir,K_list,sisPot_str,rangeList,generationSize, population2test,
                    magPot_str, magPotSetVal, UCA_str, UCAsetVal, LOfreq_str, LOfreqSetVal,IF_volt_str,
                    IFvoltSetVal, sisPotSetVal,
                    sisPot_actual,magpot_actual,UCA_actual,LOuA_actual,LOfreq_actual,IFband_actual,feedback_actual,
                    sisPot_list,
-                   verbose,verboseTop,verboseSet, testMode, chopper_off, Y2get, do_Ynum
+                   verbose,verboseTop,verboseSet, testMode, chopper_off, Y2get, do_Ynum,PM_range,interation
                    ):
+    updatedPopMembers=[]
     ### post list-making initialization
     if sisPot_str in rangeList:
         sisPot_list=[None]
@@ -141,6 +143,8 @@ def testGeneration(datadir,K_list,sisPot_str,rangeList,generationSize, populatio
                 param_index-=1
 
         popMember['Ynum']=Ynum
-        cost4Y(popMember,datadir=datadir,Y2get=Y2get,verbose=verbose)
+        popMember[generationNum_str]=interation
+        popMember = cost4Y(popMember,datadir=datadir,Y2get=Y2get,verbose=verbose)
+        updatedPopMembers.append(popMember)
 
-    return  rawdir
+    return  updatedPopMembers

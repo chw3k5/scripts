@@ -36,7 +36,7 @@ def getSavedSISpotList(fileName):
         if potList is None:
             potList = []
         potValue = potDatum.replace('\n','')
-        potList.append(int(potValue))
+        potList.append(int(float(potValue)))
     return potList
 
 def merge_dicts(*dict_args):
