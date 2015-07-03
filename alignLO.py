@@ -3,13 +3,14 @@ import numpy
 from control import LabJackU3_DAQ0, measSIS, default_sispot, default_magpot
 from control import setSIS_only, setmag_only, measSIS_TP, zeropots, setfeedback, opentelnet, closetelnet
 from LOinput import setfreq, RFon, RFoff
+from LabJack_control import LabJackU3_DAQ0, enableLabJack, disableLabJack
 
 verbose = True
 careful = True
 feedback = True
 
 start_stats =  5 # after x loops
-total_loops = 10
+total_loops = 100
 sleep_time  =  1.0
 
 reset       = True  # there is no need to keep adjusting the magnet, sis voltage, and UCA voltage if you
@@ -20,7 +21,7 @@ turn_off    = False
 magpot      = 100000 # pot position
 pot_sis     = 59100# default_sispot
 UCA_voltage =  0 # in Volts
-LOfreq_list =  [655,656,657,679,684]#list(range(650,655 )) # in GHz
+LOfreq_list =  [688,656,657,679,684]#list(range(650,655 )) # in GHz
 
 uA_list  = []
 mV_list  = []
@@ -55,7 +56,9 @@ for LOfreq in LOfreq_list:
         setmag_only(magpot)
         status = setfeedback(feedback)
         setSIS_only(pot_sis, feedback, verbose, careful)
+        enableLabJack()
         status = LabJackU3_DAQ0(abs(UCA_voltage))
+        disableLabJack()
         setfreq(LOfreq)
     else:
         mV_sis, uA_sis, pot_sis = measSIS(verbose)

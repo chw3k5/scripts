@@ -1,6 +1,7 @@
 from biasSweep3 import singleSweepLoop, setYorSnums
 from costFunc import cost4Y
 from HP437B import setRange
+from StepperControl import GoBack
 generationNum_str='genNum'
 
 def testGeneration(datadir,K_list,sisPot_str,rangeList,generationSize, population2test,
@@ -89,7 +90,7 @@ def testGeneration(datadir,K_list,sisPot_str,rangeList,generationSize, populatio
                                       dwellTime_BenchmarkSIS=1,
                                       dwellTime_BenchmarkMag=1,
                                       dwellTime_fastSweep=1,dwellTime_unpumped=1,
-                                      dwellTime_sisVsweep=1,
+                                      dwellTime_sisVsweep=2,
 
                                       ## Benchmark Tests
                                       # THz computer fast sweeps
@@ -146,5 +147,5 @@ def testGeneration(datadir,K_list,sisPot_str,rangeList,generationSize, populatio
         popMember[generationNum_str]=interation
         popMember = cost4Y(popMember,datadir=datadir,Y2get=Y2get,verbose=verbose)
         updatedPopMembers.append(popMember)
-
+    GoBack()
     return  updatedPopMembers

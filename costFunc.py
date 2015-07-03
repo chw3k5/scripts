@@ -27,8 +27,8 @@ def generateFilenames(dataDir,Ynum):
     localdir=local_copy(dataDir)
     proYdir = windir(localdir+'prodata/'+Ynum_str+'/')
     if not os.path.exists(proYdir):os.makedirs(proYdir)
-    coldRawDir = windir(dataDir+'rawdata/'+Ynum_str+'/hot/')
-    hotRawDir = windir(dataDir+'rawdata/'+Ynum_str+'/cold/')
+    coldRawDir = windir(dataDir+'rawdata/'+Ynum_str+'/cold/')
+    hotRawDir = windir(dataDir+'rawdata/'+Ynum_str+'/hot/')
     return hotRawDir, coldRawDir, proYdir
 
 

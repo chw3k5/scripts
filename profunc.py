@@ -807,6 +807,8 @@ def getproYdata(datadir):
     colddatafile = datadir + 'colddata.csv'
     Ydatafile    = datadir + 'Ydata.csv'
 
+    mV = None
+
     hot_mV_mean   = None
     hot_mV_std    = None
     hot_uA_mean   = None
@@ -879,54 +881,52 @@ def getproYdata(datadir):
         if 'y_TPerror' in Y_keys: y_TPerror = Y_data.y_TPerror
 
     # make sure all the Hot and cold data overlaps (The Y data is on the raw data scale)
-    if ((1 < len(list(hot_mV_mean))) and (1 < len(list(cold_mV_mean)))
-        and (hotdatafound) and (colddatafound)):
-        if 1 < len(hot_mV_mean):
-            mesh = (hot_mV_mean[1]-hot_mV_mean[0])
-        else:
-            mesh=0.01
-        status, hot_start, cold_start, list_length = FindOverlap(hot_mV_mean, cold_mV_mean, mesh)
-        if not status:
-            print "The function 'FindOverlap' failed in 'getproYdata' for file:", datadir
-            print "Killing Script"
-            sys.exit()
+    if (hotdatafound and colddatafound):
+        if ((1 < len(list(hot_mV_mean))) and (1 < len(list(cold_mV_mean)))
+            and (hotdatafound) and (colddatafound)):
+            if 1 < len(hot_mV_mean):
+                mesh = (hot_mV_mean[1]-hot_mV_mean[0])
+            else:
+                mesh=0.01
+            status, hot_start, cold_start, list_length = FindOverlap(hot_mV_mean, cold_mV_mean, mesh)
+            if not status:
+                print "The function 'FindOverlap' failed in 'getproYdata' for file:", datadir
+                print "Killing Script"
+                sys.exit()
 
-        # hot_end  = hot_start  + list_length
-        # mV = hot_mV_mean[hot_start:hot_end]
-        # status, mV_start, Yfactor_start, list_length = FindOverlap(mV, mV_Yfactor, mesh)
-        # if not status:
-        #     print "The function 'FindOverlap' (2nd call) failed in 'getproYdata' for file:", datadir
-        #     print "Killing Script"
-        #     sys.exit()
-
-
-
-        hot_end     = hot_start  + list_length
-        cold_end    = cold_start + list_length
-
-        mV = hot_mV_mean[hot_start:hot_end]
-
-        hot_mV_mean   = hot_mV_mean[hot_start:hot_end]
-        hot_mV_std    = hot_mV_std[hot_start:hot_end]
-        hot_uA_mean   = hot_uA_mean[hot_start:hot_end]
-        hot_uA_std    = hot_uA_std[hot_start:hot_end]
-        hot_TP_mean   = hot_TP_mean[hot_start:hot_end]
-        hot_TP_std    = hot_TP_std[hot_start:hot_end]
-        hot_time_mean = hot_time_mean[hot_start:hot_end]
-        hot_pot       = hot_pot[hot_start:hot_end]
-
-        cold_mV_mean   = cold_mV_mean[cold_start:cold_end]
-        cold_mV_std    = cold_mV_std[cold_start:cold_end]
-        cold_uA_mean   = cold_uA_mean[cold_start:cold_end]
-        cold_uA_std    = cold_uA_std[cold_start:cold_end]
-        cold_TP_mean   = cold_TP_mean[cold_start:cold_end]
-        cold_TP_std    = cold_TP_std[cold_start:cold_end]
-        cold_time_mean = cold_time_mean[cold_start:cold_end]
-        cold_pot       = cold_pot[cold_start:cold_end]
+            # hot_end  = hot_start  + list_length
+            # mV = hot_mV_mean[hot_start:hot_end]
+            # status, mV_start, Yfactor_start, list_length = FindOverlap(mV, mV_Yfactor, mesh)
+            # if not status:
+            #     print "The function 'FindOverlap' (2nd call) failed in 'getproYdata' for file:", datadir
+            #     print "Killing Script"
+            #     sys.exit()
 
 
-    else:
-        mV = None
+
+            hot_end     = hot_start  + list_length
+            cold_end    = cold_start + list_length
+
+            mV = hot_mV_mean[hot_start:hot_end]
+
+            hot_mV_mean   = hot_mV_mean[hot_start:hot_end]
+            hot_mV_std    = hot_mV_std[hot_start:hot_end]
+            hot_uA_mean   = hot_uA_mean[hot_start:hot_end]
+            hot_uA_std    = hot_uA_std[hot_start:hot_end]
+            hot_TP_mean   = hot_TP_mean[hot_start:hot_end]
+            hot_TP_std    = hot_TP_std[hot_start:hot_end]
+            hot_time_mean = hot_time_mean[hot_start:hot_end]
+            hot_pot       = hot_pot[hot_start:hot_end]
+
+            cold_mV_mean   = cold_mV_mean[cold_start:cold_end]
+            cold_mV_std    = cold_mV_std[cold_start:cold_end]
+            cold_uA_mean   = cold_uA_mean[cold_start:cold_end]
+            cold_uA_std    = cold_uA_std[cold_start:cold_end]
+            cold_TP_mean   = cold_TP_mean[cold_start:cold_end]
+            cold_TP_std    = cold_TP_std[cold_start:cold_end]
+            cold_time_mean = cold_time_mean[cold_start:cold_end]
+            cold_pot       = cold_pot[cold_start:cold_end]
+
 
         
     return Yfactor,yerror,y_pot,y_mV,y_mVerror,y_uA,y_uAerror,y_TP,y_TPerror,\

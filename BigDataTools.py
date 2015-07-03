@@ -84,12 +84,14 @@ mV_bias_max = 1.9 # at most this, None is any
 #######################################
 ###### Yfactor versus everything ######
 #######################################
-do_Yfactor_versus_LO_freq = False
+do_Yfactor_versus_LO_freq = True
 do_Yfactor_versus_magpot  = False
+do_Yfactor_versus_UCA    = False
+do_Yfactor_versus_SISpot = False
 
 ### Y factor related options
 # analysis options
-do_max_Yfactor = False # False uses the average value for a bandwidth (spectral data), True uses the maximum
+do_max_Yfactor = True # False uses the average value for a bandwidth (spectral data), True uses the maximum
 min_Y_factor = 0.3
 spec_bands = [0,1,2,3,4,5]#[1.39,1.45]#1.39,1.45]#,4,5]
 
@@ -134,11 +136,42 @@ Y_magpot_legend_size = 10
 Y_magpot_legend_num_of_points = 3
 Y_magpot_legend_loc = 3
 
+# UCA_volt
+Y_UCA_volt_plotdir = local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Y_UCA_volt/'))
+Y_UCA_volt_xlim_list_Yfactor_versus = None# [65100, 90000] # None or list of two [645, 695]
+Y_UCA_volt_xlabel_str_Yfactor_versus="LO User Controlled Attenuation (volts)"
+
+Y_UCA_volt_ls = "-"
+Y_UCA_volt_linw = 3
+Y_UCA_volt_fmt = 'o'
+Y_UCA_volt_markersize = 5
+Y_UCA_volt_alpha = 1
+
+Y_UCA_volt_legend_size = 10
+Y_UCA_volt_legend_num_of_points = 3
+Y_UCA_volt_legend_loc = 3
+
+# SISpot
+Y_SISpot_plotdir = local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Y_SISpot/'))
+Y_SISpot_xlim_list_Yfactor_versus = None# [65100, 90000] # None or list of two [645, 695]
+Y_SISpot_xlabel_str_Yfactor_versus="SIS potentiometer position"
+
+Y_SISpot_ls = "-"
+Y_SISpot_linw = 3
+Y_SISpot_fmt = 'o'
+Y_SISpot_markersize = 5
+Y_SISpot_alpha = 1
+
+Y_SISpot_legend_size = 10
+Y_SISpot_legend_num_of_points = 3
+Y_SISpot_legend_loc = 3
+
+
 ########################################
 ###### Anything verses Everything ######
 ########################################
 do_LOuA_LOmV_AvsE=False
-do_LOmV_LOfreq_AvsE = True
+do_LOmV_LOfreq_AvsE = False
 do_LOuA_LOfreq_AvsE = False
 
 neutral_color_AvsE='Green'
@@ -285,7 +318,11 @@ setnames = []
 #
 # setnames.extend(['Jun08_15/standingWaveTest_noChopper_5papers'])
 
-setnames.extend(['Jun08_15/standingWaveTest_noChopper_5papers_24Voff_LJdisCon'])
+# setnames.extend(['Jun08_15/standingWaveTest_noChopper_5papers_24Voff_LJdisCon'])
+
+# setnames.extend(['Alice/LOfreq_UCA2','Alice/LOfreq_UCA2'])
+# setnames.extend(['Alice/SISpot_MAGpot','Alice/SISpot_MAGpot2'])
+setnames.extend(['Alice/LOfreq650-655'])
 
 
 parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
@@ -381,6 +418,13 @@ def return_variable(variable_str, Ysweep):
     elif variable_str == 'SIS_uA':
             variable = Ysweep.meanSIS_uA
             variable_std = Ysweep.stdSIS_uA
+    elif variable_str == 'UCA_volt':
+        variable = Ysweep.UCA_volt
+    elif variable_str == 'SISpot':
+        maxYfactor = max(Ysweep.Yfactor)
+        maxYfactorIndex = Ysweep.Yfactor.index(maxYfactor)
+        maxYfactor_SISpot = Ysweep.y_pot[maxYfactorIndex]
+        variable=maxYfactor_SISpot
     return variable, variable_std
 
 def split_variable(K_vals,variables,variables_std=None):
@@ -459,7 +503,9 @@ def Yfactor_vs(dependent_variable_str,
             pm_max_Yfactor_mVs.append(pm_max_Yfactor_mV)
             pm_max_Yfactor_dependent_variable.append(dependent_variable)
         if testmode:
-            print  pm_max_Yfactor,':',dependent_variable,':'+dependent_variable_str+' :', pm_max_Yfactor_mV,' mV'
+            print  pm_max_Yfactor,':',dependent_variable,':'+dependent_variable_str+' :', pm_max_Yfactor_mV,' mV '+\
+                   '  UCA:',Ysweep.UCA_volt,':  Ynum:',Ysweep.Ynum
+
 
     # Sort all the data to make monotonic lines in the domain of LO frequency
     list_of_lists = [pm_max_Yfactor_dependent_variable,pm_max_Yfactors,pm_max_Yfactor_mVs]
@@ -564,7 +610,7 @@ def Yfactor_vs(dependent_variable_str,
     return
 
 
-if any([do_Yfactor_versus_LO_freq, do_Yfactor_versus_magpot]):
+if any([do_Yfactor_versus_LO_freq, do_Yfactor_versus_magpot, do_Yfactor_versus_UCA,do_Yfactor_versus_SISpot]):
     if do_Yfactor_versus_LO_freq:
         Yfactor_vs(dependent_variable_str='LOfreq',
                    Y_dependent_variable_plotdir=Y_LOfreq_plotdir,
@@ -591,6 +637,33 @@ if any([do_Yfactor_versus_LO_freq, do_Yfactor_versus_magpot]):
                    Y_dependent_variable_legend_size = Y_magpot_legend_size,
                    Y_dependent_variable_legend_num_of_points = Y_magpot_legend_num_of_points,
                    Y_dependent_variable_legend_loc = Y_magpot_legend_loc)
+
+    if do_Yfactor_versus_UCA:
+        Yfactor_vs(dependent_variable_str='UCA_volt',
+                   Y_dependent_variable_plotdir=Y_UCA_volt_plotdir,
+                   plot_xlim_list=Y_UCA_volt_xlim_list_Yfactor_versus,
+                   xlabel_str=Y_UCA_volt_xlabel_str_Yfactor_versus,
+                   Y_dependent_variable_ls = Y_UCA_volt_ls,
+                   Y_dependent_variable_linw = Y_UCA_volt_linw,
+                   Y_dependent_variable_fmt = Y_UCA_volt_fmt,
+                   Y_dependent_variable_markersize = Y_UCA_volt_markersize,
+                   Y_dependent_variable_alpha = Y_UCA_volt_alpha,
+                   Y_dependent_variable_legend_size = Y_UCA_volt_legend_size,
+                   Y_dependent_variable_legend_num_of_points = Y_UCA_volt_legend_num_of_points,
+                   Y_dependent_variable_legend_loc = Y_UCA_volt_legend_loc)
+    if do_Yfactor_versus_SISpot:
+        Yfactor_vs(dependent_variable_str='SISpot',
+                   Y_dependent_variable_plotdir=Y_SISpot_plotdir,
+                   plot_xlim_list=Y_SISpot_xlim_list_Yfactor_versus,
+                   xlabel_str=Y_SISpot_xlabel_str_Yfactor_versus,
+                   Y_dependent_variable_ls = Y_SISpot_ls,
+                   Y_dependent_variable_linw = Y_SISpot_linw,
+                   Y_dependent_variable_fmt = Y_SISpot_fmt,
+                   Y_dependent_variable_markersize = Y_SISpot_markersize,
+                   Y_dependent_variable_alpha = Y_SISpot_alpha,
+                   Y_dependent_variable_legend_size = Y_SISpot_legend_size,
+                   Y_dependent_variable_legend_num_of_points = Y_SISpot_legend_num_of_points,
+                   Y_dependent_variable_legend_loc = Y_SISpot_legend_loc)
 
 
 
@@ -891,7 +964,7 @@ if any([do_LOuA_LOmV_AvsE,do_LOmV_LOfreq_AvsE,do_LOuA_LOfreq_AvsE]):
 
 
     if do_LOuA_LOfreq_AvsE:
-        anything_vs(independent_variable_str='SIS_uA',
+        anything_vs(independent_variable_str='SIS_uaA',
                     dependent_variable_str='LOfreq',
                     plotdir=LOuA_LOfreq_AvsE_plotdir,
                     plot_xlim_list=LOuA_LOfreq_AvsE_xlim_list,
