@@ -25,7 +25,11 @@ def windir(filepath):
     return winfilepath
 
 def local_copy(filepath):
-    newfilepath = filepath.replace('Google Drive', 'local_kappa_data')
+    newfilepath = filepath.replace('Google Drive','local_kappa_data')
+    return newfilepath
+
+def googleDrive_copy(filepath):
+    newfilepath = filepath.replace('local_kappa_data','Google Drive')
     return newfilepath
 
 def getSavedSISpotList(fileName):
@@ -50,47 +54,47 @@ def merge_dicts(*dict_args):
     return result
 
 
+# Update this with new definitions
+header_str = 'param'
+temperature_str = 'temp'
+magCurrentSearch_str = 'magisweep'
+magCurrent_str = 'magiset'
+magPot_str = 'magpot'
+LOuAsearch_str = 'LOuAsearch'
+LOuAset_str = 'LOuAset'
+LOuAsetPot_str = 'LOuA_set_pot'
+LOuAmagPot_str = 'LOuA_magpot'
+LOfreq_str = 'LOfreq'
+IFband_str = 'IFband'
+magChan_str = 'mag_chan'
+meanMagV_str = 'meanmag_V'
+stdMagV_str = 'stdmag_V'
+meanMagmA_str =  'meanmag_mA'
+stdMagmA_str = 'stdmag_mA'
+UCA_volt_str =  'UCA_volt'
+TP_freq_str = 'TP_freq'
+TPnum_str = 'TP_num'
+TPintTime_str = 'TP_int_time'
+measNum_str = 'meas_num'
+delTime_str = 'del_time'
+sisPot_str = 'SIS_pot'
+std_sisTP_str =  'stdSIS_tp'
+mean_sisTP_str = 'meanSIS_tp'
+std_sis_uA_str = 'stdSISuA'
+meanSIS_uA_str = 'meanSIS_uA'
+stdSISmV_str = 'stdSIS_mV'
+meanSISmV_str = 'meanSIS_mV'
+
+# Update this with new definitions
+list_of_strings = [header_str, temperature_str, magCurrentSearch_str, magCurrent_str, magPot_str, LOuAsearch_str,
+                   LOuAset_str, LOuAsetPot_str, LOuAmagPot_str, LOfreq_str, IFband_str, magChan_str, meanMagV_str,
+                   stdMagV_str, meanMagmA_str, stdMagmA_str, UCA_volt_str, TP_freq_str, TPnum_str, TPintTime_str,
+                   measNum_str, delTime_str, sisPot_str, std_sisTP_str, mean_sisTP_str, std_sis_uA_str,
+                   meanSIS_uA_str, stdSISmV_str, meanSISmV_str]
+
+
 def getParamDict(paramsFile):
     paramsFile = windir(paramsFile)
-
-    # Update this with new definitions
-    header_str = 'param'
-    temperature_str = 'temp'
-    magCurrentSearch_str = 'magisweep'
-    magCurrent_str = 'magiset'
-    magPot_str = 'magpot'
-    LOuAsearch = 'LOuAsearch'
-    LOuAset_str = 'LOuAset'
-    LOuAsetPot_str = 'LOuA_set_pot'
-    LOuAmagPot_str = 'LOuA_magpot'
-    LOfreq_str = 'LOfreq'
-    IFband_str = 'IFband'
-    magChan_str = 'mag_chan'
-    meanMagV_str = 'meanmag_V'
-    stdMagV_str = 'stdmag_V'
-    meanMagmA_str =  'meanmag_mA'
-    stdMagmA_str = 'stdmag_mA'
-    UCA_volt_str =  'UCA_volt'
-    TP_freq_str = 'TP_freq'
-    TPnum_str = 'TP_num'
-    TPintTime_str = 'TP_int_time'
-    measNum_str = 'meas_num'
-    delTime_str = 'del_time'
-    sisPot_str = 'SIS_pot'
-    std_sisTP_str =  'stdSIS_tp'
-    mean_sisTP_str = 'meanSIS_tp'
-    std_sis_uA_str = 'stdSISuA'
-    meanSIS_uA_str = 'meanSIS_uA'
-    stdSISmV_str = 'stdSIS_mV'
-    meanSISmV_str = 'meanSIS_mV'
-
-    # Update this with new definitions
-    list_of_strings = [header_str, temperature_str, magCurrentSearch_str, magCurrent_str, magPot_str, LOuAsearch,
-                       LOuAset_str, LOuAsetPot_str, LOuAmagPot_str, LOfreq_str, IFband_str, magChan_str, meanMagV_str,
-                       stdMagV_str, meanMagmA_str, stdMagmA_str, UCA_volt_str, TP_freq_str, TPnum_str, TPintTime_str,
-                       measNum_str, delTime_str, sisPot_str, std_sisTP_str, mean_sisTP_str, std_sis_uA_str,
-                       meanSIS_uA_str, stdSISmV_str, meanSISmV_str]
-
     with open(paramsFile) as f:
         paramsData = f.readlines()
     paramsDict = {}
@@ -106,6 +110,93 @@ def getParamDict(paramsFile):
             print 'value:', value
 
     return paramsDict
+
+def getAllparams(paramsFile):
+    (K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V,
+     meanmag_mA, stdmag_mA, LOuAsearch, LOuAset, UCA_volt,LOuA_set_pot,
+     LOuA_magpot, meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp,
+     stdSIS_tp, SIS_pot, del_time, LOfreq, IFband, meas_num,
+     TP_int_time, TP_num, TP_freq, mag_chan)\
+        = (None,None,None,None,None,None,
+           None,None,None,None,None,None,
+           None,None,None,None,None,None,
+           None,None,None,None,None,None,
+           None,None,None,None)
+
+
+    paramsDict = getParamDict(paramsFile)
+    paramsKeys=paramsDict.keys()
+
+    for params_str in list_of_strings:
+        if params_str in paramsKeys:
+            value = paramsDict[params_str]
+            if params_str == temperature_str:
+                K_val = float(value)
+            elif params_str == magCurrentSearch_str:
+                magisweep = bool(value)
+            elif params_str == magCurrent_str:
+                magiset = float(value)
+            elif params_str == magPot_str:
+                magpot = float(value)
+            elif params_str == meanMagV_str:
+                meanmag_V = float(value)
+            elif params_str == stdMagV_str:
+                stdmag_V = float(value)
+
+            elif params_str == meanMagmA_str:
+                meanmag_mA = float(value)
+            elif params_str == stdMagmA_str:
+                stdmag_mA = float(value)
+            elif params_str == LOuAsearch_str:
+                LOuAsearch = bool(value)
+            elif params_str == LOuAset_str:
+                LOuAset = float(value)
+            elif params_str == UCA_volt_str:
+                UCA_volt = float(value)
+            elif params_str == LOuAsetPot_str:
+                LOuA_set_pot = float(value)
+
+            elif params_str == LOuAmagPot_str:
+                LOuA_magpot = float(value)
+            elif params_str == meanSISmV_str:
+                meanSIS_mV = float(value)
+            elif params_str == stdSISmV_str:
+                stdSIS_mV = float(value)
+            elif params_str == meanSIS_uA_str:
+                meanSIS_uA = float(value)
+            elif params_str == std_sis_uA_str:
+                stdSIS_uA = float(value)
+            elif params_str == mean_sisTP_str:
+                meanSIS_tp = float(value)
+
+            elif params_str == std_sisTP_str:
+                stdSIS_tp = float(value)
+            elif params_str == sisPot_str:
+                SIS_pot = float(value)
+            elif params_str == delTime_str:
+                del_time = float(value)
+            elif params_str == LOfreq_str:
+                LOfreq = float(value)
+            elif params_str == IFband_str:
+                IFband = float(value)
+            elif params_str == measNum_str:
+                meas_num = int(value)
+
+            elif params_str == TPintTime_str:
+                TP_int_time = float(value)
+            elif params_str == TPnum_str:
+                TP_num = float(value)
+            elif params_str == TP_freq_str:
+                TP_freq = float(value)
+            elif params_str == magChan_str:
+                mag_chan = int(value)
+
+    paramsTuple = (K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V,
+                   meanmag_mA, stdmag_mA, LOuAsearch, LOuAset, UCA_volt,LOuA_set_pot,
+                   LOuA_magpot, meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp,
+                   stdSIS_tp, SIS_pot, del_time, LOfreq, IFband, meas_num,
+                   TP_int_time, TP_num, TP_freq, mag_chan)
+    return paramsTuple
 
 def getparams(filename):
     if platform == 'win32':

@@ -3,10 +3,10 @@ from sys import platform
 import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib import cm
-import os, shutil, numpy, sys
+import os, shutil, numpy, sys, time
 from datapro import YdataPro
 from profunc import windir, local_copy
-from SetGrab import getYsweeps, tp_int_cut, LOuAset_cut, LOuAdiff_cut, mV_bias_cut_Y, LOfreq_cut
+from SetGrab import getYsweeps, tp_int_cut, LOuAset_cut, LOuAdiff_cut, mV_bias_cut_Y, LOfreq_cut, YfactorFilter
 from domath import make_monotonic, filter_on_occurrences
 from Plotting import xyplotgen2
 
@@ -79,15 +79,18 @@ sort_LOuA = False
 mV_bias_min = 0.7 # at least this, None is any
 mV_bias_max = 1.9 # at most this, None is any
 
+maxYfactor_atLeastThis = 1.5 # None is any
+
 
 
 #######################################
 ###### Yfactor versus everything ######
 #######################################
 do_Yfactor_versus_LO_freq = True
-do_Yfactor_versus_magpot  = False
-do_Yfactor_versus_UCA    = False
-do_Yfactor_versus_SISpot = False
+do_Yfactor_versus_magpot  = True
+do_Yfactor_versus_UCA    = True
+do_Yfactor_versus_SISpot = True
+do_Yfactor_versus_IFband = True
 
 ### Y factor related options
 # analysis options
@@ -111,11 +114,11 @@ Y_LOfreq_plotdir = local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsw
 Y_LOfreq_xlim_list_Yfactor_versus = [645, 695] # None or list of two [645, 695]
 Y_LOfreq_xlabel_str_Yfactor_versus="LO frequency (GHz)"
 
-Y_LOfreq_ls = "-"
+Y_LOfreq_ls = ""
 Y_LOfreq_linw = 3
 Y_LOfreq_fmt = 'o'
 Y_LOfreq_markersize = 5
-Y_LOfreq_alpha = 1
+Y_LOfreq_alpha = 0.3
 
 Y_LOfreq_legend_size = 10
 Y_LOfreq_legend_num_of_points = 3
@@ -126,11 +129,11 @@ Y_magpot_plotdir = local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsw
 Y_magpot_xlim_list_Yfactor_versus = None# [65100, 90000] # None or list of two [645, 695]
 Y_magpot_xlabel_str_Yfactor_versus="electromagnet potentiometer"
 
-Y_magpot_ls = "-"
+Y_magpot_ls = ""
 Y_magpot_linw = 3
 Y_magpot_fmt = 'o'
 Y_magpot_markersize = 5
-Y_magpot_alpha = 1
+Y_magpot_alpha = 0.3
 
 Y_magpot_legend_size = 10
 Y_magpot_legend_num_of_points = 3
@@ -141,11 +144,11 @@ Y_UCA_volt_plotdir = local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IV
 Y_UCA_volt_xlim_list_Yfactor_versus = None# [65100, 90000] # None or list of two [645, 695]
 Y_UCA_volt_xlabel_str_Yfactor_versus="LO User Controlled Attenuation (volts)"
 
-Y_UCA_volt_ls = "-"
+Y_UCA_volt_ls = ""
 Y_UCA_volt_linw = 3
 Y_UCA_volt_fmt = 'o'
 Y_UCA_volt_markersize = 5
-Y_UCA_volt_alpha = 1
+Y_UCA_volt_alpha = 0.3
 
 Y_UCA_volt_legend_size = 10
 Y_UCA_volt_legend_num_of_points = 3
@@ -156,15 +159,30 @@ Y_SISpot_plotdir = local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsw
 Y_SISpot_xlim_list_Yfactor_versus = None# [65100, 90000] # None or list of two [645, 695]
 Y_SISpot_xlabel_str_Yfactor_versus="SIS potentiometer position"
 
-Y_SISpot_ls = "-"
+Y_SISpot_ls = ""
 Y_SISpot_linw = 3
 Y_SISpot_fmt = 'o'
 Y_SISpot_markersize = 5
-Y_SISpot_alpha = 1
+Y_SISpot_alpha = 0.3
 
 Y_SISpot_legend_size = 10
 Y_SISpot_legend_num_of_points = 3
 Y_SISpot_legend_loc = 3
+
+# SISpot
+Y_IFband_plotdir = local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Y_IFband/'))
+Y_IFband_xlim_list_Yfactor_versus = None# [65100, 90000] # None or list of two [645, 695]
+Y_IFband_xlabel_str_Yfactor_versus="IF band - voltage on YIG"
+
+Y_IFband_ls = ""
+Y_IFband_linw = 3
+Y_IFband_fmt = 'o'
+Y_IFband_markersize = 5
+Y_IFband_alpha = 0.3
+
+Y_IFband_legend_size = 10
+Y_IFband_legend_num_of_points = 3
+Y_IFband_legend_loc = 3
 
 
 ########################################
@@ -173,6 +191,8 @@ Y_SISpot_legend_loc = 3
 do_LOuA_LOmV_AvsE=False
 do_LOmV_LOfreq_AvsE = False
 do_LOuA_LOfreq_AvsE = False
+do_UCA_LOfreq_AvsE = True
+do_IFband_LOfreq_AvsE = True
 
 neutral_color_AvsE='Green'
 hot_color_AvsE='firebrick'
@@ -251,6 +271,47 @@ LOuA_LOfreq_AvsE_legend_num_of_points = 3
 LOuA_LOfreq_AvsE_legend_loc = 0
 
 
+
+# UCA_LOfreq
+UCA_LOfreq_AvsE_plotdir = local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/UCA_LOfreq/'))
+
+UCA_LOfreq_AvsE_xlim_list = None#[1.2, 1.4] # None or list of two [645, 695]
+UCA_LOfreq_AvsE_xlabel_str="LO frequency (GHz)"
+
+UCA_LOfreq_AvsE_ylim_list = None#[0, 25] # None or list of two [645, 695]
+UCA_LOfreq_AvsE_ylabel_str="UCA (volts)"
+
+UCA_LOfreq_AvsE_ls = ""
+UCA_LOfreq_AvsE_linw = 3
+UCA_LOfreq_AvsE_fmt = 'o'
+UCA_LOfreq_AvsE_markersize = 5
+UCA_LOfreq_AvsE_alpha = 0.7
+
+UCA_LOfreq_AvsE_legend_size = 10
+UCA_LOfreq_AvsE_legend_num_of_points = 3
+UCA_LOfreq_AvsE_legend_loc = 0
+
+# IFband_LOfreq
+IFband_LOfreq_AvsE_plotdir = local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/IFband_LOfreq/'))
+
+IFband_LOfreq_AvsE_xlim_list = None#[1.2, 1.4] # None or list of two [645, 695]
+IFband_LOfreq_AvsE_xlabel_str="LO frequency (GHz)"
+
+IFband_LOfreq_AvsE_ylim_list = None#[0, 25] # None or list of two [645, 695]
+IFband_LOfreq_AvsE_ylabel_str="IFband (volts)"
+
+IFband_LOfreq_AvsE_ls = ""
+IFband_LOfreq_AvsE_linw = 3
+IFband_LOfreq_AvsE_fmt = 'o'
+IFband_LOfreq_AvsE_markersize = 5
+IFband_LOfreq_AvsE_alpha = 0.7
+
+IFband_LOfreq_AvsE_legend_size = 10
+IFband_LOfreq_AvsE_legend_num_of_points = 3
+IFband_LOfreq_AvsE_legend_loc = 0
+
+
+
 ###########################################
 ###### Intersecting lines Parameters ######
 ###########################################
@@ -290,6 +351,15 @@ do_shot_noise = False
 shot_noise_plotdir = local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/shot_noise/'))
 
 
+##################################################################
+###### Output files with Y factors over the Threshold value ######
+##################################################################
+outputYfilenames=True
+clear_oldYfilenames = False
+outputYpath=local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/foundYfiles/'))
+outYfile='rerun.csv'
+Y_threshold = 1.5
+
 ###############################################################
 ### All the sets of data to collect the processed data from ###
 ###############################################################
@@ -322,7 +392,7 @@ setnames = []
 
 # setnames.extend(['Alice/LOfreq_UCA2','Alice/LOfreq_UCA2'])
 # setnames.extend(['Alice/SISpot_MAGpot','Alice/SISpot_MAGpot2'])
-setnames.extend(['Alice/LOfreq650-655'])
+setnames.extend(['Alice/LOfreq650-655','Alice/LOfreq655-660','Alice/LOfreq660-665','Alice/LOfreq665-670','Alice/LOfreq670-675'])
 
 
 parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
@@ -394,6 +464,9 @@ if sort_LOuA:
 if ((mV_bias_min is not None) and (mV_bias_max is not None)):
     Ysweeps = mV_bias_cut_Y(Ysweeps, mV_min=mV_bias_min, mV_max=mV_bias_max, verbose=verbose)
 
+if maxYfactor_atLeastThis is not None:
+    Ysweeps = YfactorFilter(Ysweeps, maxYfactor_atLeastThis=maxYfactor_atLeastThis, verbose=verbose)
+
 def isNum(testVar):
     try:
         float(testVar)
@@ -425,6 +498,8 @@ def return_variable(variable_str, Ysweep):
         maxYfactorIndex = Ysweep.Yfactor.index(maxYfactor)
         maxYfactor_SISpot = Ysweep.y_pot[maxYfactorIndex]
         variable=maxYfactor_SISpot
+    elif variable_str == 'IFband':
+        variable = Ysweep.IFband
     return variable, variable_std
 
 def split_variable(K_vals,variables,variables_std=None):
@@ -489,28 +564,31 @@ def Yfactor_vs(dependent_variable_str,
         ax1.set_ylim(plot_ylim_list_Yfactor_vs)
 
     # get and plot the power meter data
-    pm_max_Yfactors                   = []
-    pm_max_Yfactor_mVs                = []
+    pm_max_Yfactors = []
+    pm_max_y_mVs = []
     pm_max_Yfactor_dependent_variable = []
     for Ysweep in Ysweeps:
-        pm_max_Yfactor_mV, pm_max_Yfactor = Ysweep.find_max_yfactor_pm()
+        (pm_max_Yfactor, pm_max_y_error, pm_max_y_mV,
+         pm_max_y_mVerror, pm_max_y_uA,pm_max_y_uAerror,
+         pm_max_y_TP, pm_max_y_TPerror, pm_max_y_pot)\
+            = Ysweep.find_max_yfactor_pm()
 
         # get the dependent variable
         dependent_variable, dependent_variable_std = return_variable(dependent_variable_str, Ysweep)
 
         if min_Y_factor <= pm_max_Yfactor:
             pm_max_Yfactors.append(pm_max_Yfactor)
-            pm_max_Yfactor_mVs.append(pm_max_Yfactor_mV)
+            pm_max_y_mVs.append(pm_max_y_mV)
             pm_max_Yfactor_dependent_variable.append(dependent_variable)
         if testmode:
-            print  pm_max_Yfactor,':',dependent_variable,':'+dependent_variable_str+' :', pm_max_Yfactor_mV,' mV '+\
+            print  pm_max_Yfactor,':',dependent_variable,':'+dependent_variable_str+' :', pm_max_y_mV,' mV '+\
                    '  UCA:',Ysweep.UCA_volt,':  Ynum:',Ysweep.Ynum
 
 
     # Sort all the data to make monotonic lines in the domain of LO frequency
-    list_of_lists = [pm_max_Yfactor_dependent_variable,pm_max_Yfactors,pm_max_Yfactor_mVs]
+    list_of_lists = [pm_max_Yfactor_dependent_variable,pm_max_Yfactors,pm_max_y_mVs]
     sorted_list_of_lists = make_monotonic(list_of_lists,reverse=False)
-    [pm_max_Yfactor_dependent_variable,pm_max_Yfactors,pm_max_Yfactor_mVs] = sorted_list_of_lists
+    [pm_max_Yfactor_dependent_variable,pm_max_Yfactors,pm_max_y_mVs] = sorted_list_of_lists
 
     x_vector = pm_max_Yfactor_dependent_variable
     y_vector = pm_max_Yfactors
@@ -610,7 +688,8 @@ def Yfactor_vs(dependent_variable_str,
     return
 
 
-if any([do_Yfactor_versus_LO_freq, do_Yfactor_versus_magpot, do_Yfactor_versus_UCA,do_Yfactor_versus_SISpot]):
+if any([do_Yfactor_versus_LO_freq, do_Yfactor_versus_magpot, do_Yfactor_versus_UCA,do_Yfactor_versus_SISpot,
+        do_Yfactor_versus_IFband]):
     if do_Yfactor_versus_LO_freq:
         Yfactor_vs(dependent_variable_str='LOfreq',
                    Y_dependent_variable_plotdir=Y_LOfreq_plotdir,
@@ -664,6 +743,20 @@ if any([do_Yfactor_versus_LO_freq, do_Yfactor_versus_magpot, do_Yfactor_versus_U
                    Y_dependent_variable_legend_size = Y_SISpot_legend_size,
                    Y_dependent_variable_legend_num_of_points = Y_SISpot_legend_num_of_points,
                    Y_dependent_variable_legend_loc = Y_SISpot_legend_loc)
+
+    if do_Yfactor_versus_IFband:
+        Yfactor_vs(dependent_variable_str='IFband',
+                   Y_dependent_variable_plotdir=Y_IFband_plotdir,
+                   plot_xlim_list=Y_IFband_xlim_list_Yfactor_versus,
+                   xlabel_str=Y_IFband_xlabel_str_Yfactor_versus,
+                   Y_dependent_variable_ls = Y_IFband_ls,
+                   Y_dependent_variable_linw = Y_IFband_linw,
+                   Y_dependent_variable_fmt = Y_IFband_fmt,
+                   Y_dependent_variable_markersize = Y_IFband_markersize,
+                   Y_dependent_variable_alpha = Y_IFband_alpha,
+                   Y_dependent_variable_legend_size = Y_IFband_legend_size,
+                   Y_dependent_variable_legend_num_of_points = Y_IFband_legend_num_of_points,
+                   Y_dependent_variable_legend_loc = Y_IFband_legend_loc)
 
 
 
@@ -928,7 +1021,7 @@ def anything_vs(independent_variable_str,
 
 
 
-if any([do_LOuA_LOmV_AvsE,do_LOmV_LOfreq_AvsE,do_LOuA_LOfreq_AvsE]):
+if any([do_LOuA_LOmV_AvsE,do_LOmV_LOfreq_AvsE,do_LOuA_LOfreq_AvsE,do_UCA_LOfreq_AvsE,do_IFband_LOfreq_AvsE]):
     if do_LOuA_LOmV_AvsE:
         anything_vs(independent_variable_str='SIS_uA',
                     dependent_variable_str='SIS_mV',
@@ -964,7 +1057,7 @@ if any([do_LOuA_LOmV_AvsE,do_LOmV_LOfreq_AvsE,do_LOuA_LOfreq_AvsE]):
 
 
     if do_LOuA_LOfreq_AvsE:
-        anything_vs(independent_variable_str='SIS_uaA',
+        anything_vs(independent_variable_str='SIS_uA',
                     dependent_variable_str='LOfreq',
                     plotdir=LOuA_LOfreq_AvsE_plotdir,
                     plot_xlim_list=LOuA_LOfreq_AvsE_xlim_list,
@@ -980,7 +1073,39 @@ if any([do_LOuA_LOmV_AvsE,do_LOmV_LOfreq_AvsE,do_LOuA_LOfreq_AvsE]):
                     dVar_legend_num_of_points = LOuA_LOfreq_AvsE_legend_num_of_points,
                     dVar_legend_loc = LOuA_LOfreq_AvsE_legend_loc)
 
+    if do_UCA_LOfreq_AvsE:
+        anything_vs(independent_variable_str='UCA_volt',
+                    dependent_variable_str='LOfreq',
+                    plotdir=UCA_LOfreq_AvsE_plotdir,
+                    plot_xlim_list=UCA_LOfreq_AvsE_xlim_list,
+                    xlabel_str=UCA_LOfreq_AvsE_xlabel_str,
+                    plot_ylim_list=UCA_LOfreq_AvsE_ylim_list,
+                    ylabel_str=UCA_LOfreq_AvsE_ylabel_str,
+                    dVar_ls = UCA_LOfreq_AvsE_ls,
+                    dVar_linw = UCA_LOfreq_AvsE_linw,
+                    dVar_fmt = UCA_LOfreq_AvsE_fmt,
+                    dVar_markersize = UCA_LOfreq_AvsE_markersize,
+                    dVar_alpha = UCA_LOfreq_AvsE_alpha,
+                    dVar_legend_size = UCA_LOfreq_AvsE_legend_size,
+                    dVar_legend_num_of_points = UCA_LOfreq_AvsE_legend_num_of_points,
+                    dVar_legend_loc = UCA_LOfreq_AvsE_legend_loc)
 
+    if do_IFband_LOfreq_AvsE:
+        anything_vs(independent_variable_str='IFband',
+                    dependent_variable_str='LOfreq',
+                    plotdir=IFband_LOfreq_AvsE_plotdir,
+                    plot_xlim_list=IFband_LOfreq_AvsE_xlim_list,
+                    xlabel_str=IFband_LOfreq_AvsE_xlabel_str,
+                    plot_ylim_list=IFband_LOfreq_AvsE_ylim_list,
+                    ylabel_str=IFband_LOfreq_AvsE_ylabel_str,
+                    dVar_ls = IFband_LOfreq_AvsE_ls,
+                    dVar_linw = IFband_LOfreq_AvsE_linw,
+                    dVar_fmt = IFband_LOfreq_AvsE_fmt,
+                    dVar_markersize = IFband_LOfreq_AvsE_markersize,
+                    dVar_alpha = IFband_LOfreq_AvsE_alpha,
+                    dVar_legend_size = IFband_LOfreq_AvsE_legend_size,
+                    dVar_legend_num_of_points = IFband_LOfreq_AvsE_legend_num_of_points,
+                    dVar_legend_loc = IFband_LOfreq_AvsE_legend_loc)
 
 ################################
 ###### Intersecting Lines ######
@@ -1294,3 +1419,26 @@ if do_shot_noise:
             #
             # plt.savefig("/Users/chw3k5/Documents/Grad_School/Kappa/NA38/IVsweep/shotplots/" + Ynum + ".eps")
             # plt.close('all')
+
+
+##################################################################
+###### Output files with Y factors over the Threshold value ######
+##################################################################
+if outputYfilenames:
+    makeORclear_plotdir(outputYpath,clear_flag=clear_oldYfilenames)
+    longYfilename = outputYpath+outYfile
+
+    if ((not clear_oldYfilenames) and (os.path.isfile(longYfilename))):
+        file_handle = open(longYfilename,'a')
+    else:
+        file_handle = open(longYfilename,'w')
+
+    for Ysweep in Ysweeps:
+        (max_Yfactor, max_y_error, max_y_mV,
+         max_y_mVerror, max_y_uA,max_y_uAerror,
+         max_y_TP, max_y_TPerror, max_y_pot) = Ysweep.find_max_yfactor_pm()
+
+        if Y_threshold <= max_Yfactor:
+            print max_Yfactor,Ysweep.proYdatadir,Ysweep.LOfreq
+            file_handle.write(Ysweep.proYdatadir+'\n')
+    file_handle.close()

@@ -205,7 +205,7 @@ for freqIndex in range(len(LOfreq_vector)-1):
                 if verboseTop: print "parentYcost:",parentYcost,'  mutantYcost:',mutantYcost
                 if ((mutantYcost < parentYcost) or (euthanizeGrandPaAfter <= genDiff)):
                     newParentList.append(mutantMember)
-                    if verboseTop: print "Mutant Replace Parents"
+                    if verboseTop: print "Mutant Replaces Parent"
                 else:
                     newParentList.append(parentMember)
         parentPopulation = newParentList

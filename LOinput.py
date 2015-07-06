@@ -102,5 +102,5 @@ if __name__ == "__main__":
     #     print freq
     #     sleep(1)
     rfon()
-    setfreq(657)
-    rfoff()
+    setfreq(672)
+    #rfoff()

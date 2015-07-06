@@ -2,7 +2,7 @@ __author__ = 'chwheele'
 
 import os, sys, numpy, time
 # Caleb's Programs
-from profunc import windir, getYnums, getSnums
+from profunc import windir, local_copy, googleDrive_copy, getYnums, getSnums, getAllparams
 from LabJack_control import LabJackU3_DAQ0, LabJackU3_DAQ1, LJ_streamTP,enableLabJack, disableLabJack
 from control import  opentelnet, closetelnet, measmag, setmag_only,setmag_highlow, setfeedback, \
     setSIS_only, measSIS_TP, zeropots, mag_channel,\
@@ -1170,10 +1170,133 @@ def BiasSweep(datadir, verbose=True, verboseTop=True, verboseSet=True, #careful=
 
     return
 
+
+def rerunY(proYdatadir,rerunDir,turnRFoff=True, doEmail=False,verbose=True, verboseTop=True, verboseSet=True):
+
+
+    paramTuple = getAllparams(paramsFile=proYdatadir+'hotproparams.csv')
+    (K_val, magisweep, magiset, magpot, meanmag_V, stdmag_V,
+        meanmag_mA, stdmag_mA, LOuAsearch, LOuAset, UCA_volt,LOuA_set_pot,
+        LOuA_magpot, meanSIS_mV, stdSIS_mV, meanSIS_uA, stdSIS_uA, meanSIS_tp,
+        stdSIS_tp, SIS_pot, del_time, LOfreq, IFband, meas_num,
+        TP_int_time, TP_num, TP_freq, mag_chan) = paramTuple
+
+    print '\nDoing a Rerun for the following values:'
+    print 'magpot:',magpot,' UCA voltage:',UCA_volt,' IFband voltage:', IFband, ' LO frequency:',LOfreq
+
+    BiasSweep(rerunDir, verbose=verbose, verboseTop=verboseTop, verboseSet=verboseSet,
+
+        # Parameter sweep behaviour
+        Kaxis=0, sisVaxis=1, magaxis=3, LOpowaxis=2, LOfreqaxis=4, IFbandaxis=5,
+        testMode=False, testModeWaitTime=1, warmmode=False, turnRFoff=turnRFoff,
+        chopper_off=False, biasOnlyMode=False,
+        warning=False,
+        sweepShape="rectangular",
+        dwellTime_BenchmarkSIS=2,
+        dwellTime_BenchmarkMag=2,
+        dwellTime_fastSweep=2,
+        dwellTime_unpumped=2,
+        dwellTime_sisVsweep=1,
+
+        # email options
+        FinishedEmail=doEmail, FiveMinEmail=doEmail, PeriodicEmail=doEmail,
+        emailGroppi=False,
+        seconds_per_email=1200,
+
+        ## Benchmark Tests
+        do_benchmarkSIS=True,
+        do_benchmarkMag=True,
+        # measure the electromagnet and the SIS junction at their standard positions
+        benchSISmeasNum=10,benchMAGmeasNum=5,
+        # THz computer fast sweeps
+        do_fastsweep=True, do_unpumpedsweep=False, fastsweep_feedback=False,
+        SweepStart_feedTrue=65000, SweepStop_feedTrue=52000, SweepStep_feedTrue=500,
+        SweepStart_feedFalse=66100, SweepStop_feedFalse=57000, SweepStep_feedFalse=100,
+
+        # mV sweep Parameters
+        sisV_feedback=True, do_sisVsweep=False, SISbiasMeasNum=5,
+        sisVsweep_start=-0.1, sisVsweep_stop=2.5, sisVsweep_step=0.1,
+        sisVsweep_list=None,
+        sisPot_feedFalse_start=65100, sisPot_feedFalse_stop=57000, sisPot_feedFalse_step=100,
+        sisPot_feedTrue_list=[63518,  63140, 62762, 62384,
+                            62006,  61628, 61250, 60872,
+                            60393,  59924, 59461, 59039,
+                            58549,  58111, 57638, 57173,
+                            56775],
+
+        # [65430, 65491, 65037, 64949, 64774, 64697, 64571, 64480,
+        #                       61250, 61127, 60872, 60581, 60393, 60125, 59924, 59684,
+        #                       59461, 59223, 59039, 58831, 58549, 58345, 58111, 57879, 57638, 57418, 57173, 56987,
+        #                       56775, 56525, 56299, 56052, 55826, 55582, 55369, 55123, 54955, 54732, 54471, 54247, 54013]
+        sisPot_feedTrue_start=65000, sisPot_feedTrue_stop=52000, sisPot_feedTrue_step=100,
+        sisPot_feedFalse_list=None,
+
+        # Powermeter read through LabJack
+        TPSampleFrequency=100, TPSampleTime=1,
+
+        # spectrum analyzer settings
+        getspecs=False, spec_linear_sc=True, spec_freq_vector=[0.0,0.4,1.0,1.6,2.2,2.5,2.8,3.1,3.4,4.0,4.6,5.2,6.4,12.4,24.4],
+        spec_sweep_time='AUTO', spec_video_band=300, spec_resol_band=300,
+        spec_attenu=0, lin_ref_lev=500, aveNum=64,
+
+        # Chopper temperature list
+        K_list=[296,78],
+
+        # Local Ocsillator frequency selector
+        LOfreq_start=650, LOfreq_stop=692, LOfreq_step=1,
+        LOfreqs_list=[LOfreq],
+
+        # Intermediate Frequency Band
+        IFband_start=IFband, IFband_stop=IFband, IFband_step=0.10,
+
+        # Electromagnet Options
+        do_magisweep=False, mag_meas=10,
+        magisweep_start=32, magisweep_stop=32, magisweep_step=1,
+        magisweep_list=None,
+        magpotsweep_start=40000, magpotsweep_stop=40000, magpotsweep_step=5000,
+        magpotsweep_list=[magpot],
+
+        # setting the local ocsilattor pump power
+        do_LOuAsearch=False,  do_LOuApresearch=False, LOuA_search_every_sweep=False,
+        UCAsweep_min=3.45, UCAsweep_max=3.45, UCAsweep_step=0.05,
+        UCAsweep_list=[UCA_volt],
+        LOuAsearch_start=14, LOuAsearch_stop=14, LOuAsearch_step=1,
+        LOuAsearch_list=[16],
+
+        # stepper motor control options
+        stepper_vel = 0.5, stepper_accel = 1, forth_dist = 0.25, back_dist = 0.25)
+
+
+    return
+
+
+
+def rerunFromList(rerunFile='/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/foundYfiles/rerun.csv'):
+    rerunFile = local_copy(windir(rerunFile))
+    with open(rerunFile,'r') as reRunHandle:
+        sweeps2rerun=reRunHandle.read().splitlines()
+    lastIndex=len(sweeps2rerun)-1
+    for (listIndex,proYdatadir) in list(enumerate(sweeps2rerun)):
+        (parentDir,junk)=proYdatadir.split('prodata')
+        parentDir = googleDrive_copy(parentDir)
+        rerunDir = windir(parentDir+'rerun/')
+        turnRFoff = False
+        if lastIndex == listIndex:
+            turnRFoff = True
+        rerunY(proYdatadir,rerunDir,turnRFoff=turnRFoff,verbose=False)
+    return
+
+
+
+
+
+
+
+
 if __name__ == "__main__":
-    BiasSweep('/Users/chw3k5/local_kappa_data/Kappa/NA38/IVsweep/newBiasSweepTest/',
-              K_list=[296,77],
-              magpotsweep_list=[66666])
+    # rerunY(proYdatadir='C:\\Users\\chwheele\\local_kappa_data\\Kappa\NA38\\IVsweep\\Alice\\LOfreq650-655\\prodata\\Y0004\\',
+    #        rerunDir='C:\\Users\\chwheele\\local_kappa_data\\Kappa\NA38\\IVsweep\\Alice\\LOfreq650-655\\rerun\\')
+    rerunFromList()
 
 
 

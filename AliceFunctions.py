@@ -90,7 +90,7 @@ def testGeneration(datadir,K_list,sisPot_str,rangeList,generationSize, populatio
                                       dwellTime_BenchmarkSIS=1,
                                       dwellTime_BenchmarkMag=1,
                                       dwellTime_fastSweep=1,dwellTime_unpumped=1,
-                                      dwellTime_sisVsweep=2,
+                                      dwellTime_sisVsweep=1,
 
                                       ## Benchmark Tests
                                       # THz computer fast sweeps

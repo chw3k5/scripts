@@ -78,6 +78,7 @@ from profunc import windir
 import serial, signal, time, os, sys, atpy, numpy, matplotlib
 from matplotlib import pyplot as plt
 from email_sender   import email_caleb, email_groppi, text_caleb, text_qroppi
+from skypecall import skypecall
 serial_port = ''
 
 if platform == 'win32':
@@ -471,6 +472,8 @@ while monitoring:
             if do_emailgroppi:
                 email_groppi(alarm_subject, alarm_body_text)
                 text_qroppi(body_text)
+
+            skypecall(phone_number='3142838383',dtmf='3212522')
 
             Email_time = current_time
             EmailTrigger = False

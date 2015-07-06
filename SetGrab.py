@@ -11,7 +11,8 @@ import copy
 def getYsweeps(fullpaths, Ynums=None, verbose=False):
     class Ysweeps():
         def __init__(self,fullpath,Ynum):  #You must always define the self, here with
-            proYdatadir = fullpath + 'prodata/' + Ynum + '/'
+            proYdatadir = windir(fullpath + 'prodata/' + Ynum + '/')
+            self.proYdatadir=proYdatadir
             self.Ynum = Ynum
             self.name = fullpath + Ynum # This is a unique identifier for each sweep
             self.fullpath = fullpath
@@ -36,8 +37,13 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
             self.hot_time_mean,self.cold_time_mean, self.hot_pot, self.cold_pot,\
             self.hotdatafound, self.colddatafound,self.Ydatafound\
                 = getproYdata(proYdatadir)
+
             # old version of how I recorded this data
             self.mV_Yfactor=self.y_mV
+            (self.max_Yfactor, self.max_y_error, self.max_y_mV, self.max_y_mVerror, self.max_y_uA, self.max_y_uAerror,
+            self.max_y_TP, self.max_y_TPerror, self.max_y_pot) \
+                = (None,None,None,None,None,None,
+                    None,None,None)
 
             # Old version of this function
             # self.Yfactor, self.mV_Yfactor, self.hot_mV_mean, self.cold_mV_mean, self.mV, \
@@ -126,13 +132,44 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
 
 
         def find_max_yfactor_pm(self):
-            max_mV_Yfactor = None
-            max_Yfactor = None
-            if self.Ydatafound:
-                max_Yfactor = max(self.Yfactor)
-                max_mV_Yfactor = self.mV_Yfactor[self.Yfactor.index(max_Yfactor)]
+            if self.max_Yfactor is None:
+                (max_Yfactor, max_y_error, max_y_mV,
+                 max_y_mVerror, max_y_uA,max_y_uAerror,
+                 max_y_TP, max_y_TPerror, max_y_pot) \
+                    = (None,None,None,
+                       None,None,None,
+                       None,None,None)
+                if self.Ydatafound:
+                    max_Yfactor = max(np.array(self.Yfactor))
+                    maxIndex=self.Yfactor.index(max_Yfactor)
+                    if self.yerror is not None:
+                        max_y_error = self.yerror[maxIndex]
+                    if self.y_mV is not None:
+                        max_y_mV = self.y_mV[maxIndex]
+                    if self.y_mVerror is not None:
+                        max_y_mVerror = self.y_mVerror[maxIndex]
+                    if self.y_uA is not None:
+                        max_y_uA = self.y_uA[maxIndex]
+                    if self.y_uAerror is not None:
+                        max_y_uAerror = self.y_uAerror[maxIndex]
+                    if self.y_TP is not None:
+                        max_y_TP = self.y_TP[maxIndex]
+                    if self.y_TPerror is not None:
+                        max_y_TPerror = self.y_TPerror[maxIndex]
+                    if self.y_pot is not None:
+                        max_y_pot = self.y_pot[maxIndex]
+            else:
+                (max_Yfactor, max_y_error, max_y_mV,
+                 max_y_mVerror, max_y_uA,max_y_uAerror,
+                 max_y_TP, max_y_TPerror, max_y_pot) \
+                    = (self.max_Yfactor, self.max_y_error, self.max_y_mV,
+                       self.max_y_mVerror, self.max_y_uA, self.max_y_uAerror,
+                       self.max_y_TP, self.max_y_TPerror, self.max_y_pot)
 
-            return max_mV_Yfactor, max_Yfactor
+
+            return (max_Yfactor, max_y_error, max_y_mV,
+                    max_y_mVerror, max_y_uA,max_y_uAerror,
+                    max_y_TP, max_y_TPerror, max_y_pot)
 
         def find_max_yfactor_spec(self,min_freq=None,max_freq=None):
             max_Yfactor      = None
@@ -570,7 +607,18 @@ def mV_bias_cut_Y(Ysweeps, mV_min=None, mV_max=None, verbose=False):
 
     return mV_bias_cut_Ysweeps
 
+def YfactorFilter(Ysweeps, maxYfactor_atLeastThis=1.0, verbose=False):
+    newYsweeps=[]
+    for Ysweep in Ysweeps:
+        (max_Yfactor, max_y_error, max_y_mV,
+         max_y_mVerror, max_y_uA,max_y_uAerror,
+         max_y_TP, max_y_TPerror, max_y_pot) \
+            = Ysweep.find_max_yfactor_pm()
+        if maxYfactor_atLeastThis <= max_Yfactor:
+            newYsweeps.append(Ysweep)
 
+
+    return newYsweeps
 
 
 
