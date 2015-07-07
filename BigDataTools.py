@@ -76,10 +76,10 @@ sort_LOuA = False
 
 ### Will only work for Y factor
 # mV bias cuts
-mV_bias_min = 0.7 # at least this, None is any
-mV_bias_max = 1.9 # at most this, None is any
+mV_bias_min = None # at least this, None is any
+mV_bias_max = None # at most this, None is any
 
-maxYfactor_atLeastThis = 1.5 # None is any
+maxYfactor_atLeastThis = None # None is any
 
 
 
@@ -358,7 +358,7 @@ outputYfilenames=True
 clear_oldYfilenames = False
 outputYpath=local_copy(windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/foundYfiles/'))
 outYfile='rerun.csv'
-Y_threshold = 1.5
+Y_threshold = None
 
 ###############################################################
 ### All the sets of data to collect the processed data from ###
@@ -392,8 +392,13 @@ setnames = []
 
 # setnames.extend(['Alice/LOfreq_UCA2','Alice/LOfreq_UCA2'])
 # setnames.extend(['Alice/SISpot_MAGpot','Alice/SISpot_MAGpot2'])
-setnames.extend(['Alice/LOfreq650-655','Alice/LOfreq655-660','Alice/LOfreq660-665','Alice/LOfreq665-670','Alice/LOfreq670-675'])
+#setnames.extend(['Alice/LOfreq650-655','Alice/LOfreq655-660','Alice/LOfreq660-665','Alice/LOfreq665-670','Alice/LOfreq670-675'])
+#setnames.extend(['Alice/LOfreq650-655/rerun','Alice/LOfreq655-660/rerun','Alice/LOfreq660-665/rerun','Alice/LOfreq665-670/rerun','Alice/LOfreq670-675/rerun'])
 
+# setnames.extend(['Alice_3p/LOfreq654-656','Alice_3p/LOfreq656-658','Alice_3p/LOfreq670-672','Alice_3p/LOfreq672-674',
+# 'Alice_3p/LOfreq674-676'])
+
+setnames.extend(['Alice_3p/LOfreq674-676'])
 
 parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
 fullpaths_raw = [windir(parent_folder + setname + '/') for setname in setnames]

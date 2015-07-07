@@ -119,7 +119,7 @@ setnames = []
 # setnames.extend(['Nov05_14/Y_LOfreqMAGLOuA','Nov05_14/Y_MAG','Nov05_14/Y_MAG2','Nov05_14/Y_MAG3','Nov05_14/Y_standard'])
 # setnames.extend(['Oct20_14/LOfreq','Oct20_14/Y_LO_pow','Oct20_14/Y_MAG','Oct20_14/Y_MAG2','Oct20_14'])
 # setnames.extend(['Jun08_15/RandS'])
-setnames.extend(['Jun08_15/standingWaveTest10/'])
+setnames.extend(['Alice/LOfreq650-655/rerun','Alice/LOfreq655-660/rerun','Alice/LOfreq660-665/rerun','Alice/LOfreq665-670/rerun','Alice/LOfreq670-675/rerun'])
 parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
 fullpaths = [windir(parent_folder + setname + '/') for setname in setnames]
 for datadir in fullpaths:

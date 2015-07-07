@@ -920,7 +920,7 @@ def getproYdata(datadir):
     cold_pot       = None
     colddatafound  = False
 
-    Yfactor    = None
+    Yfactor = None
     yerror = None
     y_pot = None
     y_mV = None
@@ -960,16 +960,16 @@ def getproYdata(datadir):
         Y_data = atpy.Table(Ydatafile, type="ascii", delimiter=",")
         Y_keys = Y_data.keys()
         Ydatafound = True
-        if 'Yfactor'    in Y_keys: Yfactor    = Y_data.Yfactor
-        if 'yerror'     in Y_keys: yerror    = Y_data.yerror
-        if 'y_pot' in Y_keys: y_pot = Y_data.y_pot
-        if 'mV_Yfactor' in Y_keys: y_mV = Y_data.mV_Yfactor # An old verson of the code used this
-        if 'y_mV' in Y_keys: y_mV = Y_data.y_mV
-        if 'mVerror' in Y_keys: mVerror = Y_data.mVerror
-        if 'y_uA' in Y_keys: y_uA = Y_data.y_uA
-        if 'y_uAerror' in Y_keys: y_uAerror = Y_data.y_uAerror
-        if 'y_TP' in Y_keys: y_TP = Y_data.y_TP
-        if 'y_TPerror' in Y_keys: y_TPerror = Y_data.y_TPerror
+        if 'Yfactor' in Y_keys: Yfactor = list(Y_data.Yfactor)
+        if 'yerror' in Y_keys: yerror = list(Y_data.yerror)
+        if 'y_pot' in Y_keys: y_pot = list(Y_data.y_pot)
+        if 'mV_Yfactor' in Y_keys: y_mV = list(Y_data.mV_Yfactor) # An old verson of the code used this
+        if 'y_mV' in Y_keys: y_mV = list(Y_data.y_mV)
+        if 'mVerror' in Y_keys: y_mVerror = list(Y_data.mVerror)
+        if 'y_uA' in Y_keys: y_uA = list(Y_data.y_uA)
+        if 'y_uAerror' in Y_keys: y_uAerror = list(Y_data.y_uAerror)
+        if 'y_TP' in Y_keys: y_TP = list(Y_data.y_TP)
+        if 'y_TPerror' in Y_keys: y_TPerror = list(Y_data.y_TPerror)
 
     # make sure all the Hot and cold data overlaps (The Y data is on the raw data scale)
     if (hotdatafound and colddatafound):

@@ -26,12 +26,12 @@ turnRFoff=False
 ### map your parameter and watch them dance around the parameters plane
 
 ### If a value is not in range list then is has constant value
-sisPotSetVal = 59100
+sisPotSetVal = 58700
 sisPot_list = [sisPotSetVal]
-magPotSetVal = 100000
+magPotSetVal = 78300
 UCAsetVal = 3.09831892665
 LOfreqSetVal =  671.986
-IFvoltSetVal = 4
+IFvoltSetVal = 2.3
 
 sisPot_str='sisPot'
 magPot_str='magPot'
@@ -41,24 +41,24 @@ IF_volt_str='IF_volt'
 generationNum_str='genNum'
 costY_str='costY'
 
-LOfreq_vector = range(655,692,5)
+LOfreq_vector = range(672,692,2)
 firstLoop=True
 for freqIndex in range(len(LOfreq_vector)-1):
     LOfreqMin=LOfreq_vector[freqIndex]
     LOfreqMax=LOfreq_vector[freqIndex+1]
     #rangeList={sisPot_str:(57000,65100),magPot_str:(65100,100000),),LOfreq_str:(650,692),IF_volt_str:(0,5)}
-    rangeList={sisPot_str:(57800,59300),magPot_str:(78000,81000),LOfreq_str:(LOfreqMin,LOfreqMax),IF_volt_str:(0,5),UCA_str:(0,5)}
-    datadir=windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Alice/LOfreq'+str(LOfreqMin)+'-'+str(LOfreqMax)+'/')
+    rangeList={LOfreq_str:(LOfreqMin,LOfreqMax),UCA_str:(0,4)}
+    datadir=windir('/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/Alice_3p/LOfreq'+str(LOfreqMin)+'-'+str(LOfreqMax)+'/')
 
     dimSize = len(rangeList) # number of dimensions
 
     generationSize = 10*dimSize # active breeding population
     initPopNum  = max(generationSize+10,40)
-    interationMax = 6 # maximum iterations
+    interationMax = 4 # maximum iterations
     F = 0.5 # DE step size [0,2]
-    crossOverProb = 0.8 #  crossover probability  [0, 1]
+    crossOverProb = 0.6 #  crossover probability  [0, 1]
     Y2get = 2.0 # VTR		"Value To Reach" (stop when func < VTR)
-    strategyDE = 2 # [1,2,3,4,5] are the options
+    strategyDE = 1 # [1,2,3,4,5] are the options
     euthanizeGrandPaAfter = 3
 
 
@@ -195,17 +195,24 @@ for freqIndex in range(len(LOfreq_vector)-1):
                 mutantMember=testedMutantPop[popIndex]
                 mutantMember[generationNum_str]=interation
 
-                parentYcost = parentMember[costY_str]
-                mutantYcost = mutantMember[costY_str]
+                parentYcost = float(parentMember[costY_str])
+                mutantYcost = float(mutantMember[costY_str])
 
                 parentGenNum = parentMember[generationNum_str]
                 mutantGenNum = mutantMember[generationNum_str]
 
                 genDiff = mutantGenNum-parentGenNum
-                if verboseTop: print "parentYcost:",parentYcost,'  mutantYcost:',mutantYcost
-                if ((mutantYcost < parentYcost) or (euthanizeGrandPaAfter <= genDiff)):
+                if verboseTop:
+                    print "parentYcost:",parentYcost,'   mutantYcost:',mutantYcost, '   Generation difference:',genDiff
+                replace = False
+                if mutantYcost < parentYcost:
+                    replace = True
+                    if verboseTop: print "Mutant Replaces Parent\n"
+                elif euthanizeGrandPaAfter < genDiff:
+                    replace = True
+                    if verboseTop: print "parent was old, gen diff:", genDiff,'\n'
+                if replace:
                     newParentList.append(mutantMember)
-                    if verboseTop: print "Mutant Replaces Parent"
                 else:
                     newParentList.append(parentMember)
         parentPopulation = newParentList
