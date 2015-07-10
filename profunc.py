@@ -891,7 +891,7 @@ def getprorawdata(datadir):
 
 
 
-def getproYdata(datadir):
+def getproYdata(datadir,findTheOverLap=True):
     if platform == 'win32':
         datadir = windir(datadir)
     hotdatafile  = datadir + 'hotdata.csv'
@@ -972,19 +972,23 @@ def getproYdata(datadir):
         if 'y_TPerror' in Y_keys: y_TPerror = list(Y_data.y_TPerror)
 
     # make sure all the Hot and cold data overlaps (The Y data is on the raw data scale)
-    if (hotdatafound and colddatafound):
-        if ((1 < len(list(hot_mV_mean))) and (1 < len(list(cold_mV_mean)))
-            and (hotdatafound) and (colddatafound)):
-            if 1 < len(hot_mV_mean):
-                mesh = (hot_mV_mean[1]-hot_mV_mean[0])
+    if findTheOverLap:
+        if (hotdatafound and colddatafound):
+            if ((1 < len(list(hot_mV_mean))) and (1 < len(list(cold_mV_mean)))
+                and (hotdatafound) and (colddatafound)):
+                if 1 < len(hot_mV_mean):
+                    mesh = (hot_mV_mean[1]-hot_mV_mean[0])
+                else:
+                    mesh=0.01
+                status, hot_start, cold_start, list_length = FindOverlap(hot_mV_mean, cold_mV_mean, mesh)
+                if not status:
+                    print "The function 'FindOverlap' failed in 'getproYdata' for file:", datadir
+                    print "Killing Script"
+                    sys.exit()
             else:
-                mesh=0.01
-            status, hot_start, cold_start, list_length = FindOverlap(hot_mV_mean, cold_mV_mean, mesh)
-            if not status:
-                print "The function 'FindOverlap' failed in 'getproYdata' for file:", datadir
-                print "Killing Script"
-                sys.exit()
-
+                hot_start=0
+                cold_start=0
+                list_length = min(len(hot_mV_mean),len(cold_mV_mean))
             # hot_end  = hot_start  + list_length
             # mV = hot_mV_mean[hot_start:hot_end]
             # status, mV_start, Yfactor_start, list_length = FindOverlap(mV, mV_Yfactor, mesh)

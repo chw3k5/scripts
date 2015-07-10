@@ -79,7 +79,7 @@ sort_LOuA = False
 mV_bias_min = None # at least this, None is any
 mV_bias_max = None # at most this, None is any
 
-maxYfactor_atLeastThis = None # None is any
+maxYfactor_atLeastThis = 0.9 # None is any
 
 
 
@@ -389,16 +389,37 @@ setnames = []
 # setnames.extend(['Jun08_15/standingWaveTest_noChopper_5papers'])
 
 # setnames.extend(['Jun08_15/standingWaveTest_noChopper_5papers_24Voff_LJdisCon'])
-
+#
 # setnames.extend(['Alice/LOfreq_UCA2','Alice/LOfreq_UCA2'])
 # setnames.extend(['Alice/SISpot_MAGpot','Alice/SISpot_MAGpot2'])
-#setnames.extend(['Alice/LOfreq650-655','Alice/LOfreq655-660','Alice/LOfreq660-665','Alice/LOfreq665-670','Alice/LOfreq670-675'])
-#setnames.extend(['Alice/LOfreq650-655/rerun','Alice/LOfreq655-660/rerun','Alice/LOfreq660-665/rerun','Alice/LOfreq665-670/rerun','Alice/LOfreq670-675/rerun'])
+# setnames.extend(['Alice/LOfreq','Alice/LOfreq2','Alice/LOfreq3','Alice/LOfreq4'])
 
-# setnames.extend(['Alice_3p/LOfreq654-656','Alice_3p/LOfreq656-658','Alice_3p/LOfreq670-672','Alice_3p/LOfreq672-674',
-# 'Alice_3p/LOfreq674-676'])
+# freqVector = range(650,681,5)
+# for index in range(len(freqVector)-1):
+#     dirString = 'Alice/LOfreq'+str(freqVector[index])+'-'+str(freqVector[index+1])
+#     setnames.append(dirString)
 
-setnames.extend(['Alice_3p/LOfreq674-676'])
+freqVector = range(650,671,5)
+for index in range(len(freqVector)-1):
+    dirString = 'Alice/LOfreq'+str(freqVector[index])+'-'+str(freqVector[index+1])
+    setnames.append(dirString+'/rerun')
+
+# freqVector = range(654,687,2)
+# for index in range(len(freqVector)-1):
+#     dirString = 'Alice_3p/LOfreq'+str(freqVector[index])+'-'+str(freqVector[index+1])
+#     setnames.append(dirString)
+
+freqVector = range(658,669,2)
+for index in range(len(freqVector)-1):
+    dirString = 'Alice_3p/LOfreq'+str(freqVector[index])+'-'+str(freqVector[index+1])
+    setnames.append(dirString+'/rerun')
+
+freqVector = range(670,675,2)
+for index in range(len(freqVector)-1):
+    dirString = 'Alice_3p/LOfreq'+str(freqVector[index])+'-'+str(freqVector[index+1])
+    setnames.append(dirString+'/rerun')
+
+# setnames.extend(['Alice_3p/LOfreq676-678'])
 
 parent_folder = '/Users/chw3k5/Google Drive/Kappa/NA38/IVsweep/'
 fullpaths_raw = [windir(parent_folder + setname + '/') for setname in setnames]

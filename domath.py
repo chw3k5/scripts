@@ -109,106 +109,110 @@ def regrid(data, mesh, verbose):
     regrid_data=numpy.zeros((regrid_size,len(data[0,:])))
     count=0
     n_last=len(regrid_data[:,0])-1
-    for n in range(len(regrid_data[:,0])):
-        regrid_data[n,0]=regrid_start+n*mesh
-        if verbose == 'T':
-            print 'n is ' + str(n)          
-        if n == 0:
-            if regrid_data[n,0] <= data[count,0]:
-                regrid_data[n,1:] = data[count,1:]
-                if verbose == 'T':
-                    print 'n=0, case regrid point less than original data'
-            else:
+
+    if regrid_start == regrid_end:
+        regrid_data=numpy.array(data)
+    else:
+        for n in range(len(regrid_data[:,0])):
+            regrid_data[n,0]=regrid_start+n*mesh
+            if verbose == 'T':
+                print 'n is ' + str(n)
+            if n == 0:
+                if regrid_data[n,0] <= data[count,0]:
+                    regrid_data[n,1:] = data[count,1:]
+                    if verbose == 'T':
+                        print 'n=0, case regrid point less than original data'
+                else:
+                    finished=False
+                    summer=numpy.zeros(len(data[count,1:]))
+                    divisor=0
+                    while not finished:
+                        #bin_start = regrid_data[n,0]-mesh/2
+                        bin_end   = regrid_data[n,0]+mesh/2
+
+                        if ((data[count,0] <= bin_end) and (count <= len(data[:,0])-2)):
+                            summer=summer+data[count,1:]
+                            divisor=divisor+1
+                            count=count+1
+                            if verbose == 'T':
+                                print 'the count is ' + str(count)
+                        else:
+                            if divisor <= 1:
+                                if verbose == 'T':
+                                    print 'n=0, case interpolate'
+
+                                if data[count-1,0] >= regrid_data[n,0]:
+                                    inner_count=count-1
+                                elif data[count,0] <= regrid_data[n,0]:
+                                    inner_count=count+1
+                                else:
+                                    inner_count=count
+
+                                c1=abs(regrid_data[n,0]-data[inner_count-1,0])/abs(data[inner_count,0]-data[inner_count-1,0])
+                                c2=abs(data[inner_count,0]-regrid_data[n,0])/abs(data[inner_count,0]-data[inner_count-1,0])
+                                regrid_data[n,1:]=data[inner_count-1,1:]*c2+data[inner_count,1:]*c1
+                                finished = True
+                            else:
+                                regrid_data[n,1:]=summer/divisor
+                                finished = True
+                                if verbose == 'T':
+                                    print 'n=0, case binning, points in bin = ' + str(divisor)
+
+            elif n==n_last: # for the last point
+                if regrid_data[n,0] >= data[count,0]:
+                    regrid_data[n,1:]=data[count,1:]
+                    if verbose == 'T':
+                        print 'n=n_last, case the last regrid point is greater than the last original data point'
+                else:
+                    if verbose == 'T':
+                        print 'n=n_last, case interpolate'
+                    if data[count-1,0] >= regrid_data[n,0]:
+                        inner_count=count-1
+                    elif data[count,0] <= regrid_data[n,0]:
+                        inner_count=count+1
+                    else:
+                        inner_count=count
+
+                    c1=abs(regrid_data[n,0]-data[inner_count-1,0])/abs(data[inner_count,0]-data[inner_count-1,0])
+                    c2=abs(data[inner_count,0]-regrid_data[n,0])/abs(data[inner_count,0]-data[inner_count-1,0])
+                    regrid_data[n,1:]=data[inner_count-1,1:]*c2+data[inner_count,1:]*c1
+                    finished = True
+            else: # for all the points that are not the first or the last points
                 finished=False
                 summer=numpy.zeros(len(data[count,1:]))
-                divisor=0                
+                divisor=0
+
                 while not finished:
                     #bin_start = regrid_data[n,0]-mesh/2
                     bin_end   = regrid_data[n,0]+mesh/2
-                    
-                    if ((data[count,0] <= bin_end) and (count <= len(data[:,0])-2)):
+
+                    if data[count,0] <= bin_end:
                         summer=summer+data[count,1:]
                         divisor=divisor+1
                         count=count+1
                         if verbose == 'T':
-                            print 'the count is ' + str(count)    
+                            print 'the count is ' + str(count)
                     else:
                         if divisor <= 1:
                             if verbose == 'T':
-                                print 'n=0, case interpolate'
-                            
+                                print 'case interpolate'
+
                             if data[count-1,0] >= regrid_data[n,0]:
                                 inner_count=count-1
                             elif data[count,0] <= regrid_data[n,0]:
                                 inner_count=count+1
                             else:
                                 inner_count=count
-                        
+
                             c1=abs(regrid_data[n,0]-data[inner_count-1,0])/abs(data[inner_count,0]-data[inner_count-1,0])
                             c2=abs(data[inner_count,0]-regrid_data[n,0])/abs(data[inner_count,0]-data[inner_count-1,0])
                             regrid_data[n,1:]=data[inner_count-1,1:]*c2+data[inner_count,1:]*c1
                             finished = True
                         else:
-                            regrid_data[n,1:]=summer/divisor                            
+                            regrid_data[n,1:]=summer/divisor
                             finished = True
                             if verbose == 'T':
-                                print 'n=0, case binning, points in bin = ' + str(divisor)
-                        
-        elif n==n_last: # for the last point
-            if regrid_data[n,0] >= data[count,0]:
-                regrid_data[n,1:]=data[count,1:]
-                if verbose == 'T':
-                    print 'n=n_last, case the last regrid point is greater than the last original data point'
-            else:
-                if verbose == 'T':
-                    print 'n=n_last, case interpolate'               
-                if data[count-1,0] >= regrid_data[n,0]:
-                    inner_count=count-1
-                elif data[count,0] <= regrid_data[n,0]:
-                    inner_count=count+1
-                else:
-                    inner_count=count
-                
-                c1=abs(regrid_data[n,0]-data[inner_count-1,0])/abs(data[inner_count,0]-data[inner_count-1,0])
-                c2=abs(data[inner_count,0]-regrid_data[n,0])/abs(data[inner_count,0]-data[inner_count-1,0])
-                regrid_data[n,1:]=data[inner_count-1,1:]*c2+data[inner_count,1:]*c1
-                finished = True            
-        else: # for all the points that are not the first or the last points
-            finished=False
-            summer=numpy.zeros(len(data[count,1:]))
-            divisor=0
-            
-            while not finished:
-                #bin_start = regrid_data[n,0]-mesh/2
-                bin_end   = regrid_data[n,0]+mesh/2
-                
-                if data[count,0] <= bin_end:
-                    summer=summer+data[count,1:]
-                    divisor=divisor+1
-                    count=count+1
-                    if verbose == 'T':
-                        print 'the count is ' + str(count)
-                else:
-                    if divisor <= 1:
-                        if verbose == 'T':
-                            print 'case interpolate'
-                        
-                        if data[count-1,0] >= regrid_data[n,0]:
-                            inner_count=count-1
-                        elif data[count,0] <= regrid_data[n,0]:
-                            inner_count=count+1
-                        else:
-                            inner_count=count
-                        
-                        c1=abs(regrid_data[n,0]-data[inner_count-1,0])/abs(data[inner_count,0]-data[inner_count-1,0])
-                        c2=abs(data[inner_count,0]-regrid_data[n,0])/abs(data[inner_count,0]-data[inner_count-1,0])
-                        regrid_data[n,1:]=data[inner_count-1,1:]*c2+data[inner_count,1:]*c1                        
-                        finished = True
-                    else:
-                        regrid_data[n,1:]=summer/divisor
-                        finished = True
-                        if verbose == 'T':
-                            print 'case=binning, divisor = ' + str(divisor)
+                                print 'case=binning, divisor = ' + str(divisor)
     status=True
     return regrid_data, status
 
@@ -516,39 +520,99 @@ def AllanVarM(data, M, verbose):
 ###### FindOverlap ######
 #########################
 def FindOverlap(X, Y, mesh):
-    X = list(X)
-    Y = list(Y)
     status   = True
-    finished = False
-    count_X        = 0
-    count_Y        = 0
-    loop_count     = 0
-    loop_count_max = len(X)+len(Y)-1
+    X_test = numpy.array(X)
+    Y_test = numpy.array(Y)
+    numpy.sort(X_test)
+    numpy.sort(Y_test)
+    X_test = numpy.round(X_test/mesh)
+    Y_test = numpy.round(Y_test/mesh)
+    # X_test = uniquify(X_test)
+    # Y_test = uniquify(Y_test)
+    lenX=len(X_test)
+    lenY=len(Y_test)
+    minX=X_test[0]
+    minY=Y_test[0]
+    maxX=X_test[-1]
+    maxY=Y_test[-1]
 
-    X_test = [int(numpy.round(x/mesh)) for x in X]
-    Y_test = [int(numpy.round(y/mesh)) for y in Y]
+    count_X = 0
+    count_Y = 0
+    length = 0
 
-
-    while not finished:
-        if X_test[count_X]==Y_test[count_Y]:
-            finished=True
-        elif X_test[count_X] < Y_test[count_Y]:
-            count_X += 1
+    # truncate the start of each X and Y arrays until they overlap
+    if minX < minY:
+        # operate on the X vector
+        if minY < maxX:
+            print "It seems the mV values of Y and X do not overlap."
+            print "minY:",minY, " is less than maxX:",maxX
+            print "Returning status = False"
+            status=False
         else:
-            count_Y += 1
-        loop_count=loop_count+1
-        if loop_count > loop_count_max:
-            print "The loop has gone on long enough to exceed the length of both Y_mV and X_mV, \n"+\
-                  "something could be wrong with the regridding. Status=False"
-            status=False
-        if ((count_X>=len(X)-1) or (count_Y>=len(Y)-1)):
-            finished=True
-            print "It seems the mV values of Y and X do not overlap, returning status=False"
-            status=False
-    if status:
-        length  = min(len(X[count_X:]),len(Y[count_Y:]))
+            for xIndex in range(lenX):
+                if minY <= X_test[xIndex]:
+                    count_X = xIndex
+                    break
+
     else:
-        length  = None
+        # operate on the Y vector
+        if minX < maxY:
+            print "It seems the mV values of Y and X do not overlap."
+            print "minX:",minX, " is less than maxY:",maxY
+            print "Returning status = False"
+            status=False
+        else:
+            for yIndex in range(lenY):
+                if minX <= Y_test[yIndex]:
+                    count_Y = yIndex
+                    break
+
+    # truncate the ends of each X and Y arrays until they overlap
+    new_minX = X_test[count_X]
+    new_minY = Y_test[count_Y]
+    if status:
+        if maxX < maxY:
+            # operate on the Y vector
+            for yIndex in reversed(range(count_Y,lenY)):
+                if maxX <= Y_test[yIndex]:
+                    length = yIndex-count_Y+1
+                    break
+        else:
+            # operate of the X vector
+            for xIndex in reversed(range(count_X,lenX)):
+                if maxY <= X_test[xIndex]:
+                    length = xIndex-count_X+1
+                    break
+
+
+
+
+    #
+    #
+    # while not finished:
+    #     if ((lenX<=count_X) or (lenY<=count_Y)):
+    #         print "It seems the mV values of Y and X do not overlap, returning status=False"
+    #         status=False
+    #         break
+    #     elif X_test[count_X]==Y_test[count_Y]:
+    #         break
+    #
+    #     elif X_test[count_X] < Y_test[count_Y]:
+    #         count_X += 1
+    #     else:
+    #         count_Y += 1
+    #
+    #     loop_count=loop_count+1
+    #     if loop_count_max < loop_count_max:
+    #         print "The loop has gone on long enough to exceed the length of both Y_mV and X_mV, \n"+\
+    #               "something could be wrong with the regridding. Status=False"
+    #         status=False
+    #         break
+    #
+    # if status:
+    #     length  = min(len(X[count_X:]),len(Y[count_Y:]))
+    # else:
+    #     length  = None
 
     return status, count_X, count_Y, length
 

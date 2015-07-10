@@ -112,7 +112,7 @@ folder =windir('/Users/chw3k5/Google Drive/Kappa/temperatureData/Jun08_15/')
 
 do_emailgroppi = False
 
-monitor_type = 'cold' # options: 'coolpumpon', 'coolpumpoff', 'LN2fill', 'LHefill', 'almostcold', 'cold', 'fastwarm', 'slowwarm'
+monitor_type = 'slowwarm' # options: 'coolpumpon', 'coolpumpoff', 'LN2fill', 'LHefill', 'almostcold', 'cold', 'fastwarm', 'slowwarm'
 meas_period      = 7.0 # in seconds
 rest_time        = 0.5 # in seconds
 channels = [4,2,3]
@@ -226,10 +226,10 @@ elif monitor_type == 'slowwarm':
     Nsecs         = 1*60*60 # in second (look at data and do statistics on the last Nhours of data collection)
     start_email   = True
     PeriodicEmail = True
-    seconds_per_email      = 2*60*60 #12*60*60 # in seconds
+    seconds_per_email      = 4*60*60 #12*60*60 # in seconds
     alarm_channel          = 4
     high_alarm_temperature = 300. # in Kelvin
-    low_alarm_temperature  =  50. # in Kelvin
+    low_alarm_temperature  =   4. # in Kelvin
 
 
 

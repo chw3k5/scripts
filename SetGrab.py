@@ -36,7 +36,7 @@ def getYsweeps(fullpaths, Ynums=None, verbose=False):
             self.hot_uA_std, self.cold_uA_std, self.hot_TP_mean, self.cold_TP_mean, self.hot_TP_std, self.cold_TP_std,\
             self.hot_time_mean,self.cold_time_mean, self.hot_pot, self.cold_pot,\
             self.hotdatafound, self.colddatafound,self.Ydatafound\
-                = getproYdata(proYdatadir)
+                = getproYdata(proYdatadir,findTheOverLap=False)
 
             # old version of how I recorded this data
             self.mV_Yfactor=self.y_mV

@@ -41,7 +41,7 @@ IF_volt_str='IF_volt'
 generationNum_str='genNum'
 costY_str='costY'
 
-LOfreq_vector = range(672,692,2)
+LOfreq_vector = range(658,671,2)
 firstLoop=True
 for freqIndex in range(len(LOfreq_vector)-1):
     LOfreqMin=LOfreq_vector[freqIndex]
