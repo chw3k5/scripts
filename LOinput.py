@@ -20,7 +20,7 @@ try:
 except:
     print 'Signal Generation Connection Warning'
     print "There was some problem with VISA or communicating with the spectrum analyzer, look in LOinput.py\n"
-    raise
+
 
 
 

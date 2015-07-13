@@ -30,10 +30,26 @@ def filter_on_occurrences(vector,min_occurrences=1,max_occurrences=None):
     return unique_element_list
 
 
+########################
+###### properrors ######
+########################
+
+def properrors(x,delx,y,dely,z):
+    z=numpy.array(z)
+    x=numpy.array(x)
+    delx=numpy.array(delx)
+    y=numpy.array(y)
+    dely=numpy.array(dely)
+    normx=delx/x
+    normy=dely/y
+    delzOverz=numpy.sqrt((normx**2)+(normy**2))
+    delz=z*delzOverz
+    return delz
+
+
 ############################
 ###### make_monotonic ######
 ############################
-
 
 def make_monotonic(list_of_lists,reverse=False):
     # the first list in the list_of_list should be the one for which the other lists are to be sorted
@@ -538,7 +554,8 @@ def FindOverlap(X, Y, mesh):
 
     count_X = 0
     count_Y = 0
-    length = 0
+    length = lenX
+
 
     # truncate the start of each X and Y arrays until they overlap
     if minX < minY:
@@ -587,8 +604,8 @@ def FindOverlap(X, Y, mesh):
 
 
 
-    #
-    #
+
+    # finished = False
     # while not finished:
     #     if ((lenX<=count_X) or (lenY<=count_Y)):
     #         print "It seems the mV values of Y and X do not overlap, returning status=False"

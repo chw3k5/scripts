@@ -3,6 +3,7 @@ import sys
 import os
 import numpy
 import matplotlib
+from matplotlib import cm
 from matplotlib import pyplot as plt
 from profunc import windir, getproparams, getmultiParams,  getproSweep, get_fastIV, getproYdata, GetProDirsNames
 from profunc import getprorawdata, find_max_yfactor_spec  # Caleb's Functions
@@ -10,7 +11,7 @@ from domath  import linfit, uniquify # Caleb's Functions
 import pickle, glob
 
 from mpl_toolkits.mplot3d import axes3d
-from matplotlib import cm
+
 #if platform == 'darwin':
 #    matplotlib.rc('text', usetex=True)
 
@@ -1257,7 +1258,7 @@ def YfactorSweepsPlotter(datadir, search_4Ynums=False, Ynums='', verbose=False, 
                                  der2_int=der2_int, do_der2_conv=do_der2_conv, der2_min_cdf=der2_min_cdf, der2_sigma=der2_sigma,
                                  verbose=verbose)
             plot_list, leglines_junk, leglabels_junk \
-                = xyplotgen(y_mV, y_mV*0+1, label='',
+                = xyplotgen(y_mV, numpy.ones(len(y_mV)), label='',
                              plot_list=plot_list, leglines=leglines, leglabels=leglabels,
                             color=Yfactor_color, linw=1, ls='-', scale_str='Yf' )
             if ax2_scaling[1] == 'Yf':

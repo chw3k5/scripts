@@ -112,6 +112,35 @@ def ProFastIV(fastIV_filename,  prodataname, mono_switcher, do_regrid, do_conv, 
         n.close()
     return fastIV_found
 
+
+def GetAllTheProFastSweepData(prodatadir):
+    # get fastIV processed data
+    fastprodata_filename = prodatadir + "fastIV.csv"
+    if os.path.isfile(fastprodata_filename):
+        mV_fast, uA_fast, tp_fast, pot_fast = get_fastIV(fastprodata_filename)
+        fastprodata_found  = True
+    else:
+        fastprodata_found = False
+        mV_fast  = None
+        uA_fast  = None
+        tp_fast  = None
+        pot_fast = None
+    # get unpumped processed data
+    unpumpedprodata_filename = prodatadir + "unpumped.csv"
+    if os.path.isfile(unpumpedprodata_filename):
+        mV_unpumped, uA_unpumped, tp_unpumped, pot_unpumped = get_fastIV(unpumpedprodata_filename)
+        unpumpedprodata_found  = True
+    else:
+        unpumpedprodata_found = False
+        mV_unpumped  = None
+        uA_unpumped  = None
+        tp_unpumped  = None
+        pot_unpumped = None
+    return fastprodata_found, unpumpedprodata_found, \
+    mV_fast, uA_fast, tp_fast, pot_fast, \
+    mV_unpumped, uA_unpumped, tp_unpumped, pot_unpumped
+
+
 def BasicDataPro(sweepdir, prodataname, is_SIS_data=True, mono_switcher=True, do_regrid=True,
                  do_conv=False, regrid_mesh=0.01, min_cdf=0.9, sigma=0.05,
                  verbose=False):

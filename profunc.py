@@ -93,6 +93,21 @@ list_of_strings = [header_str, temperature_str, magCurrentSearch_str, magCurrent
                    meanSIS_uA_str, stdSISmV_str, meanSISmV_str]
 
 
+def makeORclear_plotdir(plotdir,clear_flag=False):
+    # clear out the old plots if you are going to make new ones in an old directory
+    if os.path.isdir(plotdir):
+        # remove old plots
+        if clear_flag:
+            shutil.rmtree(plotdir)
+            # make a folder for new plots
+            os.makedirs(plotdir)
+    else:
+        # make a folder for new plots
+        os.makedirs(plotdir)
+    return
+
+
+
 def getParamDict(paramsFile):
     paramsFile = windir(paramsFile)
     with open(paramsFile) as f:
